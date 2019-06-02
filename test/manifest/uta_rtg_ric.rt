@@ -1,0 +1,4 @@
+newrt|start
+rte|10004|uemgr-service:4560,anr-service:4560,dualco-service:4560
+rte|10005|gnb-sim-service:4591
+newrt|end

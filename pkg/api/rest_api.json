@@ -1,0 +1,43 @@
+{
+    "swagger" : "2.0",
+    "info" : {
+      "description" : "REST API specification xAPP Framework",
+      "version"     : "0.0.1",
+      "title"       : "RIC xAPP Framework",
+      "license" : {
+        "name" : "",
+        "url"  : "http://www.nokia.com"
+      }
+    },
+    "host"     : "xapp-service",
+    "basePath" : "/ric/v1",
+    "schemes"  : [
+      "https",
+      "http"
+    ],
+    "paths" : {
+      "/health/alive" : {
+        "get" : {
+          "summary"     : "Health check of xAPP - Liveness probe",
+          "operationId" : "getHealthAlive",
+          "responses"   : {
+            "200" : {
+              "description" : "Status of xApp is ok"
+            }
+          }
+        }
+      },
+      "/health/ready" : {
+        "get" : {
+          "summary"     : "Health check of xAPP - Readiness probe",
+          "operationId" : "getHealthReady",
+          "responses"   : {
+            "200" : {
+              "description" : "Status of xApp is ok"
+            }
+          }
+        }
+      }
+    }
+}
+  

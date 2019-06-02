@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gnb-sim
+  namespace: ricxapp
+spec:
+  hostname: gnb-sim
+  containers:
+  - name: gnb-sim
+    image: 192.168.0.6:5000/gnb-sim:latest
+    env:
+    - name: RMR_SEED_RT
+      value: "/opt/gnbsim/uta_rtg_ric.rt"
+    ports:
+      - name: sim
+        containerPort: 4591
+        protocol: TCP
+      - name: rep
+        containerPort: 4560
+        protocol: TCP
+    command: ["/bin/bash", "-c", "--"]
+    args: ["while true; do sleep 30; done;"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnb-sim-service
+  namespace: ricxapp
+spec:
+  type: ClusterIP
+  ports:
+    - port: 4591
+      targetPort: 4591
+      protocol: TCP
+      name: sim
+
