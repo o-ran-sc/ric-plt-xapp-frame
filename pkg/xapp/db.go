@@ -21,9 +21,6 @@ package xapp
 
 import (
 	sdl "gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
-	"gitlabe1.ext.net.nokia.com/ric_dev/ue-nib/api"
-	"gitlabe1.ext.net.nokia.com/ric_dev/ue-nib/pkg/uenibreader"
-	"gitlabe1.ext.net.nokia.com/ric_dev/ue-nib/pkg/uenibwriter"
 	"sync"
 	"time"
 )
@@ -37,14 +34,10 @@ var SDLCounterOpts = []CounterOpts{
 }
 
 type SDLClient struct {
-	db   *sdl.SdlInstance
-	stat map[string]Counter
-	mux  sync.Mutex
-}
-
-type UENIBClient struct {
-	reader *uenibreader.Reader
-	writer *uenibwriter.Writer
+	db   	*sdl.SdlInstance
+	stat 	map[string]Counter
+	mux  	sync.Mutex
+	ready 	bool
 }
 
 type RNIBClient struct {
@@ -55,6 +48,8 @@ type RNIBClient struct {
 func NewSDLClient(ns string) *SDLClient {
 	return &SDLClient{
 		db: sdl.NewSdlInstance(ns, sdl.NewDatabase()),
+		stat: Metric.RegisterCounterGroup(SDLCounterOpts, "SDL"),
+		ready: false,
 	}
 }
 
@@ -67,9 +62,12 @@ func (s *SDLClient) TestConnection() {
 		Logger.Warn("Database connection not ready, waiting ...")
 		time.Sleep(time.Duration(5 * time.Second))
 	}
+	s.ready = true
 	Logger.Info("Connection to database established!")
+}
 
-	s.RegisterMetrics()
+func (s *SDLClient) IsReady() bool {
+	return s.ready
 }
 
 func (s *SDLClient) Store(key string, value interface{}) (err error) {
@@ -119,21 +117,6 @@ func (s *SDLClient) UpdateStatCounter(name string) {
 
 func (c *SDLClient) GetStat() (t SDLStatistics) {
 	return
-}
-
-func NewUENIBClient() *UENIBClient {
-	return &UENIBClient{
-		reader: uenibreader.NewReader(),
-		writer: uenibwriter.NewWriter(),
-	}
-}
-
-func (u *UENIBClient) StoreUeMeasurement(gNbId string, gNbUeX2ApId string, data *api.MeasResults) error {
-	return u.writer.UpdateUeMeasurement(gNbId, gNbUeX2ApId, data)
-}
-
-func (u *UENIBClient) ReadUeMeasurement(gNbId string, gNbUeX2ApId string) (*api.MeasResults, error) {
-	return u.reader.GetUeMeasurement(gNbId, gNbUeX2ApId)
 }
 
 // To be removed ...

@@ -25,11 +25,12 @@ import (
 	"net/http"
 )
 
+type ReadyCB func()
+
 var (
 	// XApp is an application instance
 	Rmr      *RMRClient
 	Sdl      *SDLClient
-	UeNib    *UENIBClient
 	Rnib     *RNIBClient
 	Resource *Router
 	Metric   *Metrics
@@ -42,11 +43,10 @@ func init() {
 	Logger = LoadConfig()
 
 	Logger.SetLevel(viper.GetInt("logger.level"))
-	Rmr = NewRMRClient()
 	Resource = NewRouter()
 	Config = Configurator{}
-	UeNib = NewUENIBClient()
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
+	Rmr = NewRMRClient()
 
 	if viper.IsSet("db.namespaces") {
 		namespaces := viper.GetStringSlice("db.namespaces")
@@ -68,4 +68,12 @@ func Run(c MessageConsumer) {
 
 	Sdl.TestConnection()
 	Rmr.Start(c)
+}
+
+func IsReady() bool {
+	return Rmr.IsReady() && Sdl.IsReady()
+}
+
+func SetReadyCB(cb ReadyCB) {
+	Rmr.SetReadyCB(cb)
 }
