@@ -75,13 +75,13 @@ func NewRMRClient() *RMRClient {
 
 	ctx := C.rmr_init(p, m, C.int(0))
 	if ctx == nil {
-		Logger.Fatal("rmrClient: Initializing RMR context failed, bailing out!")
+		Logger.Error("rmrClient: Initializing RMR context failed, bailing out!")
 	}
 
 	return &RMRClient{
-		context: ctx,
+		context:   ctx,
 		consumers: make([]MessageConsumer, 0),
-		stat: Metric.RegisterCounterGroup(RMRCounterOpts, "RMR"),
+		stat:      Metric.RegisterCounterGroup(RMRCounterOpts, "RMR"),
 	}
 }
 
@@ -148,7 +148,7 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 func (m *RMRClient) Allocate() *C.rmr_mbuf_t {
 	buf := C.rmr_alloc_msg(m.context, 0)
 	if buf == nil {
-		Logger.Fatal("rmrClient: Allocating message buffer failed!")
+		Logger.Error("rmrClient: Allocating message buffer failed!")
 	}
 
 	return buf
@@ -216,10 +216,20 @@ func (m *RMRClient) IsReady() bool {
 	return m.ready != 0
 }
 
-func (m *RMRClient) GetRicMessageId(mid string) int {
-	return RICMessageTypes[mid]
-}
-
 func (m *RMRClient) SetReadyCB(cb ReadyCB) {
 	m.readyCb = cb
+}
+
+func (m *RMRClient) GetRicMessageId(name string) (int, bool) {
+	id, ok := RICMessageTypes[name]
+	return id, ok
+}
+
+func (m *RMRClient) GetRicMessageName(id int) (s string) {
+	for k, v := range RICMessageTypes {
+		if id == v {
+			return k
+		}
+	}
+	return
 }

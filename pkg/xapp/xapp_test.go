@@ -159,6 +159,30 @@ func TestSubscribeChannels(t *testing.T) {
 	}
 }
 
+func TestGetRicMessageSuccess(t *testing.T) {
+	id, ok := Rmr.GetRicMessageId("RIC_SUB_REQ")
+	if !ok || id != 12010 {
+		t.Errorf("Error: GetRicMessageId failed: id=%d", id)
+	}
+
+	name := Rmr.GetRicMessageName(12010)
+	if name !=  "RIC_SUB_REQ" {
+		t.Errorf("Error: GetRicMessageName failed: name=%s", name)
+	}
+}
+
+func TestGetRicMessageFails(t *testing.T) {
+	id, ok := Rmr.GetRicMessageId("INVALID")
+	if ok {
+		t.Errorf("Error: GetRicMessageId returned invalid value id=%d", id)
+	}
+
+	name := Rmr.GetRicMessageName(123456)
+	if name !=  "" {
+		t.Errorf("Error: GetRicMessageName returned invalid value: name=%s", name)
+	}
+}
+
 func TestTeardown(t *testing.T) {
 	Sdl.Clear()
 	Rnib.Clear()

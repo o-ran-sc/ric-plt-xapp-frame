@@ -3,6 +3,7 @@ module gerrit.o-ran-sc.org/r/ric-plt/xapp-frame
 go 1.12
 
 require (
+	gerrit.o-ran-sc.org/r/com/golog v0.0.0
 	gerrit.o-ran-sc.org/r/ric-plt/sdlgo v0.1.1
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
@@ -13,3 +14,5 @@ require (
 )
 
 replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.1.1
+
+replace gerrit.o-ran-sc.org/r/com/golog => gerrit.o-ran-sc.org/r/com/golog.git v0.0.0-20190604083303-aaffc8ebe3f1

@@ -24,6 +24,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"os"
+	"path/filepath"
 )
 
 type Configurator struct {
@@ -41,8 +42,8 @@ func parseCmd() string {
 	return *fileName
 }
 
-func LoadConfig() (l Log) {
-	l = Log{}
+func LoadConfig() (l *Log) {
+	l = NewLogger(filepath.Base(os.Args[0]))
 	viper.SetConfigFile(parseCmd())
 
 	if err := viper.ReadInConfig(); err != nil {

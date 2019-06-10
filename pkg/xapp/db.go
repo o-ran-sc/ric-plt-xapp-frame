@@ -34,10 +34,10 @@ var SDLCounterOpts = []CounterOpts{
 }
 
 type SDLClient struct {
-	db   	*sdl.SdlInstance
-	stat 	map[string]Counter
-	mux  	sync.Mutex
-	ready 	bool
+	db    *sdl.SdlInstance
+	stat  map[string]Counter
+	mux   sync.Mutex
+	ready bool
 }
 
 type RNIBClient struct {
@@ -47,8 +47,8 @@ type RNIBClient struct {
 // NewSDLClient returns a new SDLClient.
 func NewSDLClient(ns string) *SDLClient {
 	return &SDLClient{
-		db: sdl.NewSdlInstance(ns, sdl.NewDatabase()),
-		stat: Metric.RegisterCounterGroup(SDLCounterOpts, "SDL"),
+		db:    sdl.NewSdlInstance(ns, sdl.NewDatabase()),
+		stat:  Metric.RegisterCounterGroup(SDLCounterOpts, "SDL"),
 		ready: false,
 	}
 }

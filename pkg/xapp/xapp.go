@@ -34,9 +34,17 @@ var (
 	Rnib     *RNIBClient
 	Resource *Router
 	Metric   *Metrics
-	Logger   Log
+	Logger   *Log
 	Config   Configurator
 )
+
+func IsReady() bool {
+	return Rmr.IsReady() && Sdl.IsReady()
+}
+
+func SetReadyCB(cb ReadyCB) {
+	Rmr.SetReadyCB(cb)
+}
 
 func init() {
 	// Load xapp configuration
@@ -68,12 +76,4 @@ func Run(c MessageConsumer) {
 
 	Sdl.TestConnection()
 	Rmr.Start(c)
-}
-
-func IsReady() bool {
-	return Rmr.IsReady() && Sdl.IsReady()
-}
-
-func SetReadyCB(cb ReadyCB) {
-	Rmr.SetReadyCB(cb)
 }
