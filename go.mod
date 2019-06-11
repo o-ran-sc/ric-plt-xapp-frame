@@ -3,7 +3,7 @@ module gerrit.o-ran-sc.org/r/ric-plt/xapp-frame
 go 1.12
 
 require (
-	gerrit.o-ran-sc.org/r/com/golog v0.0.0
+	gerrit.o-ran-sc.org/r/com/golog v0.0.1
 	gerrit.o-ran-sc.org/r/ric-plt/sdlgo v0.1.1
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7

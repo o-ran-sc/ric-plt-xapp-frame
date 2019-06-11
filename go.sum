@@ -1,4 +1,6 @@
+gerrit.o-ran-sc.org/r/com/golog.git v0.0.0-20190604083303-aaffc8ebe3f1 h1:WAB8G/FFaUjRkpLuUhIo0EfbeBOY7xjkcFAFkpe3Xns=
 gerrit.o-ran-sc.org/r/com/golog.git v0.0.0-20190604083303-aaffc8ebe3f1/go.mod h1:b8YB31U8/4iRpABioeSzGi/YMzOQ/Zq7hrJmmXKqlJk=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.1.1 h1:D2fU0/YXdqSNYsmptSBbkDfG76uBFKjnhQiq5cD4WT4=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.1.1/go.mod h1:2Y8gw2jqj9urI8VFqFQn7BX0J3A852+YrXVV9V8gOt4=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
