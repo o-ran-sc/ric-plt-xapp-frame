@@ -25,7 +25,7 @@ import (
 	"net/http"
 )
 
-type ReadyCB func()
+type ReadyCB func(interface{})
 
 var (
 	// XApp is an application instance
@@ -42,8 +42,8 @@ func IsReady() bool {
 	return Rmr.IsReady() && Sdl.IsReady()
 }
 
-func SetReadyCB(cb ReadyCB) {
-	Rmr.SetReadyCB(cb)
+func SetReadyCB(cb ReadyCB, params interface{}) {
+	Rmr.SetReadyCB(cb, params)
 }
 
 func init() {

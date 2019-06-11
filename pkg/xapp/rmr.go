@@ -55,13 +55,14 @@ var RMRCounterOpts = []CounterOpts{
 type RMRStatistics struct{}
 
 type RMRClient struct {
-	context   unsafe.Pointer
-	ready     int
-	wg        sync.WaitGroup
-	mux       sync.Mutex
-	stat      map[string]Counter
-	consumers []MessageConsumer
-	readyCb   ReadyCB
+	context       unsafe.Pointer
+	ready         int
+	wg            sync.WaitGroup
+	mux           sync.Mutex
+	stat          map[string]Counter
+	consumers     []MessageConsumer
+	readyCb       ReadyCB
+	readyCbParams interface{}
 }
 
 type MessageConsumer interface {
@@ -105,7 +106,7 @@ func (m *RMRClient) Start(c MessageConsumer) {
 	}
 
 	if m.readyCb != nil {
-		m.readyCb()
+		m.readyCb(m.readyCbParams)
 	}
 
 	m.Wait()
@@ -216,8 +217,9 @@ func (m *RMRClient) IsReady() bool {
 	return m.ready != 0
 }
 
-func (m *RMRClient) SetReadyCB(cb ReadyCB) {
+func (m *RMRClient) SetReadyCB(cb ReadyCB, params interface{}) {
 	m.readyCb = cb
+	m.readyCbParams = params
 }
 
 func (m *RMRClient) GetRicMessageId(name string) (int, bool) {

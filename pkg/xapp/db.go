@@ -70,8 +70,8 @@ func (s *SDLClient) IsReady() bool {
 	return s.ready
 }
 
-func (s *SDLClient) Store(key string, value interface{}) (err error) {
-	err = s.db.Set(key, value)
+func (s *SDLClient) doSet(pairs ...interface{}) (err error) {
+	err = s.db.Set(pairs)
 	if err != nil {
 		s.UpdateStatCounter("StoreError")
 	} else {
@@ -80,9 +80,24 @@ func (s *SDLClient) Store(key string, value interface{}) (err error) {
 	return
 }
 
+func (s *SDLClient) Store(key string, value interface{}) (err error) {
+	return s.doSet(key, value)
+}
+
+func (s *SDLClient) MStore(pairs ...interface{}) (err error) {
+	return s.doSet(pairs)
+}
+
 func (s *SDLClient) Read(key string) (value map[string]interface{}, err error) {
-	value, err = s.db.Get([]string{key})
-	return
+	return s.db.Get([]string{key})
+}
+
+func (s *SDLClient) MRead(key []string) (value map[string]interface{}, err error) {
+	return s.db.Get(key)
+}
+
+func (s *SDLClient) ReadAllKeys(key string) (value []string, err error) {
+	return s.db.GetAll()
 }
 
 func (s *SDLClient) Subscribe(cb func(string, ...string), channel string) error {
