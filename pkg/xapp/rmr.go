@@ -39,7 +39,7 @@ import "C"
 import (
 	"github.com/spf13/viper"
 	"strconv"
-	"sync"
+	"strings"
 	"time"
 	"unsafe"
 )
@@ -49,24 +49,6 @@ var RMRCounterOpts = []CounterOpts{
 	{Name: "Received", Help: "The total number of received RMR messages"},
 	{Name: "TransmitError", Help: "The total number of RMR transmission errors"},
 	{Name: "ReceiveError", Help: "The total number of RMR receive errors"},
-}
-
-// To be removed ...
-type RMRStatistics struct{}
-
-type RMRClient struct {
-	context       unsafe.Pointer
-	ready         int
-	wg            sync.WaitGroup
-	mux           sync.Mutex
-	stat          map[string]Counter
-	consumers     []MessageConsumer
-	readyCb       ReadyCB
-	readyCbParams interface{}
-}
-
-type MessageConsumer interface {
-	Consume(mtype int, sid int, len int, payload []byte) error
 }
 
 func NewRMRClient() *RMRClient {
@@ -87,6 +69,10 @@ func NewRMRClient() *RMRClient {
 }
 
 func (m *RMRClient) Start(c MessageConsumer) {
+	if c != nil {
+		m.consumers = append(m.consumers, c)
+	}
+
 	for {
 		Logger.Info("rmrClient: Waiting for RMR to be ready ...")
 
@@ -97,18 +83,13 @@ func (m *RMRClient) Start(c MessageConsumer) {
 	}
 	m.wg.Add(viper.GetInt("rmr.numWorkers"))
 
-	if c != nil {
-		m.consumers = append(m.consumers, c)
+	if m.readyCb != nil {
+		go m.readyCb(m.readyCbParams)
 	}
 
 	for w := 0; w < viper.GetInt("rmr.numWorkers"); w++ {
 		go m.Worker("worker-"+strconv.Itoa(w), 0)
 	}
-
-	if m.readyCb != nil {
-		m.readyCb(m.readyCbParams)
-	}
-
 	m.Wait()
 }
 
@@ -135,11 +116,18 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 		return
 	}
 
+	meid := &RMRMeid{}
+	meidBuf := make([]byte, int(C.RMR_MAX_MEID))
+	if meidCstr := C.rmr_get_meid(rxBuffer, (*C.uchar)(unsafe.Pointer(&meidBuf[0]))); meidCstr != nil {
+		meid.PlmnID = strings.TrimRight(string(meidBuf[0:16]), "\000")
+		meid.EnbID = strings.TrimRight(string(meidBuf[16:32]), "\000")
+	}
+
 	for _, c := range m.consumers {
 		cptr := unsafe.Pointer(rxBuffer.payload)
 		payload := C.GoBytes(cptr, C.int(rxBuffer.len))
 
-		err := c.Consume(int(rxBuffer.mtype), int(rxBuffer.sub_id), int(rxBuffer.len), payload)
+		err := c.Consume(int(rxBuffer.mtype), int(rxBuffer.sub_id), payload, meid)
 		if err != nil {
 			Logger.Warn("rmrClient: Consumer returned error: %v", err)
 		}
@@ -155,16 +143,22 @@ func (m *RMRClient) Allocate() *C.rmr_mbuf_t {
 	return buf
 }
 
-func (m *RMRClient) Send(mtype int, sid int, len int, payload []byte) bool {
+func (m *RMRClient) Send(mtype int, sid int, payload []byte, meid *RMRMeid) bool {
 	buf := m.Allocate()
 
 	buf.mtype = C.int(mtype)
 	buf.sub_id = C.int(sid)
-	buf.len = C.int(len)
+	buf.len = C.int(len(payload))
 	datap := C.CBytes(payload)
 	defer C.free(datap)
 
-	C.write_bytes_array(buf.payload, datap, C.int(len))
+	if meid != nil {
+		b := make([]byte, int(C.RMR_MAX_MEID))
+		copy(b, []byte(meid.PlmnID))
+		copy(b[16:], []byte(meid.EnbID))
+		C.rmr_bytes2meid(buf, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
+	}
+	C.write_bytes_array(buf.payload, datap, buf.len)
 
 	return m.SendBuf(buf)
 }
@@ -204,11 +198,6 @@ func (m *RMRClient) RegisterMetrics() {
 	m.stat = Metric.RegisterCounterGroup(RMRCounterOpts, "RMR")
 }
 
-// To be removed ...
-func (m *RMRClient) GetStat() (r RMRStatistics) {
-	return
-}
-
 func (m *RMRClient) Wait() {
 	m.wg.Wait()
 }
@@ -233,5 +222,10 @@ func (m *RMRClient) GetRicMessageName(id int) (s string) {
 			return k
 		}
 	}
+	return
+}
+
+// To be removed ...
+func (m *RMRClient) GetStat() (r RMRStatistics) {
 	return
 }
