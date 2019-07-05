@@ -20,7 +20,14 @@
 package xapp
 
 import (
+	rnibcommon "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
+	rnibentities "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	rnibreader "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	sdl "gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
+	uenibprotobuf "gerrit.o-ran-sc.org/r/ric-plt/ue-nib/uernibprotobuf"
+	uenibreader "gerrit.o-ran-sc.org/r/ric-plt/ue-nib/uernibreader"
+	uenibwriter "gerrit.o-ran-sc.org/r/ric-plt/ue-nib/uernibwriter"
+	rnibwriter "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/rnib"
 	"sync"
 	"time"
 )
@@ -40,8 +47,44 @@ type SDLClient struct {
 	ready bool
 }
 
+// Alias
+type EventCategory = uenibreader.EventCategory
+type EventCallback = uenibreader.EventCallback
+type MeasResultNR = uenibprotobuf.MeasResultNR
+type MeasQuantityResults = uenibprotobuf.MeasResultNR_MeasQuantityResults
+type MeasResultServMO = uenibprotobuf.MeasResults_MeasResultServMO
+type MeasResults = uenibprotobuf.MeasResults
+
+type UENIBClient struct {
+	reader *uenibreader.Reader
+	writer *uenibwriter.Writer
+}
+
+// Alias
+type RNIBNodeType = rnibentities.Node_Type
+type RNIBGlobalNbId = rnibentities.GlobalNbId
+type RNIBNodebInfo = rnibentities.NodebInfo
+type RNIBIRNibError = rnibcommon.IRNibError
+type RNIBCells = rnibentities.Cells
+type RNIBNbIdentity = rnibentities.NbIdentity
+type RNIBCellType = rnibentities.Cell_Type
+type RNIBCell = rnibentities.Cell
+type RNIBEnb = rnibentities.Enb
+type RNIBGnb = rnibentities.Gnb
+
+const RNIBNodeENB = rnibentities.Node_ENB
+const RNIBNodeGNB = rnibentities.Node_GNB
+
+type RNIBServedCellInfo = rnibentities.ServedCellInfo
+type RNIBNodebInfoEnb = rnibentities.NodebInfo_Enb
+type RNIBNodebInfoGnb = rnibentities.NodebInfo_Gnb
+type RNIBServedNRCell = rnibentities.ServedNRCell
+type RNIBServedNRCellInformation = rnibentities.ServedNRCellInformation
+type RNIBNrNeighbourInformation = rnibentities.NrNeighbourInformation
+
 type RNIBClient struct {
-	db *sdl.SdlInstance
+	reader rnibreader.RNibReader
+	writer rnibwriter.RNibWriter
 }
 
 // NewSDLClient returns a new SDLClient.
@@ -134,39 +177,74 @@ func (c *SDLClient) GetStat() (t SDLStatistics) {
 	return
 }
 
-// To be removed ...
+func NewUENIBClient() *UENIBClient {
+	return &UENIBClient{
+		reader: uenibreader.NewReader(),
+		writer: uenibwriter.NewWriter(),
+	}
+}
+
+func (u *UENIBClient) StoreUeMeasurement(gNbId string, gNbUeX2ApId string, data *uenibprotobuf.MeasResults) error {
+	return u.writer.UpdateUeMeasurement(gNbId, gNbUeX2ApId, data)
+}
+
+func (u *UENIBClient) CreateUeContext(gNbId string, gNbUeX2ApId string) error {
+	return u.writer.UeContextAddComplete(gNbId, gNbUeX2ApId)
+}
+
+func (u *UENIBClient) ReleaseUeContext(gNbId string, gNbUeX2ApId string) error {
+	return u.writer.RemoveUeContext(gNbId, gNbUeX2ApId)
+}
+
+func (u *UENIBClient) ReadUeMeasurement(gNbId string, gNbUeX2ApId string) (*uenibprotobuf.MeasResults, error) {
+	return u.reader.GetUeMeasurement(gNbId, gNbUeX2ApId)
+}
+
+func (u *UENIBClient) SubscribeEvents(gNbIDs []string, eventCategories []EventCategory, cb EventCallback) error {
+	return u.reader.SubscribeEvents(gNbIDs, eventCategories, cb)
+}
+
 func NewRNIBClient(ns string) *RNIBClient {
+	rnibreader.Init("rnib", 1)
+	rnibwriter.InitWriter("rnib", 1)
 	return &RNIBClient{
-		db: sdl.NewSdlInstance(ns, sdl.NewDatabase()),
+		reader: nil,
+		writer: nil,
 	}
 }
 
-func (r *RNIBClient) GetgNBList() (values map[string]interface{}, err error) {
-	keys, err := r.db.GetAll()
-	if err == nil {
-		values = make(map[string]interface{})
-		for _, key := range keys {
-			v, err := r.db.Get([]string{key})
-			if err == nil {
-				values[key] = v[key]
-			}
-		}
-	}
-	return
+func (r *RNIBClient) GetNodeb(invName string) (*RNIBNodebInfo, RNIBIRNibError) {
+	return rnibreader.GetRNibReader().GetNodeb(invName)
 }
 
-func (r *RNIBClient) GetNRCellList(key string) (value map[string]interface{}, err error) {
-	return r.db.Get([]string{key})
+func (r *RNIBClient) GetNodebByGlobalNbId(t RNIBNodeType, gid *RNIBGlobalNbId) (*RNIBNodebInfo, RNIBIRNibError) {
+	return rnibreader.GetRNibReader().GetNodebByGlobalNbId(t, gid)
 }
 
-func (r *RNIBClient) GetUE(key1, key2 string) (value map[string]interface{}, err error) {
-	return r.db.Get([]string{key1 + key2})
+func (r *RNIBClient) GetCellList(invName string) (*RNIBCells, RNIBIRNibError) {
+	return rnibreader.GetRNibReader().GetCellList(invName)
 }
 
-func (r *RNIBClient) Store(key string, value interface{}) (err error) {
-	return r.db.Set(key, value)
+func (r *RNIBClient) GetListGnbIds() (*[]*RNIBNbIdentity, RNIBIRNibError) {
+	return rnibreader.GetRNibReader().GetListGnbIds()
 }
 
-func (r *RNIBClient) Clear() {
-	r.db.RemoveAll()
+func (r *RNIBClient) GetListEnbIds() (*[]*RNIBNbIdentity, RNIBIRNibError) {
+	return rnibreader.GetRNibReader().GetListEnbIds()
+}
+
+func (r *RNIBClient) GetCountGnbList() (int, RNIBIRNibError) {
+	return rnibreader.GetRNibReader().GetCountGnbList()
+}
+
+func (r *RNIBClient) GetCell(invName string, pci uint32) (*RNIBCell, RNIBIRNibError) {
+	return rnibreader.GetRNibReader().GetCell(invName, pci)
+}
+
+func (r *RNIBClient) GetCellById(cellType RNIBCellType, cellId string) (*RNIBCell, RNIBIRNibError) {
+	return rnibreader.GetRNibReader().GetCellById(cellType, cellId)
+}
+
+func (r *RNIBClient) SaveNodeb(nbIdentity *RNIBNbIdentity, entity *RNIBNodebInfo) RNIBIRNibError {
+	return rnibwriter.GetRNibWriter().SaveNodeb(nbIdentity, entity)
 }

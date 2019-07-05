@@ -1,7 +1,17 @@
 gerrit.o-ran-sc.org/r/com/golog.git v0.0.0-20190604083303-aaffc8ebe3f1 h1:WAB8G/FFaUjRkpLuUhIo0EfbeBOY7xjkcFAFkpe3Xns=
 gerrit.o-ran-sc.org/r/com/golog.git v0.0.0-20190604083303-aaffc8ebe3f1/go.mod h1:b8YB31U8/4iRpABioeSzGi/YMzOQ/Zq7hrJmmXKqlJk=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.8 h1:KaSOJmMDsb3IW+YGHLrr5X36zRjcaclexPG9AiLBoRY=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.8/go.mod h1:XZBjA22t5rvzU4SrSGfa9TpSfPOgxhA1I3oJwWFdEM4=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.8 h1:25mglk3nUhSkVYnpxJH2SF9SccY2ecLio/OGBsJLNjk=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.8/go.mod h1:GXiXLz4ORBeIr0FLIbzENRykgh3Po5uPkX2jICxnRF0=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.8 h1:nvJjn4VyRGuyp5irasfFSPKW4zNDTh12sfky53UaqL4=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.8/go.mod h1:wqyKCJkXzU/UqeuRBUv3QrMHYVI544wdoMav3aeJXdE=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.1.1 h1:D2fU0/YXdqSNYsmptSBbkDfG76uBFKjnhQiq5cD4WT4=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.1.1/go.mod h1:2Y8gw2jqj9urI8VFqFQn7BX0J3A852+YrXVV9V8gOt4=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.2.0 h1:7edCLIQtk9xCwxTtLRUlXr8wQ6nmr/Mo4ZoqjF3m0NE=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.2.0/go.mod h1:2Y8gw2jqj9urI8VFqFQn7BX0J3A852+YrXVV9V8gOt4=
+gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.0.1 h1:XTb9hvfgnULlWjPeuIuD5vM5zZQqsau4GpYG2ceVYnw=
+gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.0.1/go.mod h1:vI0LM0KDGTseR28jXafdHud9zGZZauj5ETwUCKBC+3A=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
@@ -56,6 +66,8 @@ github.com/onsi/gomega v1.5.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1Cpa
 github.com/pelletier/go-toml v1.2.0 h1:T5zMGML61Wp+FlcbWjRDT7yAxhJNAiPPLOFECq181zc=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
