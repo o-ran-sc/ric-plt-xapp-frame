@@ -32,7 +32,7 @@ import (
 type Consumer struct {
 }
 
-func (m Consumer) Consume(mtype, sid, len int, payload []byte) (err error) {
+func (m Consumer) Consume(mtype, sid int, payload []byte, meid *RMRMeid) (err error) {
 	Sdl.Store("myKey", payload)
 	return nil
 }
@@ -100,7 +100,7 @@ func TestInjectQueryFailures(t *testing.T) {
 
 func TestMessagesReceivedSuccessfully(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		Rmr.Send(10004, 1111, 100, []byte{1, 2, 3, 4, 5, 6})
+		Rmr.Send(10004, 1111, []byte{1, 2, 3, 4, 5, 6}, &RMRMeid{PlmnID: "1234", EnbID: "7788"})
 	}
 
 	// Allow time to process the messages
@@ -132,16 +132,6 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 	}
 }
 
-func TestGetgNBList(t *testing.T) {
-	Rnib.Store("Kiikale", "Hello")
-	Rnib.Store("mykey", "myval")
-
-	v, _ := Rnib.GetgNBList()
-	if v["Kiikale"] != "Hello" || v["mykey"] != "myval" {
-		t.Errorf("Error: GetgNBList failed!")
-	}
-}
-
 func TestSubscribeChannels(t *testing.T) {
 	var NotificationCb = func(ch string, events ...string) {
 		if ch != "channel1" {
@@ -166,7 +156,7 @@ func TestGetRicMessageSuccess(t *testing.T) {
 	}
 
 	name := Rmr.GetRicMessageName(12010)
-	if name !=  "RIC_SUB_REQ" {
+	if name != "RIC_SUB_REQ" {
 		t.Errorf("Error: GetRicMessageName failed: name=%s", name)
 	}
 }
@@ -178,14 +168,13 @@ func TestGetRicMessageFails(t *testing.T) {
 	}
 
 	name := Rmr.GetRicMessageName(123456)
-	if name !=  "" {
+	if name != "" {
 		t.Errorf("Error: GetRicMessageName returned invalid value: name=%s", name)
 	}
 }
 
 func TestTeardown(t *testing.T) {
 	Sdl.Clear()
-	Rnib.Clear()
 }
 
 // Helper functions

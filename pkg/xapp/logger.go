@@ -21,6 +21,7 @@ package xapp
 
 import (
 	mdclog "gerrit.o-ran-sc.org/r/com/golog"
+	"time"
 )
 
 type Log struct {
@@ -43,17 +44,21 @@ func (l *Log) SetMdc(key string, value string) {
 }
 
 func (l *Log) Error(pattern string, args ...interface{}) {
+	l.SetMdc("time", time.Now().Format("2019-01-02 15:04:05"))
 	l.logger.Error(pattern, args...)
 }
 
 func (l *Log) Warn(pattern string, args ...interface{}) {
+	l.SetMdc("time", time.Now().Format("2019-01-02 15:04:05"))
 	l.logger.Warning(pattern, args...)
 }
 
 func (l *Log) Info(pattern string, args ...interface{}) {
+	l.SetMdc("time", time.Now().Format("2019-01-02 15:04:05"))
 	l.logger.Info(pattern, args...)
 }
 
 func (l *Log) Debug(pattern string, args ...interface{}) {
+	l.SetMdc("time", time.Now().Format("2019-01-02 15:04:05"))
 	l.logger.Debug(pattern, args...)
 }

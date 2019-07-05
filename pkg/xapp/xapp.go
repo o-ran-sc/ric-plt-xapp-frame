@@ -31,6 +31,7 @@ var (
 	// XApp is an application instance
 	Rmr      *RMRClient
 	Sdl      *SDLClient
+	UeNib    *UENIBClient
 	Rnib     *RNIBClient
 	Resource *Router
 	Metric   *Metrics
@@ -55,6 +56,7 @@ func init() {
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
 	Rmr = NewRMRClient()
+	UeNib = NewUENIBClient()
 
 	if viper.IsSet("db.namespaces") {
 		namespaces := viper.GetStringSlice("db.namespaces")

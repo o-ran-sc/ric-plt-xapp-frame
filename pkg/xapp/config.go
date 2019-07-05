@@ -80,3 +80,7 @@ func (*Configurator) GetString(key string) string {
 func (*Configurator) GetInt(key string) int {
 	return viper.GetInt(key)
 }
+
+func (*Configurator) GetBool(key string) bool {
+	return viper.GetBool(key)
+}
