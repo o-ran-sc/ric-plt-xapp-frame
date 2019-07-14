@@ -144,11 +144,15 @@ func (m *RMRClient) Allocate() *C.rmr_mbuf_t {
 }
 
 func (m *RMRClient) Send(mtype int, sid int, payload []byte, meid *RMRMeid) bool {
+	return m.SendMsg(mtype, sid, meid, payload, len(payload))
+}
+
+func (m *RMRClient) SendMsg(mtype int, sid int, meid *RMRMeid, payload []byte, payloadLen int) bool {
 	buf := m.Allocate()
 
 	buf.mtype = C.int(mtype)
 	buf.sub_id = C.int(sid)
-	buf.len = C.int(len(payload))
+	buf.len = C.int(payloadLen)
 	datap := C.CBytes(payload)
 	defer C.free(datap)
 
