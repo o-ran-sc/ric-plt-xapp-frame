@@ -51,6 +51,17 @@ var RMRCounterOpts = []CounterOpts{
 	{Name: "ReceiveError", Help: "The total number of RMR receive errors"},
 }
 
+type RMRParams struct {
+	Mtype 		int
+	Payload 	[]byte
+	PayloadLen 	int
+	Meid 		*RMRMeid
+	Xid  		string
+	SubId  		int
+	Src  		string
+	Mbuf 		*C.rmr_mbuf_t
+}
+
 func NewRMRClient() *RMRClient {
 	p := C.CString(viper.GetString("rmr.protPort"))
 	m := C.int(viper.GetInt("rmr.maxSize"))
@@ -116,18 +127,34 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 		return
 	}
 
-	meid := &RMRMeid{}
+	params := &RMRParams{}
+	params.Mbuf = rxBuffer
+	params.Mtype = int(rxBuffer.mtype)
+	params.SubId = int(rxBuffer.sub_id)
+	params.Meid = &RMRMeid{}
+
 	meidBuf := make([]byte, int(C.RMR_MAX_MEID))
 	if meidCstr := C.rmr_get_meid(rxBuffer, (*C.uchar)(unsafe.Pointer(&meidBuf[0]))); meidCstr != nil {
-		meid.PlmnID = strings.TrimRight(string(meidBuf[0:16]), "\000")
-		meid.EnbID = strings.TrimRight(string(meidBuf[16:32]), "\000")
+		params.Meid.PlmnID = strings.TrimRight(string(meidBuf[0:16]), "\000")
+		params.Meid.EnbID = strings.TrimRight(string(meidBuf[16:32]), "\000")
+	}
+
+	xidBuf := make([]byte, int(C.RMR_MAX_XID))
+	if xidCstr := C.rmr_get_xact(rxBuffer, (*C.uchar)(unsafe.Pointer(&xidBuf[0]))); xidCstr != nil {
+		params.Xid = strings.TrimRight(string(xidBuf[0:32]), "\000")
+	}
+
+	srcBuf := make([]byte, int(C.RMR_MAX_SRC))
+	if srcStr := C.rmr_get_src(rxBuffer, (*C.uchar)(unsafe.Pointer(&srcBuf[0]))); srcStr != nil {
+		params.Src = strings.TrimRight(string(srcBuf[0:64]), "\000")
 	}
 
 	for _, c := range m.consumers {
 		cptr := unsafe.Pointer(rxBuffer.payload)
-		payload := C.GoBytes(cptr, C.int(rxBuffer.len))
+		params.Payload = C.GoBytes(cptr, C.int(rxBuffer.len))
+		params.PayloadLen = int(rxBuffer.len)
 
-		err := c.Consume(int(rxBuffer.mtype), int(rxBuffer.sub_id), payload, meid)
+		err := c.Consume(params)
 		if err != nil {
 			Logger.Warn("rmrClient: Consumer returned error: %v", err)
 		}
@@ -143,34 +170,54 @@ func (m *RMRClient) Allocate() *C.rmr_mbuf_t {
 	return buf
 }
 
-func (m *RMRClient) Send(mtype int, sid int, payload []byte, meid *RMRMeid) bool {
-	return m.SendMsg(mtype, sid, meid, payload, len(payload))
+func (m *RMRClient) SendMsg(params *RMRParams) bool {
+	return m.Send(params, false)
 }
 
-func (m *RMRClient) SendMsg(mtype int, sid int, meid *RMRMeid, payload []byte, payloadLen int) bool {
-	buf := m.Allocate()
+func (m *RMRClient) SendRts(params *RMRParams) bool {
+	return m.Send(params, true)
+}
 
-	buf.mtype = C.int(mtype)
-	buf.sub_id = C.int(sid)
-	buf.len = C.int(payloadLen)
-	datap := C.CBytes(payload)
+func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
+	buf := params.Mbuf
+	if buf == nil {
+		buf = m.Allocate()
+	}
+
+	buf.mtype = C.int(params.Mtype)
+	buf.sub_id = C.int(params.SubId)
+	buf.len = C.int(len(params.Payload))
+	datap := C.CBytes(params.Payload)
 	defer C.free(datap)
 
-	if meid != nil {
-		b := make([]byte, int(C.RMR_MAX_MEID))
-		copy(b, []byte(meid.PlmnID))
-		copy(b[16:], []byte(meid.EnbID))
-		C.rmr_bytes2meid(buf, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
+	if params != nil {
+		if params.Meid != nil {
+			b := make([]byte, int(C.RMR_MAX_MEID))
+			copy(b, []byte(params.Meid.PlmnID))
+			copy(b[16:], []byte(params.Meid.EnbID))
+			C.rmr_bytes2meid(buf, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
+		}
+		xidLen := len(params.Xid)
+		if xidLen > 0 && xidLen <= C.RMR_MAX_XID {
+			b := make([]byte, int(C.RMR_MAX_MEID))
+			copy(b, []byte(params.Xid))
+			C.rmr_bytes2xact(buf, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
+		}
 	}
 	C.write_bytes_array(buf.payload, datap, buf.len)
 
-	return m.SendBuf(buf)
+	return m.SendBuf(buf, isRts)
 }
 
-func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t) bool {
+func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool) bool {
 	for i := 0; i < 10; i++ {
 		txBuffer.state = 0
-		txBuffer := C.rmr_send_msg(m.context, txBuffer)
+		if isRts {
+			txBuffer = C.rmr_rts_msg(m.context, txBuffer)
+		} else {
+			txBuffer = C.rmr_send_msg(m.context, txBuffer)
+		}
+
 		if txBuffer == nil {
 			break
 		} else if txBuffer.state != C.RMR_OK {

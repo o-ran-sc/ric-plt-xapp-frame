@@ -81,6 +81,10 @@ func (*Configurator) GetInt(key string) int {
 	return viper.GetInt(key)
 }
 
+func (*Configurator) GetUint32(key string) uint32 {
+	return viper.GetUint32(key)
+}
+
 func (*Configurator) GetBool(key string) bool {
 	return viper.GetBool(key)
 }

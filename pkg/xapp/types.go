@@ -43,5 +43,5 @@ type RMRMeid struct {
 }
 
 type MessageConsumer interface {
-	Consume(mtype int, sid int, payload []byte, meid *RMRMeid) error
+	Consume(params *RMRParams) error
 }

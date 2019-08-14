@@ -159,6 +159,10 @@ func (s *SDLClient) MStoreAndPublish(channelsAndEvents []string, pairs ...interf
 	return s.db.SetAndPublish(channelsAndEvents, pairs...)
 }
 
+func (s *SDLClient) Delete(keys []string) (err error) {
+	return s.db.Remove(keys)
+}
+
 func (s *SDLClient) Clear() {
 	s.db.RemoveAll()
 }

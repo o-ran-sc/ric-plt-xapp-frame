@@ -32,8 +32,9 @@ import (
 type Consumer struct {
 }
 
-func (m Consumer) Consume(mtype, sid int, payload []byte, meid *RMRMeid) (err error) {
-	Sdl.Store("myKey", payload)
+func (m Consumer) Consume(params *RMRParams) (err error) {
+	//Logger.Info("Message received - type=%d subId=%d meid=%v xid=%s src=%s", params.Mtype, params.SubId, params.Meid, params.Xid, params.Src)
+	Sdl.Store("myKey", params.Payload)
 	return nil
 }
 
@@ -100,7 +101,13 @@ func TestInjectQueryFailures(t *testing.T) {
 
 func TestMessagesReceivedSuccessfully(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		Rmr.Send(10004, 1111, []byte{1, 2, 3, 4, 5, 6}, &RMRMeid{PlmnID: "1234", EnbID: "7788"})
+		params := &RMRParams{}
+		params.Mtype = 10004
+		params.SubId = -1
+		params.Payload = []byte{1, 2, 3, 4, 5, 6}
+		params.Meid = &RMRMeid{PlmnID: "1234", EnbID: "7788"}
+		params.Xid = "TestXID"
+		Rmr.SendMsg(params)
 	}
 
 	// Allow time to process the messages
