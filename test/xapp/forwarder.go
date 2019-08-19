@@ -8,7 +8,8 @@ type Forwarder struct {
 }
 
 func (m Forwarder) Consume(params *xapp.RMRParams) (err error) {
-	xapp.Logger.Debug("Message received - type=%d subId=%d meid=%v xid=%v", params.Mtype, params.SubId, params.Meid, params.Xid)
+	xapp.Logger.Debug("Message received - type=%d txid=%s subId=%d meid=%v", 
+			params.Mtype, params.Xid, params.SubId, params.Meid)
 
 	// Store data and reply with the same message payload
 	if xapp.Config.GetInt("test.store") != 0 {
@@ -27,7 +28,7 @@ func (m Forwarder) Consume(params *xapp.RMRParams) (err error) {
 		params.SubId = sid
 	}
 
-	if ok := xapp.Rmr.SendMsg(params); !ok {
+	if ok := xapp.Rmr.SendRts(params); !ok {
 		xapp.Logger.Info("Rmr.Send failed ...")
 	}
 	return

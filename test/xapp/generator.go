@@ -18,7 +18,7 @@ type Generator struct {
 }
 
 func (m Generator) Consume(params *xapp.RMRParams) (err error) {
-	xapp.Logger.Debug("message received - type=%d subId=%d meid=%v", params.Mtype, params.SubId, params.Meid)
+	xapp.Logger.Debug("message received - type=%d txid=%s ubId=%d meid=%v", params.Mtype, params.Xid, params.SubId, params.Meid)
 
 	mux.Lock()
 	rx++
@@ -59,7 +59,7 @@ func runTests(mtype, subId, amount, msize, ack int) {
 		params.SubId = subId
 		params.Payload = s
 		params.Meid = &xapp.RMRMeid{PlmnID: "123456", EnbID: "7788"}
-		params.Xid = "TestXID"
+		params.Xid = "TestXID1234"
 		if ok := xapp.Rmr.SendMsg(params); ok {
 			tx++
 			if ack != 0 {
