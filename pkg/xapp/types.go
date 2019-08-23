@@ -38,8 +38,9 @@ type RMRClient struct {
 }
 
 type RMRMeid struct {
-	PlmnID string
-	EnbID  string
+	PlmnID  string
+	EnbID   string
+	RanName string
 }
 
 type MessageConsumer interface {

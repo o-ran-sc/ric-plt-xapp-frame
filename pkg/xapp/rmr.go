@@ -52,14 +52,14 @@ var RMRCounterOpts = []CounterOpts{
 }
 
 type RMRParams struct {
-	Mtype 		int
-	Payload 	[]byte
-	PayloadLen 	int
-	Meid 		*RMRMeid
-	Xid  		string
-	SubId  		int
-	Src  		string
-	Mbuf 		*C.rmr_mbuf_t
+	Mtype      int
+	Payload    []byte
+	PayloadLen int
+	Meid       *RMRMeid
+	Xid        string
+	SubId      int
+	Src        string
+	Mbuf       *C.rmr_mbuf_t
 }
 
 func NewRMRClient() *RMRClient {
@@ -135,8 +135,7 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 
 	meidBuf := make([]byte, int(C.RMR_MAX_MEID))
 	if meidCstr := C.rmr_get_meid(rxBuffer, (*C.uchar)(unsafe.Pointer(&meidBuf[0]))); meidCstr != nil {
-		params.Meid.PlmnID = strings.TrimRight(string(meidBuf[0:16]), "\000")
-		params.Meid.EnbID = strings.TrimRight(string(meidBuf[16:32]), "\000")
+		params.Meid.RanName = strings.TrimRight(string(meidBuf), "\000")
 	}
 
 	xidBuf := make([]byte, int(C.RMR_MAX_XID))
@@ -193,8 +192,7 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 	if params != nil {
 		if params.Meid != nil {
 			b := make([]byte, int(C.RMR_MAX_MEID))
-			copy(b, []byte(params.Meid.PlmnID))
-			copy(b[16:], []byte(params.Meid.EnbID))
+			copy(b, []byte(params.Meid.RanName))
 			C.rmr_bytes2meid(buf, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
 		}
 		xidLen := len(params.Xid)

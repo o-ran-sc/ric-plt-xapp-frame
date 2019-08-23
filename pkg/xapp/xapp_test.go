@@ -33,7 +33,7 @@ type Consumer struct {
 }
 
 func (m Consumer) Consume(params *RMRParams) (err error) {
-	//Logger.Info("Message received - type=%d subId=%d meid=%v xid=%s src=%s", params.Mtype, params.SubId, params.Meid, params.Xid, params.Src)
+	//Logger.Info("Message received - type=%d subId=%d meid=%v xid=%s src=%s", params.Mtype, params.SubId, params.Meid.RanName, params.Xid, params.Src)
 	Sdl.Store("myKey", params.Payload)
 	return nil
 }
@@ -105,7 +105,7 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 		params.Mtype = 10004
 		params.SubId = -1
 		params.Payload = []byte{1, 2, 3, 4, 5, 6}
-		params.Meid = &RMRMeid{PlmnID: "1234", EnbID: "7788"}
+		params.Meid = &RMRMeid{PlmnID: "1234", EnbID: "7788", RanName: "RanName-1234"}
 		params.Xid = "TestXID"
 		Rmr.SendMsg(params)
 	}
