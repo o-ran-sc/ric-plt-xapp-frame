@@ -21,7 +21,7 @@ replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdl
 
 replace gerrit.o-ran-sc.org/r/com/golog => gerrit.o-ran-sc.org/r/com/golog.git v0.0.0-20190604083303-aaffc8ebe3f1
 
-replace gerrit.o-ran-sc.org/r/ric-plt/ue-nib => gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.0.1
+replace gerrit.o-ran-sc.org/r/ric-plt/ue-nib => gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.2.0
 
 replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.8
 
