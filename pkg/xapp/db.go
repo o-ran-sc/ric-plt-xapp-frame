@@ -209,8 +209,8 @@ func (u *UENIBClient) SubscribeEvents(gNbIDs []string, eventCategories []EventCa
 }
 
 func NewRNIBClient(ns string) *RNIBClient {
-	rnibreader.Init("rnib", 1)
-	rnibwriter.InitWriter("rnib", 1)
+	rnibreader.Init("e2Manager", 1)
+	rnibwriter.InitWriter("e2Manager", 1)
 	return &RNIBClient{
 		reader: nil,
 		writer: nil,
