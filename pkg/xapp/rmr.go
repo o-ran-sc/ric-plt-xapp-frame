@@ -187,7 +187,7 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 	buf.sub_id = C.int(params.SubId)
 	buf.len = C.int(len(params.Payload))
 	if params.PayloadLen != 0 {
-		 buf.len = params.PayloadLen
+		 buf.len = C.int(params.PayloadLen)
 	}
 	datap := C.CBytes(params.Payload)
 	defer C.free(datap)

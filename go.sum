@@ -13,6 +13,8 @@ gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.2.0 h1:7edCLIQtk9xCwxTtLRUlXr8wQ6nmr/
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.2.0/go.mod h1:2Y8gw2jqj9urI8VFqFQn7BX0J3A852+YrXVV9V8gOt4=
 gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.0.1 h1:XTb9hvfgnULlWjPeuIuD5vM5zZQqsau4GpYG2ceVYnw=
 gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.0.1/go.mod h1:vI0LM0KDGTseR28jXafdHud9zGZZauj5ETwUCKBC+3A=
+gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.2.0 h1:cqp1r1Pvq+rIvf+s8Q4CEgGHheJprg+gbYHw/J7Z/0U=
+gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.2.0/go.mod h1:vI0LM0KDGTseR28jXafdHud9zGZZauj5ETwUCKBC+3A=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
