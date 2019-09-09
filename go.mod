@@ -4,9 +4,9 @@ go 1.12
 
 require (
 	gerrit.o-ran-sc.org/r/com/golog v0.0.1
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.8
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.8
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.8
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.21
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.21
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.21
 	gerrit.o-ran-sc.org/r/ric-plt/sdlgo v0.2.2
 	gerrit.o-ran-sc.org/r/ric-plt/ue-nib v0.0.1
 	github.com/fsnotify/fsnotify v1.4.7
@@ -23,8 +23,8 @@ replace gerrit.o-ran-sc.org/r/com/golog => gerrit.o-ran-sc.org/r/com/golog.git v
 
 replace gerrit.o-ran-sc.org/r/ric-plt/ue-nib => gerrit.o-ran-sc.org/r/ric-plt/ue-nib.git v0.2.0
 
-replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.8
+replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.21
 
-replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.8
+replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.21
 
-replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.8
+replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.21

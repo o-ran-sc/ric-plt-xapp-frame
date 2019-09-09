@@ -18,7 +18,6 @@
 package writer
 
 import (
-	"errors"
 	"fmt"
 	rnibcommon "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	rnibentities "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -37,7 +36,7 @@ type rNibWriterInstance struct {
 RNibWriter interface allows saving data to the redis BD
 */
 type RNibWriter interface {
-	SaveNodeb(nbIdentity *rnibentities.NbIdentity, nb *rnibentities.NodebInfo) rnibcommon.IRNibError
+	SaveNodeb(nbIdentity *rnibentities.NbIdentity, nb *rnibentities.NodebInfo) error
 }
 
 /*
@@ -71,12 +70,12 @@ func GetRNibWriter() RNibWriter {
 /*
 SaveNodeb saves nodeB entity data in the redis DB according to the specified data model
 */
-func (w *rNibWriterInstance) SaveNodeb(nbIdentity *rnibentities.NbIdentity, entity *rnibentities.NodebInfo) rnibcommon.IRNibError {
+func (w *rNibWriterInstance) SaveNodeb(nbIdentity *rnibentities.NbIdentity, entity *rnibentities.NodebInfo) error {
 
 	isNotEmptyIdentity := isNotEmpty(nbIdentity)
 
 	if isNotEmptyIdentity && entity.GetNodeType() == rnibentities.Node_UNKNOWN {
-		return rnibcommon.NewValidationError(errors.New(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity)))
+		return rnibcommon.NewValidationError(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity))
 	}
 	defer writerPool.Put(w)
 	data, err := proto.Marshal(entity)
@@ -134,7 +133,7 @@ func CloseWriter() {
 	writerPool.Close()
 }
 
-func appendEnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.ServedCellInfo, pairs []interface{}) ([]interface{}, rnibcommon.IRNibError) {
+func appendEnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.ServedCellInfo, pairs []interface{}) ([]interface{}, error) {
 	for _, cell := range cells {
 		cellEntity := rnibentities.Cell{Type: rnibentities.Cell_LTE_CELL, Cell: &rnibentities.Cell_ServedCellInfo{ServedCellInfo: cell}}
 		cellData, err := proto.Marshal(&cellEntity)
@@ -155,7 +154,7 @@ func appendEnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.S
 	return pairs, nil
 }
 
-func appendGnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.ServedNRCell, pairs []interface{}) ([]interface{}, rnibcommon.IRNibError) {
+func appendGnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.ServedNRCell, pairs []interface{}) ([]interface{}, error) {
 	for _, cell := range cells {
 		cellEntity := rnibentities.Cell{Type: rnibentities.Cell_NR_CELL, Cell: &rnibentities.Cell_ServedNrCell{ServedNrCell: cell}}
 		cellData, err := proto.Marshal(&cellEntity)

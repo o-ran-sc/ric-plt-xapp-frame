@@ -20,7 +20,6 @@
 package xapp
 
 import (
-	rnibcommon "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	rnibentities "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	rnibreader "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	sdl "gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
@@ -64,7 +63,7 @@ type UENIBClient struct {
 type RNIBNodeType = rnibentities.Node_Type
 type RNIBGlobalNbId = rnibentities.GlobalNbId
 type RNIBNodebInfo = rnibentities.NodebInfo
-type RNIBIRNibError = rnibcommon.IRNibError
+type RNIBIRNibError = error
 type RNIBCells = rnibentities.Cells
 type RNIBNbIdentity = rnibentities.NbIdentity
 type RNIBCellType = rnibentities.Cell_Type
@@ -209,8 +208,8 @@ func (u *UENIBClient) SubscribeEvents(gNbIDs []string, eventCategories []EventCa
 }
 
 func NewRNIBClient(ns string) *RNIBClient {
-	rnibreader.Init("e2Manager", 1)
-	rnibwriter.InitWriter("e2Manager", 1)
+	rnibreader.Init("rnib", 1)
+	rnibwriter.InitWriter("rnib", 1)
 	return &RNIBClient{
 		reader: nil,
 		writer: nil,
@@ -229,11 +228,11 @@ func (r *RNIBClient) GetCellList(invName string) (*RNIBCells, RNIBIRNibError) {
 	return rnibreader.GetRNibReader().GetCellList(invName)
 }
 
-func (r *RNIBClient) GetListGnbIds() (*[]*RNIBNbIdentity, RNIBIRNibError) {
+func (r *RNIBClient) GetListGnbIds() ([]*RNIBNbIdentity, RNIBIRNibError) {
 	return rnibreader.GetRNibReader().GetListGnbIds()
 }
 
-func (r *RNIBClient) GetListEnbIds() (*[]*RNIBNbIdentity, RNIBIRNibError) {
+func (r *RNIBClient) GetListEnbIds() ([]*RNIBNbIdentity, RNIBIRNibError) {
 	return rnibreader.GetRNibReader().GetListEnbIds()
 }
 
