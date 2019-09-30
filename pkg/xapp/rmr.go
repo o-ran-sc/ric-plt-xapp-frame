@@ -165,8 +165,15 @@ func (m *RMRClient) Allocate() *C.rmr_mbuf_t {
 	if buf == nil {
 		Logger.Error("rmrClient: Allocating message buffer failed!")
 	}
-
 	return buf
+}
+
+func (m *RMRClient) Free(mbuf *C.rmr_mbuf_t) {
+	if mbuf == nil {
+		Logger.Error("rmrClient: Can't free mbuffer, given nil pointer")
+		return
+	}
+	C.rmr_free_msg(mbuf)
 }
 
 func (m *RMRClient) SendMsg(params *RMRParams) bool {
@@ -211,27 +218,30 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 }
 
 func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool) bool {
+	defer C.rmr_free_msg(txBuffer)
+	var currBuffer *C.rmr_mbuf_t
+
 	for i := 0; i < 10; i++ {
 		txBuffer.state = 0
 		if isRts {
-			txBuffer = C.rmr_rts_msg(m.context, txBuffer)
+			currBuffer = C.rmr_rts_msg(m.context, txBuffer)
 		} else {
-			txBuffer = C.rmr_send_msg(m.context, txBuffer)
+			currBuffer = C.rmr_send_msg(m.context, txBuffer)
 		}
 
-		if txBuffer == nil {
+		if currBuffer == nil {
 			break
-		} else if txBuffer.state != C.RMR_OK {
-			if txBuffer.state != C.RMR_ERR_RETRY {
+		} else if currBuffer.state != C.RMR_OK {
+			if currBuffer.state != C.RMR_ERR_RETRY {
 				time.Sleep(100 * time.Microsecond)
 				m.UpdateStatCounter("TransmitError")
 			}
-			for j := 0; j < 100 && txBuffer.state == C.RMR_ERR_RETRY; j++ {
-				txBuffer = C.rmr_send_msg(m.context, txBuffer)
+			for j := 0; j < 100 && currBuffer.state == C.RMR_ERR_RETRY; j++ {
+				currBuffer = C.rmr_send_msg(m.context, txBuffer)
 			}
 		}
 
-		if txBuffer.state == C.RMR_OK {
+		if currBuffer.state == C.RMR_OK {
 			m.UpdateStatCounter("Transmitted")
 			return true
 		}
