@@ -88,3 +88,15 @@ func (*Configurator) GetUint32(key string) uint32 {
 func (*Configurator) GetBool(key string) bool {
 	return viper.GetBool(key)
 }
+
+func (*Configurator) Get(key string) interface{} {
+	return viper.Get(key)
+}
+
+func (*Configurator) GetStringSlice(key string) []string {
+	return viper.GetStringSlice(key)
+}
+
+func (*Configurator) GetStringMap(key string) map[string]interface{} {
+	return viper.GetStringMap(key)
+}
