@@ -170,7 +170,6 @@ func (m *RMRClient) Allocate() *C.rmr_mbuf_t {
 
 func (m *RMRClient) Free(mbuf *C.rmr_mbuf_t) {
 	if mbuf == nil {
-		Logger.Error("rmrClient: Can't free mbuffer, given nil pointer")
 		return
 	}
 	C.rmr_free_msg(mbuf)
@@ -185,10 +184,10 @@ func (m *RMRClient) SendRts(params *RMRParams) bool {
 }
 
 func (m *RMRClient) SendBuffer(params *RMRParams, isRts bool) bool {
-	defer m.Free(params.Mbuf)
 	for i := 0; i < 10; i++ {
 		errCode := m.Send(params, isRts)
 		if errCode == C.RMR_OK {
+			m.Free(params.Mbuf)
 			m.UpdateStatCounter("Transmitted")
 			return true
 		}
@@ -198,6 +197,8 @@ func (m *RMRClient) SendBuffer(params *RMRParams, isRts bool) bool {
 		}
 
 	}
+
+	m.Free(params.Mbuf)
 	m.UpdateStatCounter("TransmitError")
 	return false
 }
