@@ -13,46 +13,29 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-ROOT_DIR:=.
-BUILD_DIR:=$(ROOT_DIR)/build
+.DEFAULT: go-build
 
-COVEROUT := $(BUILD_DIR)/cover.out
-COVERHTML := $(BUILD_DIR)/cover.html
+default: go-build
 
-GOOS=$(shell go env GOOS)
-GOCMD=go
-GOBUILD=$(GOCMD) build -a -installsuffix cgo
-GOTEST=$(GOCMD) test -v -coverprofile $(COVEROUT)
+build: go-build
 
-GOFILES := $(shell find $(ROOT_DIR) -name '*.go' -not -name '*_test.go') go.mod go.sum
-GOFILES_NO_VENDOR := $(shell find $(ROOT_DIR) -path ./vendor -prune -o -name "*.go" -not -name '*_test.go' -print)
+test: go-test
 
-APP:=$(BUILD_DIR)/xapp-sim
-APPTST:=$(APP)_test
+#------------------------------------------------------------------------------
+#
+# Build and test targets
+#
+#-------------------------------------------------------------------- ----------
+ROOT_DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+CACHE_DIR:=$(abspath $(ROOT_DIR)/cache)
 
-.PHONY: FORCE
- 
-.DEFAULT: build
 
-default: build
+XAPP_NAME:=xapp
+XAPP_ROOT:=test
+XAPP_TESTENV:="RMR_SEED_RT=config/uta_rtg.rt CFG_FILE=$(ROOT_DIR)config/config-file.yaml"
+include build/make.go.mk 
 
-$(APP): $(GOFILES)
-	GO111MODULE=on GO_ENABLED=0 GOOS=linux $(GOBUILD) -o $@ ./test/xapp
-
-$(APPTST): $(GOFILES)
-	GO111MODULE=on GO_ENABLED=0 GOOS=linux $(GOTEST) -c -o $@ ./pkg/xapp 
-	RMR_SEED_RT=config/uta_rtg.rt $@ -f config/config-file.yaml -test.coverprofile $(COVEROUT)
-	go tool cover -html=$(COVEROUT) -o $(COVERHTML)
-
-build: $(APP)
-
-test: $(APPTST)
-
-fmt: $(GOFILES_NO_VENDOR)
-	gofmt -w -s $^
-	@(RESULT="$$(gofmt -l $^)"; test -z "$${RESULT}" || (echo -e "gofmt failed:\n$${RESULT}" && false) )
-
-clean:
-	@echo "  >  Cleaning build cache"
-	@-rm -rf $(APP) $(APPTST) 2> /dev/null
-	go clean 2> /dev/null
+XAPP_NAME:=xapp
+XAPP_ROOT:=pkg
+XAPP_TESTENV:="RMR_SEED_RT=config/uta_rtg.rt CFG_FILE=$(ROOT_DIR)config/config-file.yaml"
+include build/make.go.mk 

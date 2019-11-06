@@ -136,6 +136,8 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 	meidBuf := make([]byte, int(C.RMR_MAX_MEID))
 	if meidCstr := C.rmr_get_meid(rxBuffer, (*C.uchar)(unsafe.Pointer(&meidBuf[0]))); meidCstr != nil {
 		params.Meid.RanName = strings.TrimRight(string(meidBuf), "\000")
+		//params.Meid.PlmnID = strings.TrimRight(string(meidBuf[0:16]), "\000")
+		//params.Meid.EnbID = strings.TrimRight(string(meidBuf[16:32]), "\000")
 	}
 
 	xidBuf := make([]byte, int(C.RMR_MAX_XID))
@@ -202,11 +204,13 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 		if params.Meid != nil {
 			b := make([]byte, int(C.RMR_MAX_MEID))
 			copy(b, []byte(params.Meid.RanName))
+			//copy(b, []byte(params.Meid.PlmnID))
+			//copy(b[16:], []byte(params.Meid.EnbID))
 			C.rmr_bytes2meid(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
 		}
 		xidLen := len(params.Xid)
 		if xidLen > 0 && xidLen <= C.RMR_MAX_XID {
-			b := make([]byte, int(C.RMR_MAX_MEID))
+			b := make([]byte, int(C.RMR_MAX_XID))
 			copy(b, []byte(params.Xid))
 			C.rmr_bytes2xact(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
 		}
