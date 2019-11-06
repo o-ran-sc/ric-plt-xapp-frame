@@ -23,9 +23,6 @@ import (
 	rnibentities "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	rnibreader "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	sdl "gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
-	uenibprotobuf "gerrit.o-ran-sc.org/r/ric-plt/ue-nib/uenibprotobuf"
-	uenibreader "gerrit.o-ran-sc.org/r/ric-plt/ue-nib/uenibreader"
-	uenibwriter "gerrit.o-ran-sc.org/r/ric-plt/ue-nib/uenibwriter"
 	rnibwriter "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/rnib"
 	"sync"
 	"time"
@@ -44,19 +41,6 @@ type SDLClient struct {
 	stat  map[string]Counter
 	mux   sync.Mutex
 	ready bool
-}
-
-// Alias
-type EventCategory = uenibreader.EventCategory
-type EventCallback = uenibreader.EventCallback
-type MeasResultNR = uenibprotobuf.MeasResultNR
-type MeasQuantityResults = uenibprotobuf.MeasResultNR_MeasQuantityResults
-type MeasResultServMO = uenibprotobuf.MeasResults_MeasResultServMO
-type MeasResults = uenibprotobuf.MeasResults
-
-type UENIBClient struct {
-	reader *uenibreader.Reader
-	writer *uenibwriter.Writer
 }
 
 // Alias
@@ -178,33 +162,6 @@ func (s *SDLClient) UpdateStatCounter(name string) {
 
 func (c *SDLClient) GetStat() (t SDLStatistics) {
 	return
-}
-
-func NewUENIBClient() *UENIBClient {
-	return &UENIBClient{
-		reader: uenibreader.NewReader(),
-		writer: uenibwriter.NewWriter(),
-	}
-}
-
-func (u *UENIBClient) StoreUeMeasurement(gNbId string, gNbUeX2ApId string, data *uenibprotobuf.MeasResults) error {
-	return u.writer.UpdateUeMeasurement(gNbId, gNbUeX2ApId, data)
-}
-
-func (u *UENIBClient) CreateUeContext(gNbId string, gNbUeX2ApId string) error {
-	return u.writer.UeContextAddComplete(gNbId, gNbUeX2ApId)
-}
-
-func (u *UENIBClient) ReleaseUeContext(gNbId string, gNbUeX2ApId string) error {
-	return u.writer.RemoveUeContext(gNbId, gNbUeX2ApId)
-}
-
-func (u *UENIBClient) ReadUeMeasurement(gNbId string, gNbUeX2ApId string) (*uenibprotobuf.MeasResults, error) {
-	return u.reader.GetUeMeasurement(gNbId, gNbUeX2ApId)
-}
-
-func (u *UENIBClient) SubscribeEvents(gNbIDs []string, eventCategories []EventCategory, cb EventCallback) error {
-	return u.reader.SubscribeEvents(gNbIDs, eventCategories, cb)
 }
 
 func NewRNIBClient(ns string) *RNIBClient {
