@@ -1,0 +1,53 @@
+---
+project: 'ric_plt_xapp_frame'
+project_creation_date: '2019-11-08'
+project_category: ''
+lifecycle_state: 'Incubation'
+project_lead: &oran_ric_plt_xapp_frame_ptl
+    name: 'Thoralf Czichy'
+    email: 'thoralf.czichy@nokia.com'
+    id: 'czichy'
+    company: 'Nokia'
+    timezone: 'America/New_York'
+primary_contact: *oran_ric_plt_xapp_frame_ptl
+issue_tracking:
+    type: 'jira'
+    url: 'https://jira.o-ran-sc.org/projects/'
+    key: 'ric_plt_xapp_frame'
+mailing_list:
+    type: 'groups.io'
+    url: 'technical-discuss@lists.o-ran-sc.org'
+    tag: '[]'
+realtime_discussion:
+    type: 'irc'
+    server: 'freenode.net'
+    channel: '#oran'
+meetings:
+    - type: 'gotomeeting+irc'
+      agenda: 'https://wiki.o-ran-sc.org/display/'
+      url: ''
+      server: 'freenode.net'
+      channel: '#oran'
+      repeats: ''
+      time: ''
+repositories:
+    - ric-plt/xapp-frame
+committers:
+    - <<: *oran_ric_plt_xapp_frame_ptl
+    - name: 'Abukar Mohamed'
+      email: 'abukar.mohamed@nokia.com'
+      company: 'nokia'
+      id: 'Nune'
+      timezone: 'Unknown/Unknown'
+    - name: 'Juha Hyttinen'
+      email: 'juha.hyttinen@nokia.com'
+      company: 'nokia'
+      id: 'juhhytti'
+      timezone: 'Unknown/Unknown'
+tsc:
+    # yamllint disable rule:line-length
+    approval: 'missing'
+    changes:
+        - type: ''
+          name: ''
+          link: ''
