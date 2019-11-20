@@ -37,6 +37,7 @@ void write_bytes_array(unsigned char *dst, void *data, int len) {
 import "C"
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 	"strconv"
 	"strings"
@@ -49,6 +50,26 @@ var RMRCounterOpts = []CounterOpts{
 	{Name: "Received", Help: "The total number of received RMR messages"},
 	{Name: "TransmitError", Help: "The total number of RMR transmission errors"},
 	{Name: "ReceiveError", Help: "The total number of RMR receive errors"},
+}
+
+var RMRErrors = map[int]string{
+	C.RMR_OK:             "state is good",
+	C.RMR_ERR_BADARG:     "argument passed to function was unusable",
+	C.RMR_ERR_NOENDPT:    "send/call could not find an endpoint based on msg type",
+	C.RMR_ERR_EMPTY:      "msg received had no payload; attempt to send an empty message",
+	C.RMR_ERR_NOHDR:      "message didn't contain a valid header",
+	C.RMR_ERR_SENDFAILED: "send failed; errno has nano reason",
+	C.RMR_ERR_CALLFAILED: "unable to send call() message",
+	C.RMR_ERR_NOWHOPEN:   "no wormholes are open",
+	C.RMR_ERR_WHID:       "wormhole id was invalid",
+	C.RMR_ERR_OVERFLOW:   "operation would have busted through a buffer/field size",
+	C.RMR_ERR_RETRY:      "request (send/call/rts) failed, but caller should retry (EAGAIN for wrappers)",
+	C.RMR_ERR_RCVFAILED:  "receive failed (hard error)",
+	C.RMR_ERR_TIMEOUT:    "message processing call timed out",
+	C.RMR_ERR_UNSET:      "the message hasn't been populated with a transport buffer",
+	C.RMR_ERR_TRUNC:      "received message likely truncated",
+	C.RMR_ERR_INITFAILED: "initialization of something (probably message) failed",
+	C.RMR_ERR_NOTSUPP:    "the request is not supported, or RMr was not initialized for the request",
 }
 
 type RMRParams struct {
@@ -112,6 +133,7 @@ func (m *RMRClient) Worker(taskName string, msgSize int) {
 	for {
 		rxBuffer := C.rmr_rcv_msg(m.context, nil)
 		if rxBuffer == nil {
+			m.LogMBufError("RecvMsg failed", rxBuffer)
 			m.UpdateStatCounter("ReceiveError")
 			continue
 		}
@@ -136,8 +158,6 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 	meidBuf := make([]byte, int(C.RMR_MAX_MEID))
 	if meidCstr := C.rmr_get_meid(rxBuffer, (*C.uchar)(unsafe.Pointer(&meidBuf[0]))); meidCstr != nil {
 		params.Meid.RanName = strings.TrimRight(string(meidBuf), "\000")
-		//params.Meid.PlmnID = strings.TrimRight(string(meidBuf[0:16]), "\000")
-		//params.Meid.EnbID = strings.TrimRight(string(meidBuf[16:32]), "\000")
 	}
 
 	xidBuf := make([]byte, int(C.RMR_MAX_XID))
@@ -204,8 +224,6 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 		if params.Meid != nil {
 			b := make([]byte, int(C.RMR_MAX_MEID))
 			copy(b, []byte(params.Meid.RanName))
-			//copy(b, []byte(params.Meid.PlmnID))
-			//copy(b[16:], []byte(params.Meid.EnbID))
 			C.rmr_bytes2meid(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
 		}
 		xidLen := len(params.Xid)
@@ -236,7 +254,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool) bool {
 
 	if currBuffer == nil {
 		m.UpdateStatCounter("TransmitError")
-		return false
+		return m.LogMBufError("SendBuf failed", txBuffer)
 	}
 
 	// Just quick retry seems to help for K8s issue
@@ -249,8 +267,8 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool) bool {
 	}
 
 	if currBuffer.state != C.RMR_OK {
-		state = false
 		counterName = "TransmitError"
+		state = m.LogMBufError("SendBuf failed", currBuffer)
 	}
 
 	m.UpdateStatCounter(counterName)
@@ -293,6 +311,11 @@ func (m *RMRClient) GetRicMessageName(id int) (s string) {
 		}
 	}
 	return
+}
+
+func (m *RMRClient) LogMBufError(text string, mbuf *C.rmr_mbuf_t) bool {
+	Logger.Debug(fmt.Sprintf("rmrClient: %s -> [tp=%v] %v - %s", text, mbuf.tp_state, mbuf.state, RMRErrors[int(mbuf.state)]))
+	return false
 }
 
 // To be removed ...
