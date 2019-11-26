@@ -27,6 +27,8 @@ import (
 type RMRStatistics struct{}
 
 type RMRClient struct {
+	protPort      string
+	numWorkers    int
 	context       unsafe.Pointer
 	ready         int
 	wg            sync.WaitGroup

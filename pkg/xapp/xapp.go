@@ -29,13 +29,15 @@ type ReadyCB func(interface{})
 
 var (
 	// XApp is an application instance
-	Rmr      *RMRClient
-	Sdl      *SDLClient
-	Rnib     *RNIBClient
-	Resource *Router
-	Metric   *Metrics
-	Logger   *Log
-	Config   Configurator
+	Rmr           *RMRClient
+	Sdl           *SDLClient
+	Rnib          *RNIBClient
+	Resource      *Router
+	Metric        *Metrics
+	Logger        *Log
+	Config        Configurator
+	readyCb       ReadyCB
+	readyCbParams interface{}
 )
 
 func IsReady() bool {
@@ -43,7 +45,14 @@ func IsReady() bool {
 }
 
 func SetReadyCB(cb ReadyCB, params interface{}) {
-	Rmr.SetReadyCB(cb, params)
+	readyCb = cb
+	readyCbParams = params
+}
+
+func xappReadyCb(params interface{}) {
+	if readyCb != nil {
+		readyCb(readyCbParams)
+	}
 }
 
 func init() {
@@ -54,7 +63,6 @@ func init() {
 	Resource = NewRouter()
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
-	Rmr = NewRMRClient()
 
 	if viper.IsSet("db.namespaces") {
 		namespaces := viper.GetStringSlice("db.namespaces")
@@ -69,11 +77,17 @@ func init() {
 	}
 }
 
-func Run(c MessageConsumer) {
+func RunWithParams(c MessageConsumer, sdlcheck bool) {
+	Rmr = NewRMRClient()
+	Rmr.SetReadyCB(xappReadyCb, nil)
 	go http.ListenAndServe(viper.GetString("local.host"), Resource.router)
-
 	Logger.Info(fmt.Sprintf("Xapp started, listening on: %s", viper.GetString("local.host")))
-
-	Sdl.TestConnection()
+	if sdlcheck {
+		Sdl.TestConnection()
+	}
 	Rmr.Start(c)
+}
+
+func Run(c MessageConsumer) {
+	RunWithParams(c, true)
 }
