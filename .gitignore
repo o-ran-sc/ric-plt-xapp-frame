@@ -1,2 +1,3 @@
-cache
-
+# documentation
+.tox
+docs/_build/
