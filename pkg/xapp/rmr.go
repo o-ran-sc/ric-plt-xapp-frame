@@ -111,13 +111,17 @@ func (m *RMRClient) Start(c MessageConsumer) {
 		m.consumers = append(m.consumers, c)
 	}
 
+	var counter int = 0
 	for {
-		Logger.Info("rmrClient: Waiting for RMR to be ready ...")
-
 		if m.ready = int(C.rmr_ready(m.context)); m.ready == 1 {
+			Logger.Info("rmrClient: RMR is ready after %d seconds waiting...", counter)
 			break
 		}
-		time.Sleep(10 * time.Second)
+		if counter%10 == 0 {
+			Logger.Info("rmrClient: Waiting for RMR to be ready ...")
+		}
+		time.Sleep(1 * time.Second)
+		counter++
 	}
 	m.wg.Add(m.numWorkers)
 
