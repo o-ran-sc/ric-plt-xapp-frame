@@ -36,7 +36,7 @@ RUN apt-get update -y \
 RUN curl -s https://packagecloud.io/install/repositories/o-ran-sc/master/script.deb.sh | bash
 
 # RMR
-ARG RMRVERSION=1.9.0
+ARG RMRVERSION=1.13.1
 #RUN apt-get install -y rmr=${RMRVERSION} rmr-dev=${RMRVERSION}
 RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb && dpkg -i rmr_${RMRVERSION}_amd64.deb
 RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb && dpkg -i rmr-dev_${RMRVERSION}_amd64.deb
