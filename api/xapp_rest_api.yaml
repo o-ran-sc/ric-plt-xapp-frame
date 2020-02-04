@@ -1,0 +1,77 @@
+swagger: '2.0'
+info:
+  description: This is the initial REST API for RIC subscription
+  version: 0.0.1
+  title: RIC subscription
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+host: hostname
+basePath: /ric/v1
+schemes:
+  - http
+paths:
+  /subscriptions/report:
+    post:
+      tags:
+      - "report"
+      summary: Subscribe to X2AP events via Subscription Manager
+      operationId: subscribeReport
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: ReportParams
+          in: body
+          description: Subscription report parameters
+          schema:
+            $ref: '#/definitions/ReportParams'
+      responses:
+        '201':
+          description: Subscription successfully created
+          schema:
+            $ref: '#/definitions/ReportResult'
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal error
+definitions:
+  SubscriptionType:
+    type: string
+    enum:
+      - control
+      - policy
+      - report
+  ReportParams:
+    type: object
+    required:
+      - RequestorId
+      - Interfaces
+    properties:
+      RequestorId:
+        type: integer
+      Interfaces:
+        $ref: '#/definitions/InterfaceList'
+  Interface:
+    type: object
+    required:
+      - Direction
+      - ProcedureCode
+      - TypeOfMessage
+    properties:
+      Direction:
+        type: integer
+      ProcedureCode:
+        type: integer
+      TypeOfMessage:
+        type: integer
+  InterfaceList:
+    type: array
+    items:
+      $ref: '#/definitions/Interface'
+  ReportResult:
+    type: array
+    description: A list of sequence numbers
+    items:
+      type: integer
