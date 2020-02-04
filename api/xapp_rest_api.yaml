@@ -1,0 +1,165 @@
+swagger: '2.0'
+info:
+  description: This is the initial REST API for RIC subscription
+  version: 0.0.1
+  title: RIC subscription
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+host: hostname
+basePath: /ric/v1
+schemes:
+  - http
+paths:
+  /subscriptions/report:
+    post:
+      tags:
+      - "report"
+      summary: Subscribe a list of X2AP event triggers to receive "REPORT" messages sent by RAN
+      operationId: subscribeReport
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: ReportParams
+          in: body
+          description: Subscription report parameters
+          schema:
+            $ref: '#/definitions/ReportParams'
+      responses:
+        '201':
+          description: Subscription successfully created
+          schema:
+            $ref: '#/definitions/SubscriptionResult'
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal error
+  /subscriptions/control:
+    post:
+      tags:
+      - "control"
+      summary: Subscribe and send "CONTROL" message to RAN to initiate or resume call processing in RAN
+      operationId: subscribeControl
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: ControlParams
+          in: body
+          description: Subscription control parameters
+          schema:
+            $ref: '#/definitions/ControlParams'
+      responses:
+        '201':
+          description: Subscription successfully created
+          schema:
+            $ref: '#/definitions/SubscriptionResult'
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal error
+  /subscriptions/policy:
+    post:
+      tags:
+      - "policy"
+      summary: Subscribe and send "POLICY" message to RAN to execute a specific POLICY during call processing in RAN after each occurrence of a defined SUBSCRIPTION
+      operationId: subscribePolicy
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: PolicyParams
+          in: body
+          description: Subscription policy parameters
+          schema:
+            $ref: '#/definitions/PolicyParams'
+      responses:
+        '201':
+          description: Subscription successfully created
+          schema:
+            $ref: '#/definitions/SubscriptionResult'
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal error
+  /subscriptions/{subscriptionId}:
+    delete:
+      tags:
+      - "common"
+      summary: Unsubscribe X2AP events from Subscription Manager
+      operationId: Unsubscribe
+      parameters:
+        - name: subscriptionId
+          in: path
+          description: The subscriptionId to be unsubscribed
+          required: true
+          type: integer
+      responses:
+        '204':
+          description: Operation done successfully
+        '400':
+          description: Invalid requestorId supplied
+        '500':
+          description: Internal error
+definitions:
+  SubscriptionType:
+    type: string
+    enum:
+      - control
+      - insert
+      - policy
+      - report
+  ReportParams:
+    type: object
+    required:
+      - RequestorId
+      - EventTriggers
+    properties:
+      RequestorId:
+        type: integer
+      EventTriggers:
+        $ref: '#/definitions/EventTriggerList'
+  EventTrigger:
+    type: object
+    required:
+      - InterfaceDirection
+      - ProcedureCode
+      - TypeOfMessage
+    properties:
+      InterfaceDirection:
+        type: integer
+      ProcedureCode:
+        type: integer
+      TypeOfMessage:
+        type: integer
+      PlmnId:
+        type: string
+      ENBId:
+        type: integer
+  EventTriggerList:
+    type: array
+    items:
+      $ref: '#/definitions/EventTrigger'
+  SubscriptionResult:
+    type: array
+    description: A list of unique IDs
+    items:
+      type: integer
+  ControlParams:
+    type: object
+    properties:
+      RequestorId:
+        type: integer
+      TBD:
+        type: string
+  PolicyParams:
+    type: object
+    properties:
+      RequestorId:
+        type: integer
+      TBD:
+        type: string

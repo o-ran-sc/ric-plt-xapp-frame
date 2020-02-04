@@ -36,6 +36,7 @@ var (
 	Metric        *Metrics
 	Logger        *Log
 	Config        Configurator
+	Subscription  *Subscriber
 	readyCb       ReadyCB
 	readyCbParams interface{}
 )
@@ -63,6 +64,7 @@ func init() {
 	Resource = NewRouter()
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
+	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
 
 	if viper.IsSet("db.namespaces") {
 		namespaces := viper.GetStringSlice("db.namespaces")

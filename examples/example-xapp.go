@@ -111,6 +111,7 @@ func GetMetricsOpts() []xapp.CounterOpts {
 func NewExampleXapp(appReady, rmrReady bool) *ExampleXapp {
 	metrics := GetMetricsOpts()
 	return &ExampleXapp{
+		msgChan:  make(chan *xapp.RMRParams),
 		stats:    xapp.Metric.RegisterCounterGroup(metrics, "ExampleXapp"),
 		rmrReady: rmrReady,
 		appReady: appReady,
