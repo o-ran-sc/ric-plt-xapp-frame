@@ -9,10 +9,19 @@ require (
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.21
 	gerrit.o-ran-sc.org/r/ric-plt/sdlgo v0.3.1
 	github.com/fsnotify/fsnotify v1.4.7
+	github.com/go-openapi/errors v0.19.3
+	github.com/go-openapi/loads v0.19.4
+	github.com/go-openapi/runtime v0.19.4
+	github.com/go-openapi/spec v0.19.3
+	github.com/go-openapi/strfmt v0.19.4
+	github.com/go-openapi/swag v0.19.7
+	github.com/go-openapi/validate v0.19.6
 	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/mux v1.7.1
+	github.com/jessevdk/go-flags v1.4.0
 	github.com/prometheus/client_golang v0.9.3
 	github.com/spf13/viper v1.4.0
+	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
 )
 
 replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.3.1

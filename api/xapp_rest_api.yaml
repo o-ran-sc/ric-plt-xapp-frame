@@ -1,0 +1,81 @@
+swagger: '2.0'
+info:
+  description: This is the initial REST API for RIC subscription
+  version: 0.0.1
+  title: RIC subscription
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+host: hostname
+basePath: /ric/v1
+schemes:
+  - http
+paths:
+  /subscriptions:
+    post:
+      summary: Subscribe to X2AP events
+      tags:
+        - subscription
+      operationId: subscribe
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: SubscriptionParams
+          in: body
+          description: Subscription parameters
+          schema:
+            $ref: '#/definitions/Subscription'
+      responses:
+        '201':
+          description: Subscription successfully created
+          schema:
+            $ref: '#/definitions/SubscriptionResult'
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal error
+definitions:
+  Subscription:
+    type: object
+    required:
+      - TransactionId
+      - RequestorId
+      - Interfaces
+    properties:
+      RequestorId:
+        type: string
+      TransactionId:
+        type: string
+      Interfaces:
+        $ref: '#/definitions/InterfaceList'
+  Interface:
+    type: object
+    required:
+      - Direction
+      - ProcedureCode
+      - TypeOfMessage
+    properties:
+      Direction:
+        type: integer
+      ProcedureCode:
+        type: integer
+      TypeOfMessage:
+        type: integer
+  InterfaceList:
+    type: array
+    items:
+      $ref: '#/definitions/Interface'
+  SubscriptionResult:
+    type: object
+    required:
+      - RequestorId
+      - SequenceNumber
+    properties:
+      RequestorId:
+        type: integer
+      SequenceNumbers:
+        type: array
+        items:
+          type: integer
