@@ -24,32 +24,35 @@
 ```go
 package main
 
-import "gitlabe1.ext.net.nokia.com/ric_dev/nokia-xapps/xapp/pkg/xapp"
+import "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 
-type MessageCounsumer struct {
+type ExampleXapp struct {
 }
 
-func (m MessageCounsumer) Consume(mtype, len int, payload []byte) (err error) {
-        xapp.Logger.Debug("Message received - type=%d len=%d", mtype, len)
+func (m *ExampleXapp) Consume(rp *xapp.RMRParams) (err error) {
+        xapp.Logger.Debug("Message received - type=%d len=%d", rp.Mtype, rp.PayloadLen)
 
-        xapp.Sdl.Store("myKey", payload)
-        xapp.Rmr.Send(10005, len, payload)
+        xapp.Sdl.Store("myKey", rp.Payload)
+        xapp.Rmr.Send(r)
         return nil
 }
 
 func main() {
-    xapp.Run(MessageCounsumer{})
+       xapp.Run(ExampleXapp{})
 }
 ```
-#### Installing and running the example xapp
+#### Building and running the example xapp
 
-    git clone git@gitlabe1.ext.net.nokia.com:ric_dev/nokia-xapps/xapp.git
+    git clone https://gerrit.o-ran-sc.org/r/ric-plt/xapp-frame
+    cd xapp-frame
 
-#### Build and run
-    unset GOPATH
-    cd xapp/examples
-    go build example-xapp.go
-    ./example-xapp
+#### To generate an executable binary for our sample xApp application, run the following command:
+
+    GO111MODULE=on GO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o example-xapp examples/example-xapp.go
+
+#### To run the generated executable binary locally, run the following command:
+
+    RMR_SEED_RT=config/uta_rtg.rt ./example-xapp -f config/config-file.yaml
 
 Congratulations! You've just built your first **xapp** application.
 
