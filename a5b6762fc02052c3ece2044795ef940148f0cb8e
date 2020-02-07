@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c8a1348_4f7b6677",
+        "filename": "api/xapp_rest_api.yaml",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-02-07T07:38:27Z",
+      "side": 1,
+      "message": "Is requestor id correct name?",
+      "revId": "a5b6762fc02052c3ece2044795ef940148f0cb8e",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
