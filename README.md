@@ -18,6 +18,13 @@
 * Encoding and decoding of commonly used RIC ASN.1 messages
 * And more to come
 
+## Prerequisites
+Make sure that following tools are properly installed and configured
+* GO (golang) development and runtime tools
+* MDCLOG (ricplt/com/log)
+* RMR (ricplt/lib/rmr)
+* DBAAS (redis-server)
+
 ## Quick Start
 
 #### Below is a simple example xapp. For more information, see the sample code in the xapp/examples folder:
@@ -56,9 +63,90 @@ func main() {
 
 Congratulations! You've just built your first **xapp** application.
 
-## API
-#### API List
- * TBD
+## API LIST
+#### Logging APIs
+ * SetLevel(level int)
+  ```
+  Sets logging level to given "level". Level can be 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG
+  ```
+ * SetMdc(key string, value string)
+  ```
+  Sets the application MDC to given string. The MDC will be visible in the logs
+  ```
+ * Error(pattern string, args ...interface{}).
+  ```
+  Writes an error log. Other possible function are: Warn, Info and Debug
+  ```
+
+#### Config APIs
+ * AddConfigChangeListener(f ConfigChangeCB)
+  ```
+  Injects an application callback function that is called when config change occurs
+  ```
+ * GetString(key string) string
+  ```
+  Returns the value associated with the key as a string. Other possible functions are: GetInt, GetBool and GetStringSlice
+  ```
+
+#### Metrics APIs
+ * RegisterCounterGroup(opts []CounterOpts, subsytem string) (c map[string]Counter)
+  ```
+  Creates a new 'Counter' vector based on the provided CounterOpts and partitioned by the given label names.
+  ```
+ * RegisterGaugeGroup(opts []CounterOpts, subsytem string) (c map[string]Gauge)
+  ```
+  Creates a new 'Gauge' vector based on the provided CounterOpts and partitioned by the given label names.
+  ```
+
+#### RMR-client APIs
+ * IsReady() bool
+  ```
+  Indicates whether RMR is ready or not
+  ```
+ * SetReadyCB(cb ReadyCB, params interface{})
+  ```
+  Injects a callback function that is called when RMR is ready
+  ```
+ * Allocate() *C.rmr_mbuf_t
+  ```
+  Allocates and return RMR message buffer
+  ```
+ * Free(mbuf *C.rmr_mbuf_t)
+  ```
+  De-allocates a RMR message buffer previously allocated with 'Allocate'
+  ```
+ * SendMsg(params *RMRParams)
+  ```
+  Sends RMR message based on the given RMR parameters
+  ```
+ * SendRts(params *RMRParams)
+  ```
+  Sends 'rts' RMR message based on the given RMR parameters
+  ```
+
+#### REST APIs
+ * InjectRoute(url string, handler http.HandlerFunc, method string) *mux.Route
+  ```
+  Registers a given URL and corresponding handler, which will be called when incoming request matches with the URL
+  ```
+ * InjectQueryRoute(url string, h http.HandlerFunc, m string, q ...string) *mux.Route
+  ```
+  Registers an inquiry URL and corresponding handler, which will be called when incoming request matches with the URL
+  ```
+ * InjectStatusCb(f StatusCb)
+  ```
+  Injects a callback function, which is called during K8s aliveness probe
+  ```
+
+#### SDL APIs
+ * Store(key string, value interface{}) (err error)
+  ```
+  Store writes the value of a key to SDL. MStore writes multiple key-value pairs atomically
+  ```
+ * Read(key string) (value map[string]interface{}, err error)
+  ```
+  Reads the value of a key from SDL. MRead reads multiple keys atomically
+  ```
 
 #### API Usage and Examples
 * Setting logging level and writing to log
