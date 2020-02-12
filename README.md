@@ -169,6 +169,24 @@ Congratulations! You've just built your first **xapp** application.
     Resource.InjectQueryRoute("/ric/v1/user", handler, "GET", "foo", "bar", "id", "mykey")
     ```
 
+* Metrics: registering couple of counters
+    ```
+    metrics := []xapp.CounterOpts{
+		{Name: "RICIndicationsRx", Help: "The total number of RIC inidcation events received"},
+		{Name: "RICExampleMessageRx", Help: "The total number of RIC example messages received"},
+	}
+    xapp.Metric.RegisterCounterGroup(metrics, "MyXApp")
+
+    // Use curl-command to get metrics
+    curl http://localhost:8080/ric/v1/metrics
+    ```
+
+## Running unit tests
+  Unit tests of xApp-framework can be run as following:
+  ```
+  make test
+  ```
+
 ## Documentation
 
 ## Community

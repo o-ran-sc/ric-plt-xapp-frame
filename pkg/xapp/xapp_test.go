@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
+	"github.com/spf13/viper"
 	"os"
 	"strings"
 	"testing"
@@ -43,7 +44,7 @@ func (m Consumer) Consume(params *RMRParams) (err error) {
 
 // Test cases
 func TestMain(m *testing.M) {
-	go Run(Consumer{})
+	go RunWithParams(Consumer{}, viper.GetBool("db.waitForSdl"))
 	time.Sleep(time.Duration(5) * time.Second)
 	code := m.Run()
 	os.Exit(code)
@@ -114,6 +115,7 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 	// Allow time to process the messages
 	time.Sleep(time.Duration(2) * time.Second)
 
+	waitForSdl := viper.GetBool("db.waitForSdl")
 	stats := getMetrics(t)
 	if !strings.Contains(stats, "ricxapp_RMR_Transmitted 100") {
 		t.Errorf("Error: ricxapp_RMR_Transmitted value incorrect")
@@ -131,16 +133,20 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 		t.Errorf("Error: ricxapp_RMR_ReceiveError value incorrect")
 	}
 
-	if !strings.Contains(stats, "ricxapp_SDL_Stored 100") {
+	if waitForSdl && !strings.Contains(stats, "ricxapp_SDL_Stored 100") {
 		t.Errorf("Error: ricxapp_SDL_Stored value incorrect")
 	}
 
-	if !strings.Contains(stats, "ricxapp_SDL_StoreError 0") {
+	if waitForSdl && !strings.Contains(stats, "ricxapp_SDL_StoreError 0") {
 		t.Errorf("Error: ricxapp_SDL_StoreError value incorrect")
 	}
 }
 
 func TestSubscribeChannels(t *testing.T) {
+	if !viper.GetBool("db.waitForSdl") {
+		return
+	}
+
 	var NotificationCb = func(ch string, events ...string) {
 		if ch != "channel1" {
 			t.Errorf("Error: Callback function called with incorrect params")
@@ -170,14 +176,36 @@ func TestGetRicMessageSuccess(t *testing.T) {
 }
 
 func TestGetRicMessageFails(t *testing.T) {
-	id, ok := Rmr.GetRicMessageId("INVALID")
+	ok := Rmr.IsRetryError(&RMRParams{status: 0})
 	if ok {
-		t.Errorf("Error: GetRicMessageId returned invalid value id=%d", id)
+		t.Errorf("Error: IsRetryError returned wrong value")
 	}
 
-	name := Rmr.GetRicMessageName(123456)
-	if name != "" {
-		t.Errorf("Error: GetRicMessageName returned invalid value: name=%s", name)
+	ok = Rmr.IsRetryError(&RMRParams{status: 10})
+	if !ok {
+		t.Errorf("Error: IsRetryError returned wrong value")
+	}
+
+	ok = Rmr.IsNoEndPointError(&RMRParams{status: 5})
+	if ok {
+		t.Errorf("Error: IsNoEndPointError returned wrong value")
+	}
+
+	ok = Rmr.IsNoEndPointError(&RMRParams{status: 2})
+	if !ok {
+		t.Errorf("Error: IsNoEndPointError returned wrong value")
+	}
+}
+
+func TestIsErrorFunctions(t *testing.T) {
+	id, ok := Rmr.GetRicMessageId("RIC_SUB_REQ")
+	if !ok || id != 12010 {
+		t.Errorf("Error: GetRicMessageId failed: id=%d", id)
+	}
+
+	name := Rmr.GetRicMessageName(12010)
+	if name != "RIC_SUB_REQ" {
+		t.Errorf("Error: GetRicMessageName failed: name=%s", name)
 	}
 }
 

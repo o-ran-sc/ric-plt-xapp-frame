@@ -21,11 +21,13 @@
   "protPort": "tcp:4560"
   "maxSize": 2072
   "numWorkers": 1
+  "maxRetryOnFailure": 5
 "subscription":
     "host": "localhost:8088"
     "timeout": 2
 "db":
-  "namespaces": ["sdl", "rnib"]
+  "namespace": "sdl"
+  "waitForSdl": false
 "test":
   "mode": "forwarder"
   "mtype": 10004
