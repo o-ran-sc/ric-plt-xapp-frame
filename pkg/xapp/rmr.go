@@ -180,10 +180,24 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 		params.Src = strings.TrimRight(string(srcBuf[0:64]), "\000")
 	}
 
+	// Default case: a single consumer
+	if len(m.consumers) == 1 && m.consumers[0] != nil {
+		params.PayloadLen = int(rxBuffer.len)
+		params.Payload = (*[1 << 30]byte)(unsafe.Pointer(rxBuffer.payload))[:params.PayloadLen:params.PayloadLen]
+		err := m.consumers[0].Consume(params)
+		if err != nil {
+			Logger.Warn("rmrClient: Consumer returned error: %v", err)
+		}
+		return
+	}
+
+	// Special case for multiple consumers
 	for _, c := range m.consumers {
 		cptr := unsafe.Pointer(rxBuffer.payload)
 		params.Payload = C.GoBytes(cptr, C.int(rxBuffer.len))
 		params.PayloadLen = int(rxBuffer.len)
+		params.Mtype = int(rxBuffer.mtype)
+		params.SubId = int(rxBuffer.sub_id)
 
 		err := c.Consume(params)
 		if err != nil {
