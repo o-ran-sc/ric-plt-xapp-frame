@@ -30,10 +30,10 @@ import (
 	"time"
 )
 
-//var _ = func() bool {
-//	testing.Init()
-//	return true
-//}()
+var _ = func() bool {
+	testing.Init()
+	return true
+}()
 
 type Consumer struct{}
 
