@@ -21,21 +21,21 @@ package xapp
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 	"net/http"
 	"net/http/httptest"
-	"github.com/spf13/viper"
 	"os"
 	"strings"
 	"testing"
 	"time"
 )
 
-var _ = func() bool {
-	testing.Init()
-	return true
-}()
+//var _ = func() bool {
+//	testing.Init()
+//	return true
+//}()
 
-type Consumer struct {}
+type Consumer struct{}
 
 func (m Consumer) Consume(params *RMRParams) (err error) {
 	Sdl.Store("myKey", params.Payload)

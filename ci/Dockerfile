@@ -75,4 +75,4 @@ RUN make -C /ws go-build
 RUN make -C /ws go-test-fmt
 
 # Test Requires dbaas
-#RUN make -C /ws go-test
+RUN make -C /ws go-test
