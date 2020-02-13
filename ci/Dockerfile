@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------
 
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:3-u18.04-nng as xapp-base
+FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:4-u18.04-nng as xapp-base
 
 RUN apt-get update -y \
     &&apt-get install -y \
