@@ -102,6 +102,7 @@ func TestInjectQueryFailures(t *testing.T) {
 }
 
 func TestMessagesReceivedSuccessfully(t *testing.T) {
+	time.Sleep(time.Duration(5) * time.Second)
 	for i := 0; i < 100; i++ {
 		params := &RMRParams{}
 		params.Mtype = 10004
@@ -118,11 +119,11 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 	waitForSdl := viper.GetBool("db.waitForSdl")
 	stats := getMetrics(t)
 	if !strings.Contains(stats, "ricxapp_RMR_Transmitted 100") {
-		t.Errorf("Error: ricxapp_RMR_Transmitted value incorrect")
+		t.Errorf("Error: ricxapp_RMR_Transmitted value incorrect: %v", stats)
 	}
 
 	if !strings.Contains(stats, "ricxapp_RMR_Received 100") {
-		t.Errorf("Error: ricxapp_RMR_Received value incorrect")
+		t.Errorf("Error: ricxapp_RMR_Received value incorrect: %v", stats)
 	}
 
 	if !strings.Contains(stats, "ricxapp_RMR_TransmitError 0") {
