@@ -34,6 +34,29 @@ func init() {
   "host": "hostname",
   "basePath": "/ric/v1",
   "paths": {
+    "/subscriptions": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "query"
+        ],
+        "summary": "Returns list of subscriptions",
+        "operationId": "getAllSubscriptions",
+        "responses": {
+          "200": {
+            "description": "successful query of subscriptions",
+            "schema": {
+              "$ref": "#/definitions/SubscriptionList"
+            }
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/subscriptions/control": {
       "post": {
         "consumes": [
@@ -248,6 +271,27 @@ func init() {
         "RequestorId": {
           "type": "integer"
         }
+      }
+    },
+    "SubscriptionData": {
+      "type": "object",
+      "properties": {
+        "Endpoint": {
+          "type": "string"
+        },
+        "Meid": {
+          "type": "string"
+        },
+        "SubscriptionId": {
+          "type": "integer"
+        }
+      }
+    },
+    "SubscriptionList": {
+      "description": "A list of subscriptions",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SubscriptionData"
       }
     },
     "SubscriptionResult": {
@@ -285,6 +329,29 @@ func init() {
   "host": "hostname",
   "basePath": "/ric/v1",
   "paths": {
+    "/subscriptions": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "query"
+        ],
+        "summary": "Returns list of subscriptions",
+        "operationId": "getAllSubscriptions",
+        "responses": {
+          "200": {
+            "description": "successful query of subscriptions",
+            "schema": {
+              "$ref": "#/definitions/SubscriptionList"
+            }
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/subscriptions/control": {
       "post": {
         "consumes": [
@@ -499,6 +566,27 @@ func init() {
         "RequestorId": {
           "type": "integer"
         }
+      }
+    },
+    "SubscriptionData": {
+      "type": "object",
+      "properties": {
+        "Endpoint": {
+          "type": "string"
+        },
+        "Meid": {
+          "type": "string"
+        },
+        "SubscriptionId": {
+          "type": "integer"
+        }
+      }
+    },
+    "SubscriptionList": {
+      "description": "A list of subscriptions",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SubscriptionData"
       }
     },
     "SubscriptionResult": {
