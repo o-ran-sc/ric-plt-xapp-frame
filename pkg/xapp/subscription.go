@@ -20,10 +20,14 @@
 package xapp
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/go-openapi/loads"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	apiclient "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi"
@@ -37,10 +41,12 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/control"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/policy"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/query"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
 )
 
-type SubscriptionReportHandler func(models.SubscriptionType, interface{}) (models.SubscriptionResult, error)
+type SubscriptionHandler func(models.SubscriptionType, interface{}) (models.SubscriptionResult, error)
+type SubscriptionQueryHandler func() (models.SubscriptionList, error)
 
 type Subscriber struct {
 	localAddr  string
@@ -71,7 +77,7 @@ func NewSubscriber(host string, timo int) *Subscriber {
 }
 
 // Server interface: listen and receive subscription requests
-func (r *Subscriber) Listen(handler SubscriptionReportHandler) error {
+func (r *Subscriber) Listen(subHandler SubscriptionHandler, queryHandler SubscriptionQueryHandler) error {
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
 		return err
@@ -79,10 +85,19 @@ func (r *Subscriber) Listen(handler SubscriptionReportHandler) error {
 
 	api := operations.NewXappFrameworkAPI(swaggerSpec)
 
+	// Subscription: query
+	api.QueryGetAllSubscriptionsHandler = query.GetAllSubscriptionsHandlerFunc(
+		func(p query.GetAllSubscriptionsParams) middleware.Responder {
+			if resp, err := queryHandler(); err == nil {
+				return query.NewGetAllSubscriptionsOK().WithPayload(resp)
+			}
+			return query.NewGetAllSubscriptionsInternalServerError()
+		})
+
 	// SubscriptionType: Report
 	api.ReportSubscribeReportHandler = report.SubscribeReportHandlerFunc(
 		func(p report.SubscribeReportParams) middleware.Responder {
-			if resp, err := handler(models.SubscriptionTypeReport, p.ReportParams); err == nil {
+			if resp, err := subHandler(models.SubscriptionTypeReport, p.ReportParams); err == nil {
 				return report.NewSubscribeReportCreated().WithPayload(resp)
 			}
 			return report.NewSubscribeReportInternalServerError()
@@ -91,7 +106,7 @@ func (r *Subscriber) Listen(handler SubscriptionReportHandler) error {
 	// SubscriptionType: Control
 	api.ControlSubscribeControlHandler = control.SubscribeControlHandlerFunc(
 		func(p control.SubscribeControlParams) middleware.Responder {
-			if resp, err := handler(models.SubscriptionTypeControl, p.ControlParams); err == nil {
+			if resp, err := subHandler(models.SubscriptionTypeControl, p.ControlParams); err == nil {
 				return control.NewSubscribeControlCreated().WithPayload(resp)
 			}
 			return control.NewSubscribeControlInternalServerError()
@@ -100,7 +115,7 @@ func (r *Subscriber) Listen(handler SubscriptionReportHandler) error {
 	// SubscriptionType: policy
 	api.PolicySubscribePolicyHandler = policy.SubscribePolicyHandlerFunc(
 		func(p policy.SubscribePolicyParams) middleware.Responder {
-			if resp, err := handler(models.SubscriptionTypePolicy, p.PolicyParams); err == nil {
+			if resp, err := subHandler(models.SubscriptionTypePolicy, p.PolicyParams); err == nil {
 				return policy.NewSubscribePolicyCreated().WithPayload(resp)
 			}
 			return policy.NewSubscribePolicyInternalServerError()
@@ -151,6 +166,29 @@ func (r *Subscriber) SubscribePolicy(p *apimodel.PolicyParams) (apimodel.Subscri
 	return result.Payload, err
 }
 
-func (s *Subscriber) CreateTransport() *apiclient.RICSubscription {
-	return apiclient.New(httptransport.New(s.remoteHost, s.remoteUrl, s.remoteProt), strfmt.Default)
+// Subscription interface for xApp: QUERY
+func (r *Subscriber) QuerySubscriptions() (models.SubscriptionList, error) {
+	resp, err := http.Get(fmt.Sprintf("http://%s/%s/subscriptions", r.remoteHost, r.remoteUrl))
+	if err != nil {
+		return models.SubscriptionList{}, err
+	}
+
+	defer resp.Body.Close()
+
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return models.SubscriptionList{}, err
+	}
+
+	subscriptions := models.SubscriptionList{}
+	err = json.Unmarshal([]byte(string(contents)), &subscriptions)
+	if err != nil {
+		return models.SubscriptionList{}, err
+	}
+
+	return subscriptions, nil
+}
+
+func (r *Subscriber) CreateTransport() *apiclient.RICSubscription {
+	return apiclient.New(httptransport.New(r.remoteHost, r.remoteUrl, r.remoteProt), strfmt.Default)
 }
