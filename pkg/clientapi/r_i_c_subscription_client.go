@@ -14,6 +14,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/control"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/policy"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/query"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/report"
 )
 
@@ -65,6 +66,8 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *RICSubscri
 	cli.Control = control.New(transport, formats)
 
 	cli.Policy = policy.New(transport, formats)
+
+	cli.Query = query.New(transport, formats)
 
 	cli.Report = report.New(transport, formats)
 
@@ -118,6 +121,8 @@ type RICSubscription struct {
 
 	Policy *policy.Client
 
+	Query *query.Client
+
 	Report *report.Client
 
 	Transport runtime.ClientTransport
@@ -132,6 +137,8 @@ func (c *RICSubscription) SetTransport(transport runtime.ClientTransport) {
 	c.Control.SetTransport(transport)
 
 	c.Policy.SetTransport(transport)
+
+	c.Query.SetTransport(transport)
 
 	c.Report.SetTransport(transport)
 
