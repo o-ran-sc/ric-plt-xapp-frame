@@ -59,12 +59,33 @@ func subscriptionHandler(stype models.SubscriptionType, params interface{}) (mod
 	return models.SubscriptionResult{11, 22, 33}, nil
 }
 
+func queryHandler() (models.SubscriptionList, error) {
+	resp := models.SubscriptionList{
+		&models.SubscriptionData{
+			SubscriptionID: 11,
+			Meid: "Test-Gnb",
+			Endpoint: []string{"127.0.0.1:4056"},
+		},
+	}
+
+	return resp, nil
+}
+
 func TestSetup(t *testing.T) {
 	suite = t
 
 	// Start the server to simulate SubManager
-	go Subscription.Listen(subscriptionHandler)
+	go Subscription.Listen(subscriptionHandler, queryHandler)
 	time.Sleep(time.Duration(2) * time.Second)
+}
+
+func TestSubscriptionQueryHandling(t *testing.T) {
+	resp, err := Subscription.QuerySubscriptions()
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp[0].SubscriptionID, int64(11))
+	assert.Equal(t, resp[0].Meid, "Test-Gnb")
+	assert.Equal(t, resp[0].Endpoint, []string{"127.0.0.1:4056"})
 }
 
 func TestSubscriptionReportHandling(t *testing.T) {
