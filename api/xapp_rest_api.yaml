@@ -11,6 +11,21 @@ basePath: /ric/v1
 schemes:
   - http
 paths:
+  /subscriptions:
+    get:
+      summary: Returns list of subscriptions
+      tags:
+        - "query"
+      operationId: getAllSubscriptions
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful query of subscriptions
+          schema:
+            $ref: '#/definitions/SubscriptionList'
+        '500':
+          description: Internal error
   /subscriptions/report:
     post:
       tags:
@@ -163,3 +178,19 @@ definitions:
         type: integer
       TBD:
         type: string
+  SubscriptionData:
+    type: object
+    properties:
+      SubscriptionId:
+        type: integer
+      Meid:
+        type: string
+      Endpoint:
+        type: array
+        items:
+          type: string
+  SubscriptionList:
+    type: array
+    description: A list of subscriptions
+    items:
+       $ref: '#/definitions/SubscriptionData'
