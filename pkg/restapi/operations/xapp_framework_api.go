@@ -22,6 +22,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/control"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/policy"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/query"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
 )
 
@@ -44,6 +45,9 @@ func NewXappFrameworkAPI(spec *loads.Document) *XappFrameworkAPI {
 		JSONProducer:        runtime.JSONProducer(),
 		CommonUnsubscribeHandler: common.UnsubscribeHandlerFunc(func(params common.UnsubscribeParams) middleware.Responder {
 			return middleware.NotImplemented("operation CommonUnsubscribe has not yet been implemented")
+		}),
+		QueryGetAllSubscriptionsHandler: query.GetAllSubscriptionsHandlerFunc(func(params query.GetAllSubscriptionsParams) middleware.Responder {
+			return middleware.NotImplemented("operation QueryGetAllSubscriptions has not yet been implemented")
 		}),
 		ControlSubscribeControlHandler: control.SubscribeControlHandlerFunc(func(params control.SubscribeControlParams) middleware.Responder {
 			return middleware.NotImplemented("operation ControlSubscribeControl has not yet been implemented")
@@ -87,6 +91,8 @@ type XappFrameworkAPI struct {
 
 	// CommonUnsubscribeHandler sets the operation handler for the unsubscribe operation
 	CommonUnsubscribeHandler common.UnsubscribeHandler
+	// QueryGetAllSubscriptionsHandler sets the operation handler for the get all subscriptions operation
+	QueryGetAllSubscriptionsHandler query.GetAllSubscriptionsHandler
 	// ControlSubscribeControlHandler sets the operation handler for the subscribe control operation
 	ControlSubscribeControlHandler control.SubscribeControlHandler
 	// PolicySubscribePolicyHandler sets the operation handler for the subscribe policy operation
@@ -158,6 +164,10 @@ func (o *XappFrameworkAPI) Validate() error {
 
 	if o.CommonUnsubscribeHandler == nil {
 		unregistered = append(unregistered, "common.UnsubscribeHandler")
+	}
+
+	if o.QueryGetAllSubscriptionsHandler == nil {
+		unregistered = append(unregistered, "query.GetAllSubscriptionsHandler")
 	}
 
 	if o.ControlSubscribeControlHandler == nil {
@@ -274,6 +284,11 @@ func (o *XappFrameworkAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/subscriptions/{subscriptionId}"] = common.NewUnsubscribe(o.context, o.CommonUnsubscribeHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/subscriptions"] = query.NewGetAllSubscriptions(o.context, o.QueryGetAllSubscriptionsHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
