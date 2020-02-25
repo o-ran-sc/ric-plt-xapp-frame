@@ -307,7 +307,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool) int {
 	}
 
 	m.UpdateStatCounter(counterName)
-	m.Free(currBuffer)
+	defer m.Free(currBuffer)
 
 	return int(currBuffer.state)
 }
