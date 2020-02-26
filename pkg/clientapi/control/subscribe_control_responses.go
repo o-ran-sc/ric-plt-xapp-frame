@@ -61,7 +61,7 @@ func NewSubscribeControlCreated() *SubscribeControlCreated {
 Subscription successfully created
 */
 type SubscribeControlCreated struct {
-	Payload clientmodel.SubscriptionResult
+	Payload clientmodel.SubscriptionResponse
 }
 
 func (o *SubscribeControlCreated) Error() string {

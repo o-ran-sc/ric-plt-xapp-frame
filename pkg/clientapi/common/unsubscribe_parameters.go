@@ -13,7 +13,6 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/swag"
 
 	strfmt "github.com/go-openapi/strfmt"
 )
@@ -62,11 +61,11 @@ for the unsubscribe operation typically these are written to a http.Request
 */
 type UnsubscribeParams struct {
 
-	/*SubscriptionID
-	  The subscriptionId to be unsubscribed
+	/*ClientEndpoint
+	  The clientEndpoint to be unsubscribed
 
 	*/
-	SubscriptionID int64
+	ClientEndpoint string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -106,15 +105,15 @@ func (o *UnsubscribeParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithSubscriptionID adds the subscriptionID to the unsubscribe params
-func (o *UnsubscribeParams) WithSubscriptionID(subscriptionID int64) *UnsubscribeParams {
-	o.SetSubscriptionID(subscriptionID)
+// WithClientEndpoint adds the clientEndpoint to the unsubscribe params
+func (o *UnsubscribeParams) WithClientEndpoint(clientEndpoint string) *UnsubscribeParams {
+	o.SetClientEndpoint(clientEndpoint)
 	return o
 }
 
-// SetSubscriptionID adds the subscriptionId to the unsubscribe params
-func (o *UnsubscribeParams) SetSubscriptionID(subscriptionID int64) {
-	o.SubscriptionID = subscriptionID
+// SetClientEndpoint adds the clientEndpoint to the unsubscribe params
+func (o *UnsubscribeParams) SetClientEndpoint(clientEndpoint string) {
+	o.ClientEndpoint = clientEndpoint
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -125,8 +124,8 @@ func (o *UnsubscribeParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.R
 	}
 	var res []error
 
-	// path param subscriptionId
-	if err := r.SetPathParam("subscriptionId", swag.FormatInt64(o.SubscriptionID)); err != nil {
+	// path param clientEndpoint
+	if err := r.SetPathParam("clientEndpoint", o.ClientEndpoint); err != nil {
 		return err
 	}
 

@@ -16,13 +16,13 @@ import (
 
 var suite *testing.T
 
-var requestorId = int64(0x4EEC)
+var clientEndpoint = "localhost:4561"
 var direction = int64(0)
 var procedureCode = int64(27)
 var typeOfMessage = int64(1)
 
 var reportParams = apimodel.ReportParams{
-	RequestorID: &requestorId,
+	ClientEndpoint: &clientEndpoint,
 	EventTriggers: apimodel.EventTriggerList{
 		&apimodel.EventTrigger{
 			InterfaceDirection: &direction,
@@ -33,30 +33,35 @@ var reportParams = apimodel.ReportParams{
 }
 
 var controlParams = apimodel.ControlParams{
-	RequestorID: requestorId,
+	ClientEndpoint: &clientEndpoint,
 }
 
 var policyParams = apimodel.PolicyParams{
-	RequestorID: requestorId,
+	ClientEndpoint: &clientEndpoint,
 }
 
-func subscriptionHandler(stype models.SubscriptionType, params interface{}) (models.SubscriptionResult, error) {
+func subscriptionHandler(stype models.SubscriptionType, params interface{}) (models.SubscriptionResponse, error) {
 	switch stype {
 	case models.SubscriptionTypeReport:
 		p := params.(*models.ReportParams)
-		assert.Equal(suite, requestorId, *p.RequestorID)
+		assert.Equal(suite, clientEndpoint, *p.ClientEndpoint)
 		assert.Equal(suite, direction, *p.EventTriggers[0].InterfaceDirection)
 		assert.Equal(suite, procedureCode, *p.EventTriggers[0].ProcedureCode)
 		assert.Equal(suite, typeOfMessage, *p.EventTriggers[0].TypeOfMessage)
 	case models.SubscriptionTypeControl:
 		p := params.(*models.ControlParams)
-		assert.Equal(suite, requestorId, p.RequestorID)
+		assert.Equal(suite, clientEndpoint, *p.ClientEndpoint)
 	case models.SubscriptionTypePolicy:
 		p := params.(*models.PolicyParams)
-		assert.Equal(suite, requestorId, p.RequestorID)
+		assert.Equal(suite, clientEndpoint, *p.ClientEndpoint)
 	}
 
-	return models.SubscriptionResult{11, 22, 33}, nil
+	reqId := int64(11)
+	instanceId := int64(22)
+	return models.SubscriptionResponse{
+		&models.SubscriptionResponseItem{RequestorID: &reqId, InstanceID: &instanceId}, 
+		&models.SubscriptionResponseItem{RequestorID: &reqId, InstanceID: &instanceId},
+	}, nil
 }
 
 func queryHandler() (models.SubscriptionList, error) {
@@ -71,11 +76,17 @@ func queryHandler() (models.SubscriptionList, error) {
 	return resp, nil
 }
 
+func deleteHandler(ep string) error {
+	assert.Equal(suite, clientEndpoint, ep)
+
+	return nil
+}
+
 func TestSetup(t *testing.T) {
 	suite = t
 
 	// Start the server to simulate SubManager
-	go Subscription.Listen(subscriptionHandler, queryHandler)
+	go Subscription.Listen(subscriptionHandler, queryHandler, deleteHandler)
 	time.Sleep(time.Duration(2) * time.Second)
 }
 
@@ -92,24 +103,33 @@ func TestSubscriptionReportHandling(t *testing.T) {
 	result, err := Subscription.SubscribeReport(&reportParams)
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, len(result), 3)
-	assert.Equal(t, result[0], int64(11))
-	assert.Equal(t, result[1], int64(22))
-	assert.Equal(t, result[2], int64(33))
+	assert.Equal(t, len(result), 2)
+	assert.Equal(t, *result[0].RequestorID, int64(11))
+	assert.Equal(t, *result[0].InstanceID, int64(22))
+	assert.Equal(t, *result[1].RequestorID, int64(11))
+	assert.Equal(t, *result[1].InstanceID, int64(22))
 }
 
 func TestSubscriptionControltHandling(t *testing.T) {
 	result, err := Subscription.SubscribeControl(&controlParams)
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, len(result), 3)
-	assert.Equal(t, result[0], int64(11))
+	assert.Equal(t, len(result), 2)
+	assert.Equal(t, *result[0].RequestorID, int64(11))
+	assert.Equal(t, *result[0].InstanceID, int64(22))
 }
 
 func TestSubscriptionPolicytHandling(t *testing.T) {
 	result, err := Subscription.SubscribePolicy(&policyParams)
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, len(result), 3)
-	assert.Equal(t, result[0], int64(11))
+	assert.Equal(t, len(result), 2)
+	assert.Equal(t, *result[0].RequestorID, int64(11))
+	assert.Equal(t, *result[0].InstanceID, int64(22))
+}
+
+func TestSubscriptionDeleteHandling(t *testing.T) {
+	err := Subscription.UnSubscribe(clientEndpoint)
+
+	assert.Equal(t, err, nil)
 }

@@ -29,7 +29,7 @@ func NewUnsubscribe(ctx *middleware.Context, handler UnsubscribeHandler) *Unsubs
 	return &Unsubscribe{Context: ctx, Handler: handler}
 }
 
-/*Unsubscribe swagger:route DELETE /subscriptions/{subscriptionId} common unsubscribe
+/*Unsubscribe swagger:route DELETE /subscriptions/{clientEndpoint} common unsubscribe
 
 Unsubscribe X2AP events from Subscription Manager
 

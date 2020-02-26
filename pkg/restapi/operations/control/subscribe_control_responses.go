@@ -25,7 +25,7 @@ type SubscribeControlCreated struct {
 	/*
 	  In: Body
 	*/
-	Payload models.SubscriptionResult `json:"body,omitempty"`
+	Payload models.SubscriptionResponse `json:"body,omitempty"`
 }
 
 // NewSubscribeControlCreated creates SubscribeControlCreated with default headers values
@@ -35,13 +35,13 @@ func NewSubscribeControlCreated() *SubscribeControlCreated {
 }
 
 // WithPayload adds the payload to the subscribe control created response
-func (o *SubscribeControlCreated) WithPayload(payload models.SubscriptionResult) *SubscribeControlCreated {
+func (o *SubscribeControlCreated) WithPayload(payload models.SubscriptionResponse) *SubscribeControlCreated {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the subscribe control created response
-func (o *SubscribeControlCreated) SetPayload(payload models.SubscriptionResult) {
+func (o *SubscribeControlCreated) SetPayload(payload models.SubscriptionResponse) {
 	o.Payload = payload
 }
 
@@ -52,7 +52,7 @@ func (o *SubscribeControlCreated) WriteResponse(rw http.ResponseWriter, producer
 	payload := o.Payload
 	if payload == nil {
 		// return empty array
-		payload = models.SubscriptionResult{}
+		payload = models.SubscriptionResponse{}
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

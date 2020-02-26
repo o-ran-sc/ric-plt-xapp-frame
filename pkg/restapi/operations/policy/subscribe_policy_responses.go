@@ -25,7 +25,7 @@ type SubscribePolicyCreated struct {
 	/*
 	  In: Body
 	*/
-	Payload models.SubscriptionResult `json:"body,omitempty"`
+	Payload models.SubscriptionResponse `json:"body,omitempty"`
 }
 
 // NewSubscribePolicyCreated creates SubscribePolicyCreated with default headers values
@@ -35,13 +35,13 @@ func NewSubscribePolicyCreated() *SubscribePolicyCreated {
 }
 
 // WithPayload adds the payload to the subscribe policy created response
-func (o *SubscribePolicyCreated) WithPayload(payload models.SubscriptionResult) *SubscribePolicyCreated {
+func (o *SubscribePolicyCreated) WithPayload(payload models.SubscriptionResponse) *SubscribePolicyCreated {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the subscribe policy created response
-func (o *SubscribePolicyCreated) SetPayload(payload models.SubscriptionResult) {
+func (o *SubscribePolicyCreated) SetPayload(payload models.SubscriptionResponse) {
 	o.Payload = payload
 }
 
@@ -52,7 +52,7 @@ func (o *SubscribePolicyCreated) WriteResponse(rw http.ResponseWriter, producer 
 	payload := o.Payload
 	if payload == nil {
 		// return empty array
-		payload = models.SubscriptionResult{}
+		payload = models.SubscriptionResponse{}
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

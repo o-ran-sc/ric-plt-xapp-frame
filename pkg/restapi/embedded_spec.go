@@ -84,7 +84,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -123,7 +123,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -162,7 +162,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -174,7 +174,7 @@ func init() {
         }
       }
     },
-    "/subscriptions/{subscriptionId}": {
+    "/subscriptions/{clientEndpoint}": {
       "delete": {
         "tags": [
           "common"
@@ -183,9 +183,9 @@ func init() {
         "operationId": "Unsubscribe",
         "parameters": [
           {
-            "type": "integer",
-            "description": "The subscriptionId to be unsubscribed",
-            "name": "subscriptionId",
+            "type": "string",
+            "description": "The clientEndpoint to be unsubscribed",
+            "name": "clientEndpoint",
             "in": "path",
             "required": true
           }
@@ -195,7 +195,7 @@ func init() {
             "description": "Operation done successfully"
           },
           "400": {
-            "description": "Invalid requestorId supplied"
+            "description": "Invalid clientEndpoint supplied"
           },
           "500": {
             "description": "Internal error"
@@ -207,9 +207,12 @@ func init() {
   "definitions": {
     "ControlParams": {
       "type": "object",
+      "required": [
+        "ClientEndpoint"
+      ],
       "properties": {
-        "RequestorId": {
-          "type": "integer"
+        "ClientEndpoint": {
+          "type": "string"
         },
         "TBD": {
           "type": "string"
@@ -249,9 +252,12 @@ func init() {
     },
     "PolicyParams": {
       "type": "object",
+      "required": [
+        "ClientEndpoint"
+      ],
       "properties": {
-        "RequestorId": {
-          "type": "integer"
+        "ClientEndpoint": {
+          "type": "string"
         },
         "TBD": {
           "type": "string"
@@ -261,15 +267,15 @@ func init() {
     "ReportParams": {
       "type": "object",
       "required": [
-        "RequestorId",
+        "ClientEndpoint",
         "EventTriggers"
       ],
       "properties": {
+        "ClientEndpoint": {
+          "type": "string"
+        },
         "EventTriggers": {
           "$ref": "#/definitions/EventTriggerList"
-        },
-        "RequestorId": {
-          "type": "integer"
         }
       }
     },
@@ -297,11 +303,25 @@ func init() {
         "$ref": "#/definitions/SubscriptionData"
       }
     },
-    "SubscriptionResult": {
-      "description": "A list of unique IDs",
+    "SubscriptionResponse": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "$ref": "#/definitions/SubscriptionResponseItem"
+      }
+    },
+    "SubscriptionResponseItem": {
+      "type": "object",
+      "required": [
+        "RequestorId",
+        "InstanceId"
+      ],
+      "properties": {
+        "InstanceId": {
+          "type": "integer"
+        },
+        "RequestorId": {
+          "type": "integer"
+        }
       }
     },
     "SubscriptionType": {
@@ -382,7 +402,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -421,7 +441,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -460,7 +480,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -472,7 +492,7 @@ func init() {
         }
       }
     },
-    "/subscriptions/{subscriptionId}": {
+    "/subscriptions/{clientEndpoint}": {
       "delete": {
         "tags": [
           "common"
@@ -481,9 +501,9 @@ func init() {
         "operationId": "Unsubscribe",
         "parameters": [
           {
-            "type": "integer",
-            "description": "The subscriptionId to be unsubscribed",
-            "name": "subscriptionId",
+            "type": "string",
+            "description": "The clientEndpoint to be unsubscribed",
+            "name": "clientEndpoint",
             "in": "path",
             "required": true
           }
@@ -493,7 +513,7 @@ func init() {
             "description": "Operation done successfully"
           },
           "400": {
-            "description": "Invalid requestorId supplied"
+            "description": "Invalid clientEndpoint supplied"
           },
           "500": {
             "description": "Internal error"
@@ -505,9 +525,12 @@ func init() {
   "definitions": {
     "ControlParams": {
       "type": "object",
+      "required": [
+        "ClientEndpoint"
+      ],
       "properties": {
-        "RequestorId": {
-          "type": "integer"
+        "ClientEndpoint": {
+          "type": "string"
         },
         "TBD": {
           "type": "string"
@@ -547,9 +570,12 @@ func init() {
     },
     "PolicyParams": {
       "type": "object",
+      "required": [
+        "ClientEndpoint"
+      ],
       "properties": {
-        "RequestorId": {
-          "type": "integer"
+        "ClientEndpoint": {
+          "type": "string"
         },
         "TBD": {
           "type": "string"
@@ -559,15 +585,15 @@ func init() {
     "ReportParams": {
       "type": "object",
       "required": [
-        "RequestorId",
+        "ClientEndpoint",
         "EventTriggers"
       ],
       "properties": {
+        "ClientEndpoint": {
+          "type": "string"
+        },
         "EventTriggers": {
           "$ref": "#/definitions/EventTriggerList"
-        },
-        "RequestorId": {
-          "type": "integer"
         }
       }
     },
@@ -595,11 +621,25 @@ func init() {
         "$ref": "#/definitions/SubscriptionData"
       }
     },
-    "SubscriptionResult": {
-      "description": "A list of unique IDs",
+    "SubscriptionResponse": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "$ref": "#/definitions/SubscriptionResponseItem"
+      }
+    },
+    "SubscriptionResponseItem": {
+      "type": "object",
+      "required": [
+        "RequestorId",
+        "InstanceId"
+      ],
+      "properties": {
+        "InstanceId": {
+          "type": "integer"
+        },
+        "RequestorId": {
+          "type": "integer"
+        }
       }
     },
     "SubscriptionType": {

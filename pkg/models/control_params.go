@@ -8,15 +8,18 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // ControlParams control params
 // swagger:model ControlParams
 type ControlParams struct {
 
-	// requestor Id
-	RequestorID int64 `json:"RequestorId,omitempty"`
+	// client endpoint
+	// Required: true
+	ClientEndpoint *string `json:"ClientEndpoint"`
 
 	// t b d
 	TBD string `json:"TBD,omitempty"`
@@ -24,6 +27,24 @@ type ControlParams struct {
 
 // Validate validates this control params
 func (m *ControlParams) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateClientEndpoint(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ControlParams) validateClientEndpoint(formats strfmt.Registry) error {
+
+	if err := validate.Required("ClientEndpoint", "body", m.ClientEndpoint); err != nil {
+		return err
+	}
+
 	return nil
 }
 
