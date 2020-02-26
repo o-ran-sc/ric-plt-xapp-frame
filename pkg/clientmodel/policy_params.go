@@ -8,22 +8,124 @@ package clientmodel
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // PolicyParams policy params
 // swagger:model PolicyParams
 type PolicyParams struct {
 
-	// requestor Id
-	RequestorID int64 `json:"RequestorId,omitempty"`
+	// client endpoint
+	// Required: true
+	ClientEndpoint *string `json:"ClientEndpoint"`
 
-	// t b d
-	TBD string `json:"TBD,omitempty"`
+	// event triggers
+	// Required: true
+	EventTriggers EventTriggerList `json:"EventTriggers"`
+
+	// meid
+	// Required: true
+	Meid *string `json:"Meid"`
+
+	// policy action definitions
+	// Required: true
+	PolicyActionDefinitions *PolicyActionDefinition `json:"PolicyActionDefinitions"`
+
+	// r a n function ID
+	// Required: true
+	RANFunctionID *int64 `json:"RANFunctionID"`
 }
 
 // Validate validates this policy params
 func (m *PolicyParams) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateClientEndpoint(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateEventTriggers(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMeid(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validatePolicyActionDefinitions(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRANFunctionID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *PolicyParams) validateClientEndpoint(formats strfmt.Registry) error {
+
+	if err := validate.Required("ClientEndpoint", "body", m.ClientEndpoint); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *PolicyParams) validateEventTriggers(formats strfmt.Registry) error {
+
+	if err := validate.Required("EventTriggers", "body", m.EventTriggers); err != nil {
+		return err
+	}
+
+	if err := m.EventTriggers.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("EventTriggers")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *PolicyParams) validateMeid(formats strfmt.Registry) error {
+
+	if err := validate.Required("Meid", "body", m.Meid); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *PolicyParams) validatePolicyActionDefinitions(formats strfmt.Registry) error {
+
+	if err := validate.Required("PolicyActionDefinitions", "body", m.PolicyActionDefinitions); err != nil {
+		return err
+	}
+
+	if m.PolicyActionDefinitions != nil {
+		if err := m.PolicyActionDefinitions.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("PolicyActionDefinitions")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *PolicyParams) validateRANFunctionID(formats strfmt.Registry) error {
+
+	if err := validate.Required("RANFunctionID", "body", m.RANFunctionID); err != nil {
+		return err
+	}
+
 	return nil
 }
 

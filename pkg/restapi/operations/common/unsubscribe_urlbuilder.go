@@ -10,13 +10,11 @@ import (
 	"net/url"
 	golangswaggerpaths "path"
 	"strings"
-
-	"github.com/go-openapi/swag"
 )
 
 // UnsubscribeURL generates an URL for the unsubscribe operation
 type UnsubscribeURL struct {
-	SubscriptionID int64
+	SubscriptionID string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -44,7 +42,7 @@ func (o *UnsubscribeURL) Build() (*url.URL, error) {
 
 	var _path = "/subscriptions/{subscriptionId}"
 
-	subscriptionID := swag.FormatInt64(o.SubscriptionID)
+	subscriptionID := o.SubscriptionID
 	if subscriptionID != "" {
 		_path = strings.Replace(_path, "{subscriptionId}", subscriptionID, -1)
 	} else {

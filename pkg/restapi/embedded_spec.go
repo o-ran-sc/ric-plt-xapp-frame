@@ -57,45 +57,6 @@ func init() {
         }
       }
     },
-    "/subscriptions/control": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "control"
-        ],
-        "summary": "Subscribe and send \"CONTROL\" message to RAN to initiate or resume call processing in RAN",
-        "operationId": "subscribeControl",
-        "parameters": [
-          {
-            "description": "Subscription control parameters",
-            "name": "ControlParams",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/ControlParams"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Subscription successfully created",
-            "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          },
-          "500": {
-            "description": "Internal error"
-          }
-        }
-      }
-    },
     "/subscriptions/policy": {
       "post": {
         "consumes": [
@@ -123,7 +84,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -146,7 +107,7 @@ func init() {
         "tags": [
           "report"
         ],
-        "summary": "Subscribe a list of X2AP event triggers to receive \"REPORT\" messages sent by RAN",
+        "summary": "Subscribe a list of X2AP event triggers to receive \"REPORT\" messages sent by RAN or Subscribe to receive the content of gNB NRT table in REPORT message sent by RAN",
         "operationId": "subscribeReport",
         "parameters": [
           {
@@ -162,7 +123,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -183,8 +144,8 @@ func init() {
         "operationId": "Unsubscribe",
         "parameters": [
           {
-            "type": "integer",
-            "description": "The subscriptionId to be unsubscribed",
+            "type": "string",
+            "description": "The subscriptionId received in the Subscription Response",
             "name": "subscriptionId",
             "in": "path",
             "required": true
@@ -195,7 +156,7 @@ func init() {
             "description": "Operation done successfully"
           },
           "400": {
-            "description": "Invalid requestorId supplied"
+            "description": "Invalid subscriptionId supplied"
           },
           "500": {
             "description": "Internal error"
@@ -205,27 +166,26 @@ func init() {
     }
   },
   "definitions": {
-    "ControlParams": {
+    "ActionParameters": {
       "type": "object",
+      "required": [
+        "ActionParameterID",
+        "ActionParameterValue"
+      ],
       "properties": {
-        "RequestorId": {
+        "ActionParameterID": {
           "type": "integer"
         },
-        "TBD": {
-          "type": "string"
+        "ActionParameterValue": {
+          "type": "boolean"
         }
       }
     },
     "EventTrigger": {
       "type": "object",
-      "required": [
-        "InterfaceDirection",
-        "ProcedureCode",
-        "TypeOfMessage"
-      ],
       "properties": {
         "ENBId": {
-          "type": "integer"
+          "type": "string"
         },
         "InterfaceDirection": {
           "type": "integer"
@@ -235,6 +195,13 @@ func init() {
         },
         "ProcedureCode": {
           "type": "integer"
+        },
+        "TriggerNature": {
+          "type": "string",
+          "enum": [
+            "now",
+            "on change"
+          ]
         },
         "TypeOfMessage": {
           "type": "integer"
@@ -247,29 +214,162 @@ func init() {
         "$ref": "#/definitions/EventTrigger"
       }
     },
-    "PolicyParams": {
+    "Format1ActionDefinition": {
       "type": "object",
+      "required": [
+        "StyleID",
+        "ActionParameters"
+      ],
       "properties": {
-        "RequestorId": {
+        "ActionParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ActionParameters"
+          }
+        },
+        "StyleID": {
+          "type": "integer"
+        }
+      }
+    },
+    "Format2ActionDefinition": {
+      "type": "object",
+      "required": [
+        "RANUeGroupParameters"
+      ],
+      "properties": {
+        "RANUeGroupParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RANUeGroupList"
+          }
+        }
+      }
+    },
+    "ImperativePolicyDefinition": {
+      "type": "object",
+      "required": [
+        "PolicyParameterID",
+        "PolicyParameterValue"
+      ],
+      "properties": {
+        "PolicyParameterID": {
           "type": "integer"
         },
-        "TBD": {
+        "PolicyParameterValue": {
+          "type": "integer"
+        }
+      }
+    },
+    "PolicyActionDefinition": {
+      "type": "object",
+      "properties": {
+        "ActionDefinitionFormat2": {
+          "$ref": "#/definitions/Format2ActionDefinition"
+        }
+      }
+    },
+    "PolicyParams": {
+      "type": "object",
+      "required": [
+        "Meid",
+        "RANFunctionID",
+        "ClientEndpoint",
+        "EventTriggers",
+        "PolicyActionDefinitions"
+      ],
+      "properties": {
+        "ClientEndpoint": {
           "type": "string"
+        },
+        "EventTriggers": {
+          "$ref": "#/definitions/EventTriggerList"
+        },
+        "Meid": {
+          "type": "string"
+        },
+        "PolicyActionDefinitions": {
+          "$ref": "#/definitions/PolicyActionDefinition"
+        },
+        "RANFunctionID": {
+          "type": "integer"
+        }
+      }
+    },
+    "RANUeGroupList": {
+      "type": "object",
+      "required": [
+        "RANUeGroupID",
+        "RANUeGroupDefinition",
+        "RANImperativePolicy"
+      ],
+      "properties": {
+        "RANImperativePolicy": {
+          "$ref": "#/definitions/ImperativePolicyDefinition"
+        },
+        "RANUeGroupDefinition": {
+          "$ref": "#/definitions/RANUeGroupParams"
+        },
+        "RANUeGroupID": {
+          "type": "integer"
+        }
+      }
+    },
+    "RANUeGroupParams": {
+      "type": "object",
+      "required": [
+        "RANParameterID",
+        "RANParameterValue"
+      ],
+      "properties": {
+        "RANParameterID": {
+          "type": "integer"
+        },
+        "RANParameterTestCondition": {
+          "type": "string",
+          "enum": [
+            "equal",
+            "greaterthan",
+            "lessthan",
+            "contains",
+            "present"
+          ]
+        },
+        "RANParameterValue": {
+          "type": "integer"
+        }
+      }
+    },
+    "ReportActionDefinition": {
+      "type": "object",
+      "properties": {
+        "ActionDefinitionFormat1": {
+          "$ref": "#/definitions/Format1ActionDefinition"
         }
       }
     },
     "ReportParams": {
       "type": "object",
       "required": [
-        "RequestorId",
+        "RANFunctionID",
+        "ClientEndpoint",
         "EventTriggers"
       ],
       "properties": {
+        "ClientEndpoint": {
+          "type": "string"
+        },
         "EventTriggers": {
           "$ref": "#/definitions/EventTriggerList"
         },
-        "RequestorId": {
+        "Meid": {
+          "type": "string"
+        },
+        "RANFunctionID": {
           "type": "integer"
+        },
+        "ReportActionDefinitions": {
+          "$ref": "#/definitions/ReportActionDefinition"
         }
       }
     },
@@ -297,17 +397,34 @@ func init() {
         "$ref": "#/definitions/SubscriptionData"
       }
     },
-    "SubscriptionResult": {
-      "description": "A list of unique IDs",
+    "SubscriptionResponse": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "$ref": "#/definitions/SubscriptionResponseItem"
+      }
+    },
+    "SubscriptionResponseItem": {
+      "type": "object",
+      "required": [
+        "SubscriptionId",
+        "RequestorId",
+        "InstanceId"
+      ],
+      "properties": {
+        "InstanceId": {
+          "type": "integer"
+        },
+        "RequestorId": {
+          "type": "integer"
+        },
+        "SubscriptionId": {
+          "type": "string"
+        }
       }
     },
     "SubscriptionType": {
       "type": "string",
       "enum": [
-        "control",
         "insert",
         "policy",
         "report"
@@ -355,45 +472,6 @@ func init() {
         }
       }
     },
-    "/subscriptions/control": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "control"
-        ],
-        "summary": "Subscribe and send \"CONTROL\" message to RAN to initiate or resume call processing in RAN",
-        "operationId": "subscribeControl",
-        "parameters": [
-          {
-            "description": "Subscription control parameters",
-            "name": "ControlParams",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/ControlParams"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Subscription successfully created",
-            "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          },
-          "500": {
-            "description": "Internal error"
-          }
-        }
-      }
-    },
     "/subscriptions/policy": {
       "post": {
         "consumes": [
@@ -421,7 +499,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -444,7 +522,7 @@ func init() {
         "tags": [
           "report"
         ],
-        "summary": "Subscribe a list of X2AP event triggers to receive \"REPORT\" messages sent by RAN",
+        "summary": "Subscribe a list of X2AP event triggers to receive \"REPORT\" messages sent by RAN or Subscribe to receive the content of gNB NRT table in REPORT message sent by RAN",
         "operationId": "subscribeReport",
         "parameters": [
           {
@@ -460,7 +538,7 @@ func init() {
           "201": {
             "description": "Subscription successfully created",
             "schema": {
-              "$ref": "#/definitions/SubscriptionResult"
+              "$ref": "#/definitions/SubscriptionResponse"
             }
           },
           "400": {
@@ -481,8 +559,8 @@ func init() {
         "operationId": "Unsubscribe",
         "parameters": [
           {
-            "type": "integer",
-            "description": "The subscriptionId to be unsubscribed",
+            "type": "string",
+            "description": "The subscriptionId received in the Subscription Response",
             "name": "subscriptionId",
             "in": "path",
             "required": true
@@ -493,7 +571,7 @@ func init() {
             "description": "Operation done successfully"
           },
           "400": {
-            "description": "Invalid requestorId supplied"
+            "description": "Invalid subscriptionId supplied"
           },
           "500": {
             "description": "Internal error"
@@ -503,27 +581,26 @@ func init() {
     }
   },
   "definitions": {
-    "ControlParams": {
+    "ActionParameters": {
       "type": "object",
+      "required": [
+        "ActionParameterID",
+        "ActionParameterValue"
+      ],
       "properties": {
-        "RequestorId": {
+        "ActionParameterID": {
           "type": "integer"
         },
-        "TBD": {
-          "type": "string"
+        "ActionParameterValue": {
+          "type": "boolean"
         }
       }
     },
     "EventTrigger": {
       "type": "object",
-      "required": [
-        "InterfaceDirection",
-        "ProcedureCode",
-        "TypeOfMessage"
-      ],
       "properties": {
         "ENBId": {
-          "type": "integer"
+          "type": "string"
         },
         "InterfaceDirection": {
           "type": "integer"
@@ -533,6 +610,13 @@ func init() {
         },
         "ProcedureCode": {
           "type": "integer"
+        },
+        "TriggerNature": {
+          "type": "string",
+          "enum": [
+            "now",
+            "on change"
+          ]
         },
         "TypeOfMessage": {
           "type": "integer"
@@ -545,29 +629,162 @@ func init() {
         "$ref": "#/definitions/EventTrigger"
       }
     },
-    "PolicyParams": {
+    "Format1ActionDefinition": {
       "type": "object",
+      "required": [
+        "StyleID",
+        "ActionParameters"
+      ],
       "properties": {
-        "RequestorId": {
+        "ActionParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ActionParameters"
+          }
+        },
+        "StyleID": {
+          "type": "integer"
+        }
+      }
+    },
+    "Format2ActionDefinition": {
+      "type": "object",
+      "required": [
+        "RANUeGroupParameters"
+      ],
+      "properties": {
+        "RANUeGroupParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RANUeGroupList"
+          }
+        }
+      }
+    },
+    "ImperativePolicyDefinition": {
+      "type": "object",
+      "required": [
+        "PolicyParameterID",
+        "PolicyParameterValue"
+      ],
+      "properties": {
+        "PolicyParameterID": {
           "type": "integer"
         },
-        "TBD": {
+        "PolicyParameterValue": {
+          "type": "integer"
+        }
+      }
+    },
+    "PolicyActionDefinition": {
+      "type": "object",
+      "properties": {
+        "ActionDefinitionFormat2": {
+          "$ref": "#/definitions/Format2ActionDefinition"
+        }
+      }
+    },
+    "PolicyParams": {
+      "type": "object",
+      "required": [
+        "Meid",
+        "RANFunctionID",
+        "ClientEndpoint",
+        "EventTriggers",
+        "PolicyActionDefinitions"
+      ],
+      "properties": {
+        "ClientEndpoint": {
           "type": "string"
+        },
+        "EventTriggers": {
+          "$ref": "#/definitions/EventTriggerList"
+        },
+        "Meid": {
+          "type": "string"
+        },
+        "PolicyActionDefinitions": {
+          "$ref": "#/definitions/PolicyActionDefinition"
+        },
+        "RANFunctionID": {
+          "type": "integer"
+        }
+      }
+    },
+    "RANUeGroupList": {
+      "type": "object",
+      "required": [
+        "RANUeGroupID",
+        "RANUeGroupDefinition",
+        "RANImperativePolicy"
+      ],
+      "properties": {
+        "RANImperativePolicy": {
+          "$ref": "#/definitions/ImperativePolicyDefinition"
+        },
+        "RANUeGroupDefinition": {
+          "$ref": "#/definitions/RANUeGroupParams"
+        },
+        "RANUeGroupID": {
+          "type": "integer"
+        }
+      }
+    },
+    "RANUeGroupParams": {
+      "type": "object",
+      "required": [
+        "RANParameterID",
+        "RANParameterValue"
+      ],
+      "properties": {
+        "RANParameterID": {
+          "type": "integer"
+        },
+        "RANParameterTestCondition": {
+          "type": "string",
+          "enum": [
+            "equal",
+            "greaterthan",
+            "lessthan",
+            "contains",
+            "present"
+          ]
+        },
+        "RANParameterValue": {
+          "type": "integer"
+        }
+      }
+    },
+    "ReportActionDefinition": {
+      "type": "object",
+      "properties": {
+        "ActionDefinitionFormat1": {
+          "$ref": "#/definitions/Format1ActionDefinition"
         }
       }
     },
     "ReportParams": {
       "type": "object",
       "required": [
-        "RequestorId",
+        "RANFunctionID",
+        "ClientEndpoint",
         "EventTriggers"
       ],
       "properties": {
+        "ClientEndpoint": {
+          "type": "string"
+        },
         "EventTriggers": {
           "$ref": "#/definitions/EventTriggerList"
         },
-        "RequestorId": {
+        "Meid": {
+          "type": "string"
+        },
+        "RANFunctionID": {
           "type": "integer"
+        },
+        "ReportActionDefinitions": {
+          "$ref": "#/definitions/ReportActionDefinition"
         }
       }
     },
@@ -595,17 +812,34 @@ func init() {
         "$ref": "#/definitions/SubscriptionData"
       }
     },
-    "SubscriptionResult": {
-      "description": "A list of unique IDs",
+    "SubscriptionResponse": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "$ref": "#/definitions/SubscriptionResponseItem"
+      }
+    },
+    "SubscriptionResponseItem": {
+      "type": "object",
+      "required": [
+        "SubscriptionId",
+        "RequestorId",
+        "InstanceId"
+      ],
+      "properties": {
+        "InstanceId": {
+          "type": "integer"
+        },
+        "RequestorId": {
+          "type": "integer"
+        },
+        "SubscriptionId": {
+          "type": "string"
+        }
       }
     },
     "SubscriptionType": {
       "type": "string",
       "enum": [
-        "control",
         "insert",
         "policy",
         "report"

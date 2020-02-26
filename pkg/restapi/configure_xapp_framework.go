@@ -12,8 +12,8 @@ import (
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/common"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/control"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/policy"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/query"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
 )
 
@@ -42,9 +42,9 @@ func configureAPI(api *operations.XappFrameworkAPI) http.Handler {
 			return middleware.NotImplemented("operation common.Unsubscribe has not yet been implemented")
 		})
 	}
-	if api.ControlSubscribeControlHandler == nil {
-		api.ControlSubscribeControlHandler = control.SubscribeControlHandlerFunc(func(params control.SubscribeControlParams) middleware.Responder {
-			return middleware.NotImplemented("operation control.SubscribeControl has not yet been implemented")
+	if api.QueryGetAllSubscriptionsHandler == nil {
+		api.QueryGetAllSubscriptionsHandler = query.GetAllSubscriptionsHandlerFunc(func(params query.GetAllSubscriptionsParams) middleware.Responder {
+			return middleware.NotImplemented("operation query.GetAllSubscriptions has not yet been implemented")
 		})
 	}
 	if api.PolicySubscribePolicyHandler == nil {

@@ -17,30 +17,57 @@ import (
 // swagger:model ReportParams
 type ReportParams struct {
 
+	// client endpoint
+	// Required: true
+	ClientEndpoint *string `json:"ClientEndpoint"`
+
 	// event triggers
 	// Required: true
 	EventTriggers EventTriggerList `json:"EventTriggers"`
 
-	// requestor Id
+	// meid
+	Meid string `json:"Meid,omitempty"`
+
+	// r a n function ID
 	// Required: true
-	RequestorID *int64 `json:"RequestorId"`
+	RANFunctionID *int64 `json:"RANFunctionID"`
+
+	// report action definitions
+	ReportActionDefinitions *ReportActionDefinition `json:"ReportActionDefinitions,omitempty"`
 }
 
 // Validate validates this report params
 func (m *ReportParams) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateClientEndpoint(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateEventTriggers(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateRequestorID(formats); err != nil {
+	if err := m.validateRANFunctionID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateReportActionDefinitions(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ReportParams) validateClientEndpoint(formats strfmt.Registry) error {
+
+	if err := validate.Required("ClientEndpoint", "body", m.ClientEndpoint); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -60,10 +87,28 @@ func (m *ReportParams) validateEventTriggers(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ReportParams) validateRequestorID(formats strfmt.Registry) error {
+func (m *ReportParams) validateRANFunctionID(formats strfmt.Registry) error {
 
-	if err := validate.Required("RequestorId", "body", m.RequestorID); err != nil {
+	if err := validate.Required("RANFunctionID", "body", m.RANFunctionID); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *ReportParams) validateReportActionDefinitions(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ReportActionDefinitions) { // not required
+		return nil
+	}
+
+	if m.ReportActionDefinitions != nil {
+		if err := m.ReportActionDefinitions.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("ReportActionDefinitions")
+			}
+			return err
+		}
 	}
 
 	return nil
