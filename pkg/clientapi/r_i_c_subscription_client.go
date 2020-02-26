@@ -12,7 +12,6 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/common"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/control"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/policy"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/query"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/report"
@@ -62,8 +61,6 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *RICSubscri
 	cli.Transport = transport
 
 	cli.Common = common.New(transport, formats)
-
-	cli.Control = control.New(transport, formats)
 
 	cli.Policy = policy.New(transport, formats)
 
@@ -117,8 +114,6 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 type RICSubscription struct {
 	Common *common.Client
 
-	Control *control.Client
-
 	Policy *policy.Client
 
 	Query *query.Client
@@ -133,8 +128,6 @@ func (c *RICSubscription) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
 
 	c.Common.SetTransport(transport)
-
-	c.Control.SetTransport(transport)
 
 	c.Policy.SetTransport(transport)
 

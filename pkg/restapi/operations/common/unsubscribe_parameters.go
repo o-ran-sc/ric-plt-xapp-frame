@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/swag"
 
 	strfmt "github.com/go-openapi/strfmt"
 )
@@ -31,11 +30,11 @@ type UnsubscribeParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*The subscriptionId to be unsubscribed
+	/*The subscriptionId received in the Subscription Response
 	  Required: true
 	  In: path
 	*/
-	SubscriptionID int64
+	SubscriptionID string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -68,11 +67,7 @@ func (o *UnsubscribeParams) bindSubscriptionID(rawData []string, hasKey bool, fo
 	// Required: true
 	// Parameter is provided by construction from the route
 
-	value, err := swag.ConvertInt64(raw)
-	if err != nil {
-		return errors.InvalidType("subscriptionId", "path", "int64", raw)
-	}
-	o.SubscriptionID = value
+	o.SubscriptionID = raw
 
 	return nil
 }

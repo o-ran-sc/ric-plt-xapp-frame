@@ -25,7 +25,7 @@ type Client struct {
 }
 
 /*
-SubscribeReport subscribes a list of x2 a p event triggers to receive r e p o r t messages sent by r a n
+SubscribeReport subscribes a list of x2 a p event triggers to receive r e p o r t messages sent by r a n or subscribe to receive the content of g n b n r t table in r e p o r t message sent by r a n
 */
 func (a *Client) SubscribeReport(params *SubscribeReportParams) (*SubscribeReportCreated, error) {
 	// TODO: Validate the params before sending

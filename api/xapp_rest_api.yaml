@@ -1,4 +1,4 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   description: This is the initial REST API for RIC subscription
   version: 0.0.1
@@ -30,7 +30,7 @@ paths:
     post:
       tags:
       - "report"
-      summary: Subscribe a list of X2AP event triggers to receive "REPORT" messages sent by RAN
+      summary: Subscribe a list of X2AP event triggers to receive "REPORT" messages sent by RAN or Subscribe to receive the content of gNB NRT table in REPORT message sent by RAN
       operationId: subscribeReport
       consumes:
         - application/json
@@ -46,32 +46,7 @@ paths:
         '201':
           description: Subscription successfully created
           schema:
-            $ref: '#/definitions/SubscriptionResult'
-        '400':
-          description: Invalid input
-        '500':
-          description: Internal error
-  /subscriptions/control:
-    post:
-      tags:
-      - "control"
-      summary: Subscribe and send "CONTROL" message to RAN to initiate or resume call processing in RAN
-      operationId: subscribeControl
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: ControlParams
-          in: body
-          description: Subscription control parameters
-          schema:
-            $ref: '#/definitions/ControlParams'
-      responses:
-        '201':
-          description: Subscription successfully created
-          schema:
-            $ref: '#/definitions/SubscriptionResult'
+            $ref: '#/definitions/SubscriptionResponse'
         '400':
           description: Invalid input
         '500':
@@ -96,7 +71,7 @@ paths:
         '201':
           description: Subscription successfully created
           schema:
-            $ref: '#/definitions/SubscriptionResult'
+            $ref: '#/definitions/SubscriptionResponse'
         '400':
           description: Invalid input
         '500':
@@ -110,40 +85,42 @@ paths:
       parameters:
         - name: subscriptionId
           in: path
-          description: The subscriptionId to be unsubscribed
+          description: The subscriptionId received in the Subscription Response
           required: true
-          type: integer
+          type: string
       responses:
         '204':
           description: Operation done successfully
         '400':
-          description: Invalid requestorId supplied
+          description: Invalid subscriptionId supplied
         '500':
           description: Internal error
 definitions:
   SubscriptionType:
     type: string
     enum:
-      - control
       - insert
       - policy
       - report
   ReportParams:
     type: object
     required:
-      - RequestorId
+      - RANFunctionID
+      - ClientEndpoint
       - EventTriggers
     properties:
-      RequestorId:
+      Meid:
+        type: string
+      RANFunctionID:
         type: integer
+      ClientEndpoint:
+        type: string
       EventTriggers:
         $ref: '#/definitions/EventTriggerList'
+      ReportActionDefinitions:
+        $ref: '#/definitions/ReportActionDefinition'
   EventTrigger:
     type: object
-    required:
-      - InterfaceDirection
-      - ProcedureCode
-      - TypeOfMessage
     properties:
       InterfaceDirection:
         type: integer
@@ -151,33 +128,137 @@ definitions:
         type: integer
       TypeOfMessage:
         type: integer
+      TriggerNature:
+        type: string
+        enum:
+          - now
+          - on change
       PlmnId:
         type: string
       ENBId:
-        type: integer
+        type: string
   EventTriggerList:
     type: array
     items:
       $ref: '#/definitions/EventTrigger'
-  SubscriptionResult:
-    type: array
-    description: A list of unique IDs
-    items:
-      type: integer
-  ControlParams:
+  ActionParameters:
+    type: object
+    required:
+      - ActionParameterID
+      - ActionParameterValue
+    properties:
+      ActionParameterID:
+        type: integer
+      ActionParameterValue:
+        type: boolean
+  Format1ActionDefinition:
+    type: object
+    required:
+      - StyleID
+      - ActionParameters
+    properties:
+      StyleID:
+        type: integer
+      ActionParameters:
+        type: array
+        items:
+          $ref: '#/definitions/ActionParameters'
+  ReportActionDefinition:
     type: object
     properties:
-      RequestorId:
-        type: integer
-      TBD:
-        type: string
+      ActionDefinitionFormat1:
+        $ref: '#/definitions/Format1ActionDefinition'
   PolicyParams:
     type: object
+    required:
+      - Meid
+      - RANFunctionID
+      - ClientEndpoint
+      - EventTriggers
+      - PolicyActionDefinitions
     properties:
+      Meid:
+        type: string
+      RANFunctionID:
+        type: integer
+      ClientEndpoint:
+        type: string
+      EventTriggers:
+        $ref: '#/definitions/EventTriggerList'
+      PolicyActionDefinitions:
+        $ref: '#/definitions/PolicyActionDefinition'
+  PolicyActionDefinition:
+    type: object
+    properties:
+      ActionDefinitionFormat2:
+        $ref: '#/definitions/Format2ActionDefinition'
+  Format2ActionDefinition:
+    type: object
+    required:
+      - RANUeGroupParameters
+    properties:
+      RANUeGroupParameters:
+        type: array
+        items:
+          $ref: '#/definitions/RANUeGroupList'
+  RANUeGroupList:
+    type: object
+    required:
+      - RANUeGroupID
+      - RANUeGroupDefinition
+      - RANImperativePolicy
+    properties:
+      RANUeGroupID:
+        type: integer
+      RANUeGroupDefinition:
+        $ref: '#/definitions/RANUeGroupParams'
+      RANImperativePolicy:
+        $ref: '#/definitions/ImperativePolicyDefinition'
+  RANUeGroupParams:
+    type: object
+    required:
+      - RANParameterID
+      - RANParameterValue
+    properties:
+      RANParameterID:
+        type: integer
+      RANParameterTestCondition:
+        type: string
+        enum:
+          - equal
+          - greaterthan
+          - lessthan
+          - contains
+          - present
+      RANParameterValue:
+        type: integer
+  ImperativePolicyDefinition:
+    type: object
+    required:
+      - PolicyParameterID
+      - PolicyParameterValue
+    properties:
+      PolicyParameterID:
+        type: integer
+      PolicyParameterValue:
+        type: integer
+  SubscriptionResponseItem:
+    type: object
+    required:
+      - SubscriptionId
+      - RequestorId
+      - InstanceId
+    properties:
+      SubscriptionId:
+        type: string
       RequestorId:
         type: integer
-      TBD:
-        type: string
+      InstanceId:
+        type: integer
+  SubscriptionResponse:
+    type: array
+    items:
+      $ref: '#/definitions/SubscriptionResponseItem'
   SubscriptionData:
     type: object
     properties:

@@ -6,6 +6,8 @@ package clientmodel
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"encoding/json"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -18,37 +20,30 @@ import (
 type EventTrigger struct {
 
 	// e n b Id
-	ENBID int64 `json:"ENBId,omitempty"`
+	ENBID string `json:"ENBId,omitempty"`
 
 	// interface direction
-	// Required: true
-	InterfaceDirection *int64 `json:"InterfaceDirection"`
+	InterfaceDirection int64 `json:"InterfaceDirection,omitempty"`
 
 	// plmn Id
 	PlmnID string `json:"PlmnId,omitempty"`
 
 	// procedure code
-	// Required: true
-	ProcedureCode *int64 `json:"ProcedureCode"`
+	ProcedureCode int64 `json:"ProcedureCode,omitempty"`
+
+	// trigger nature
+	// Enum: [now on change]
+	TriggerNature string `json:"TriggerNature,omitempty"`
 
 	// type of message
-	// Required: true
-	TypeOfMessage *int64 `json:"TypeOfMessage"`
+	TypeOfMessage int64 `json:"TypeOfMessage,omitempty"`
 }
 
 // Validate validates this event trigger
 func (m *EventTrigger) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateInterfaceDirection(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateProcedureCode(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateTypeOfMessage(formats); err != nil {
+	if err := m.validateTriggerNature(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -58,27 +53,43 @@ func (m *EventTrigger) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *EventTrigger) validateInterfaceDirection(formats strfmt.Registry) error {
+var eventTriggerTypeTriggerNaturePropEnum []interface{}
 
-	if err := validate.Required("InterfaceDirection", "body", m.InterfaceDirection); err != nil {
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["now","on change"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		eventTriggerTypeTriggerNaturePropEnum = append(eventTriggerTypeTriggerNaturePropEnum, v)
+	}
+}
+
+const (
+
+	// EventTriggerTriggerNatureNow captures enum value "now"
+	EventTriggerTriggerNatureNow string = "now"
+
+	// EventTriggerTriggerNatureOnChange captures enum value "on change"
+	EventTriggerTriggerNatureOnChange string = "on change"
+)
+
+// prop value enum
+func (m *EventTrigger) validateTriggerNatureEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, eventTriggerTypeTriggerNaturePropEnum); err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (m *EventTrigger) validateProcedureCode(formats strfmt.Registry) error {
+func (m *EventTrigger) validateTriggerNature(formats strfmt.Registry) error {
 
-	if err := validate.Required("ProcedureCode", "body", m.ProcedureCode); err != nil {
-		return err
+	if swag.IsZero(m.TriggerNature) { // not required
+		return nil
 	}
 
-	return nil
-}
-
-func (m *EventTrigger) validateTypeOfMessage(formats strfmt.Registry) error {
-
-	if err := validate.Required("TypeOfMessage", "body", m.TypeOfMessage); err != nil {
+	// value enum
+	if err := m.validateTriggerNatureEnum("TriggerNature", "body", m.TriggerNature); err != nil {
 		return err
 	}
 

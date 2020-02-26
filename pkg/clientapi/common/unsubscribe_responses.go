@@ -76,7 +76,7 @@ func NewUnsubscribeBadRequest() *UnsubscribeBadRequest {
 
 /*UnsubscribeBadRequest handles this case with default header values.
 
-Invalid requestorId supplied
+Invalid subscriptionId supplied
 */
 type UnsubscribeBadRequest struct {
 }
