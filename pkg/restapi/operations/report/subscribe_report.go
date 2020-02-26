@@ -31,7 +31,7 @@ func NewSubscribeReport(ctx *middleware.Context, handler SubscribeReportHandler)
 
 /*SubscribeReport swagger:route POST /subscriptions/report report subscribeReport
 
-Subscribe a list of X2AP event triggers to receive "REPORT" messages sent by RAN
+Subscribe a list of X2AP event triggers to receive "REPORT" messages sent by RAN or Subscribe to receive the content of gNB NRT table in REPORT message sent by RAN
 
 */
 type SubscribeReport struct {

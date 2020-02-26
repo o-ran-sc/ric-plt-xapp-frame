@@ -20,9 +20,6 @@ type SubscriptionType string
 
 const (
 
-	// SubscriptionTypeControl captures enum value "control"
-	SubscriptionTypeControl SubscriptionType = "control"
-
 	// SubscriptionTypeInsert captures enum value "insert"
 	SubscriptionTypeInsert SubscriptionType = "insert"
 
@@ -38,7 +35,7 @@ var subscriptionTypeEnum []interface{}
 
 func init() {
 	var res []SubscriptionType
-	if err := json.Unmarshal([]byte(`["control","insert","policy","report"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["insert","policy","report"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
