@@ -36,7 +36,7 @@ func (a *Client) Unsubscribe(params *UnsubscribeParams) (*UnsubscribeNoContent, 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "Unsubscribe",
 		Method:             "DELETE",
-		PathPattern:        "/subscriptions/{subscriptionId}",
+		PathPattern:        "/subscriptions/{clientEndpoint}",
 		ProducesMediaTypes: []string{""},
 		ConsumesMediaTypes: []string{""},
 		Schemes:            []string{"http"},

@@ -61,7 +61,7 @@ type UnsubscribeNoContent struct {
 }
 
 func (o *UnsubscribeNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /subscriptions/{subscriptionId}][%d] unsubscribeNoContent ", 204)
+	return fmt.Sprintf("[DELETE /subscriptions/{clientEndpoint}][%d] unsubscribeNoContent ", 204)
 }
 
 func (o *UnsubscribeNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -76,13 +76,13 @@ func NewUnsubscribeBadRequest() *UnsubscribeBadRequest {
 
 /*UnsubscribeBadRequest handles this case with default header values.
 
-Invalid requestorId supplied
+Invalid clientEndpoint supplied
 */
 type UnsubscribeBadRequest struct {
 }
 
 func (o *UnsubscribeBadRequest) Error() string {
-	return fmt.Sprintf("[DELETE /subscriptions/{subscriptionId}][%d] unsubscribeBadRequest ", 400)
+	return fmt.Sprintf("[DELETE /subscriptions/{clientEndpoint}][%d] unsubscribeBadRequest ", 400)
 }
 
 func (o *UnsubscribeBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -103,7 +103,7 @@ type UnsubscribeInternalServerError struct {
 }
 
 func (o *UnsubscribeInternalServerError) Error() string {
-	return fmt.Sprintf("[DELETE /subscriptions/{subscriptionId}][%d] unsubscribeInternalServerError ", 500)
+	return fmt.Sprintf("[DELETE /subscriptions/{clientEndpoint}][%d] unsubscribeInternalServerError ", 500)
 }
 
 func (o *UnsubscribeInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

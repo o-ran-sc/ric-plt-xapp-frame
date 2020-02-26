@@ -38,7 +38,7 @@ func (o *UnsubscribeNoContent) WriteResponse(rw http.ResponseWriter, producer ru
 // UnsubscribeBadRequestCode is the HTTP code returned for type UnsubscribeBadRequest
 const UnsubscribeBadRequestCode int = 400
 
-/*UnsubscribeBadRequest Invalid requestorId supplied
+/*UnsubscribeBadRequest Invalid clientEndpoint supplied
 
 swagger:response unsubscribeBadRequest
 */

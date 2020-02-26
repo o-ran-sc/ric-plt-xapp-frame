@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/swag"
 
 	strfmt "github.com/go-openapi/strfmt"
 )
@@ -31,11 +30,11 @@ type UnsubscribeParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*The subscriptionId to be unsubscribed
+	/*The clientEndpoint to be unsubscribed
 	  Required: true
 	  In: path
 	*/
-	SubscriptionID int64
+	ClientEndpoint string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -47,8 +46,8 @@ func (o *UnsubscribeParams) BindRequest(r *http.Request, route *middleware.Match
 
 	o.HTTPRequest = r
 
-	rSubscriptionID, rhkSubscriptionID, _ := route.Params.GetOK("subscriptionId")
-	if err := o.bindSubscriptionID(rSubscriptionID, rhkSubscriptionID, route.Formats); err != nil {
+	rClientEndpoint, rhkClientEndpoint, _ := route.Params.GetOK("clientEndpoint")
+	if err := o.bindClientEndpoint(rClientEndpoint, rhkClientEndpoint, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -58,8 +57,8 @@ func (o *UnsubscribeParams) BindRequest(r *http.Request, route *middleware.Match
 	return nil
 }
 
-// bindSubscriptionID binds and validates parameter SubscriptionID from path.
-func (o *UnsubscribeParams) bindSubscriptionID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+// bindClientEndpoint binds and validates parameter ClientEndpoint from path.
+func (o *UnsubscribeParams) bindClientEndpoint(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -68,11 +67,7 @@ func (o *UnsubscribeParams) bindSubscriptionID(rawData []string, hasKey bool, fo
 	// Required: true
 	// Parameter is provided by construction from the route
 
-	value, err := swag.ConvertInt64(raw)
-	if err != nil {
-		return errors.InvalidType("subscriptionId", "path", "int64", raw)
-	}
-	o.SubscriptionID = value
+	o.ClientEndpoint = raw
 
 	return nil
 }

@@ -283,7 +283,7 @@ func (o *XappFrameworkAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/subscriptions/{subscriptionId}"] = common.NewUnsubscribe(o.context, o.CommonUnsubscribeHandler)
+	o.handlers["DELETE"]["/subscriptions/{clientEndpoint}"] = common.NewUnsubscribe(o.context, o.CommonUnsubscribeHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

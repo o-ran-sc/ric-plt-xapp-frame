@@ -46,7 +46,7 @@ paths:
         '201':
           description: Subscription successfully created
           schema:
-            $ref: '#/definitions/SubscriptionResult'
+            $ref: '#/definitions/SubscriptionResponse'
         '400':
           description: Invalid input
         '500':
@@ -71,7 +71,7 @@ paths:
         '201':
           description: Subscription successfully created
           schema:
-            $ref: '#/definitions/SubscriptionResult'
+            $ref: '#/definitions/SubscriptionResponse'
         '400':
           description: Invalid input
         '500':
@@ -96,28 +96,28 @@ paths:
         '201':
           description: Subscription successfully created
           schema:
-            $ref: '#/definitions/SubscriptionResult'
+            $ref: '#/definitions/SubscriptionResponse'
         '400':
           description: Invalid input
         '500':
           description: Internal error
-  /subscriptions/{subscriptionId}:
+  /subscriptions/{clientEndpoint}:
     delete:
       tags:
       - "common"
       summary: Unsubscribe X2AP events from Subscription Manager
       operationId: Unsubscribe
       parameters:
-        - name: subscriptionId
+        - name: clientEndpoint
           in: path
-          description: The subscriptionId to be unsubscribed
+          description: The clientEndpoint to be unsubscribed
           required: true
-          type: integer
+          type: string
       responses:
         '204':
           description: Operation done successfully
         '400':
-          description: Invalid requestorId supplied
+          description: Invalid clientEndpoint supplied
         '500':
           description: Internal error
 definitions:
@@ -131,11 +131,11 @@ definitions:
   ReportParams:
     type: object
     required:
-      - RequestorId
+      - ClientEndpoint
       - EventTriggers
     properties:
-      RequestorId:
-        type: integer
+      ClientEndpoint:
+        type: string
       EventTriggers:
         $ref: '#/definitions/EventTriggerList'
   EventTrigger:
@@ -159,23 +159,36 @@ definitions:
     type: array
     items:
       $ref: '#/definitions/EventTrigger'
-  SubscriptionResult:
-    type: array
-    description: A list of unique IDs
-    items:
-      type: integer
-  ControlParams:
+  SubscriptionResponseItem:
     type: object
+    required:
+      - RequestorId
+      - InstanceId
     properties:
       RequestorId:
         type: integer
+      InstanceId:
+        type: integer
+  SubscriptionResponse:
+    type: array
+    items:
+      $ref: '#/definitions/SubscriptionResponseItem'
+  ControlParams:
+    type: object
+    required:
+      - ClientEndpoint
+    properties:
+      ClientEndpoint:
+        type: string
       TBD:
         type: string
   PolicyParams:
     type: object
+    required:
+      - ClientEndpoint
     properties:
-      RequestorId:
-        type: integer
+      ClientEndpoint:
+        type: string
       TBD:
         type: string
   SubscriptionData:

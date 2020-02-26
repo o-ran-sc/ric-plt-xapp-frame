@@ -34,6 +34,7 @@ import (
 	apicontrol "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/control"
 	apipolicy "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/policy"
 	apireport "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/report"
+	apicommon "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/common"
 	apimodel "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
@@ -43,10 +44,12 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/policy"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/query"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/common"
 )
 
-type SubscriptionHandler func(models.SubscriptionType, interface{}) (models.SubscriptionResult, error)
+type SubscriptionHandler func(models.SubscriptionType, interface{}) (models.SubscriptionResponse, error)
 type SubscriptionQueryHandler func() (models.SubscriptionList, error)
+type SubscriptionDeleteHandler func(string) error
 
 type Subscriber struct {
 	localAddr  string
@@ -77,7 +80,7 @@ func NewSubscriber(host string, timo int) *Subscriber {
 }
 
 // Server interface: listen and receive subscription requests
-func (r *Subscriber) Listen(subHandler SubscriptionHandler, queryHandler SubscriptionQueryHandler) error {
+func (r *Subscriber) Listen(add SubscriptionHandler, get SubscriptionQueryHandler, del SubscriptionDeleteHandler) error {
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
 		return err
@@ -88,7 +91,7 @@ func (r *Subscriber) Listen(subHandler SubscriptionHandler, queryHandler Subscri
 	// Subscription: query
 	api.QueryGetAllSubscriptionsHandler = query.GetAllSubscriptionsHandlerFunc(
 		func(p query.GetAllSubscriptionsParams) middleware.Responder {
-			if resp, err := queryHandler(); err == nil {
+			if resp, err := get(); err == nil {
 				return query.NewGetAllSubscriptionsOK().WithPayload(resp)
 			}
 			return query.NewGetAllSubscriptionsInternalServerError()
@@ -97,7 +100,7 @@ func (r *Subscriber) Listen(subHandler SubscriptionHandler, queryHandler Subscri
 	// SubscriptionType: Report
 	api.ReportSubscribeReportHandler = report.SubscribeReportHandlerFunc(
 		func(p report.SubscribeReportParams) middleware.Responder {
-			if resp, err := subHandler(models.SubscriptionTypeReport, p.ReportParams); err == nil {
+			if resp, err := add(models.SubscriptionTypeReport, p.ReportParams); err == nil {
 				return report.NewSubscribeReportCreated().WithPayload(resp)
 			}
 			return report.NewSubscribeReportInternalServerError()
@@ -106,7 +109,7 @@ func (r *Subscriber) Listen(subHandler SubscriptionHandler, queryHandler Subscri
 	// SubscriptionType: Control
 	api.ControlSubscribeControlHandler = control.SubscribeControlHandlerFunc(
 		func(p control.SubscribeControlParams) middleware.Responder {
-			if resp, err := subHandler(models.SubscriptionTypeControl, p.ControlParams); err == nil {
+			if resp, err := add(models.SubscriptionTypeControl, p.ControlParams); err == nil {
 				return control.NewSubscribeControlCreated().WithPayload(resp)
 			}
 			return control.NewSubscribeControlInternalServerError()
@@ -115,12 +118,21 @@ func (r *Subscriber) Listen(subHandler SubscriptionHandler, queryHandler Subscri
 	// SubscriptionType: policy
 	api.PolicySubscribePolicyHandler = policy.SubscribePolicyHandlerFunc(
 		func(p policy.SubscribePolicyParams) middleware.Responder {
-			if resp, err := subHandler(models.SubscriptionTypePolicy, p.PolicyParams); err == nil {
+			if resp, err := add(models.SubscriptionTypePolicy, p.PolicyParams); err == nil {
 				return policy.NewSubscribePolicyCreated().WithPayload(resp)
 			}
 			return policy.NewSubscribePolicyInternalServerError()
 		})
 
+	// SubscriptionType: delete
+	api.CommonUnsubscribeHandler = common.UnsubscribeHandlerFunc(
+		func(p common.UnsubscribeParams) middleware.Responder {
+			if err := del(p.ClientEndpoint); err == nil {
+				return common.NewUnsubscribeNoContent()
+			}
+			return common.NewUnsubscribeInternalServerError()
+		})
+	
 	server := restapi.NewServer(api)
 	defer server.Shutdown()
 	server.Host = r.localAddr
@@ -134,36 +146,44 @@ func (r *Subscriber) Listen(subHandler SubscriptionHandler, queryHandler Subscri
 }
 
 // Subscription interface for xApp: REPORT
-func (r *Subscriber) SubscribeReport(p *apimodel.ReportParams) (apimodel.SubscriptionResult, error) {
+func (r *Subscriber) SubscribeReport(p *apimodel.ReportParams) (apimodel.SubscriptionResponse, error) {
 	params := apireport.NewSubscribeReportParamsWithTimeout(r.timeout).WithReportParams(p)
 	result, err := r.CreateTransport().Report.SubscribeReport(params)
 	if err != nil {
-		return apimodel.SubscriptionResult{}, err
+		return apimodel.SubscriptionResponse{}, err
 	}
 
 	return result.Payload, err
 }
 
 // Subscription interface for xApp: CONTROL
-func (r *Subscriber) SubscribeControl(p *apimodel.ControlParams) (apimodel.SubscriptionResult, error) {
+func (r *Subscriber) SubscribeControl(p *apimodel.ControlParams) (apimodel.SubscriptionResponse, error) {
 	params := apicontrol.NewSubscribeControlParamsWithTimeout(r.timeout).WithControlParams(p)
 	result, err := r.CreateTransport().Control.SubscribeControl(params)
 	if err != nil {
-		return apimodel.SubscriptionResult{}, err
+		return apimodel.SubscriptionResponse{}, err
 	}
 
 	return result.Payload, err
 }
 
 // Subscription interface for xApp: POLICY
-func (r *Subscriber) SubscribePolicy(p *apimodel.PolicyParams) (apimodel.SubscriptionResult, error) {
+func (r *Subscriber) SubscribePolicy(p *apimodel.PolicyParams) (apimodel.SubscriptionResponse, error) {
 	params := apipolicy.NewSubscribePolicyParamsWithTimeout(r.timeout).WithPolicyParams(p)
 	result, err := r.CreateTransport().Policy.SubscribePolicy(params)
 	if err != nil {
-		return apimodel.SubscriptionResult{}, err
+		return apimodel.SubscriptionResponse{}, err
 	}
 
 	return result.Payload, err
+}
+
+// Subscription interface for xApp: DELETE
+func (r *Subscriber) UnSubscribe(ep string) error {
+	params := apicommon.NewUnsubscribeParamsWithTimeout(r.timeout).WithClientEndpoint(ep)
+	_, err := r.CreateTransport().Common.Unsubscribe(params)
+
+	return err
 }
 
 // Subscription interface for xApp: QUERY
