@@ -81,15 +81,19 @@ type RMRParams struct {
 	SubId      int
 	Src        string
 	Mbuf       *C.rmr_mbuf_t
+	Whid       int
 	status     int
 }
 
-func NewRMRClientWithParams(protPort string, maxSize int, numWorkers int, statDesc string) *RMRClient {
+func NewRMRClientWithParams(protPort string, maxSize int, numWorkers int, threadType int, statDesc string) *RMRClient {
 	p := C.CString(protPort)
 	m := C.int(maxSize)
+	c := C.int(threadType)
 	defer C.free(unsafe.Pointer(p))
 
-	ctx := C.rmr_init(p, m, C.int(0))
+	//ctx := C.rmr_init(p, m, C.int(0))
+	//ctx := C.rmr_init(p, m, C.RMRFL_NOTHREAD)
+	ctx := C.rmr_init(p, m, c)
 	if ctx == nil {
 		Logger.Error("rmrClient: Initializing RMR context failed, bailing out!")
 	}
@@ -104,7 +108,7 @@ func NewRMRClientWithParams(protPort string, maxSize int, numWorkers int, statDe
 }
 
 func NewRMRClient() *RMRClient {
-	return NewRMRClientWithParams(viper.GetString("rmr.protPort"), viper.GetInt("rmr.maxSize"), viper.GetInt("rmr.numWorkers"), "RMR")
+	return NewRMRClientWithParams(viper.GetString("rmr.protPort"), viper.GetInt("rmr.maxSize"), viper.GetInt("rmr.numWorkers"), viper.GetInt("rmr.threadType"), "RMR")
 }
 
 func (m *RMRClient) Start(c MessageConsumer) {
@@ -262,24 +266,28 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 	}
 	C.write_bytes_array(txBuffer.payload, datap, txBuffer.len)
 
-	params.status = m.SendBuf(txBuffer, isRts)
+	params.status = m.SendBuf(txBuffer, isRts, params.Whid)
 	if params.status == int(C.RMR_OK) {
 		return true
 	}
 	return false
 }
 
-func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool) int {
+func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 	var (
 		currBuffer  *C.rmr_mbuf_t
 		counterName string = "Transmitted"
 	)
 
 	txBuffer.state = 0
-	if isRts {
-		currBuffer = C.rmr_rts_msg(m.context, txBuffer)
+	if whid != 0 {
+		currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
 	} else {
-		currBuffer = C.rmr_send_msg(m.context, txBuffer)
+		if isRts {
+			currBuffer = C.rmr_rts_msg(m.context, txBuffer)
+		} else {
+			currBuffer = C.rmr_send_msg(m.context, txBuffer)
+		}
 	}
 
 	if currBuffer == nil {
@@ -294,10 +302,14 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool) int {
 	}
 
 	for j := 0; j < maxRetryOnFailure && currBuffer != nil && currBuffer.state == C.RMR_ERR_RETRY; j++ {
-		if isRts {
-			currBuffer = C.rmr_rts_msg(m.context, currBuffer)
+		if whid != 0 {
+			currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
 		} else {
-			currBuffer = C.rmr_send_msg(m.context, currBuffer)
+			if isRts {
+				currBuffer = C.rmr_rts_msg(m.context, txBuffer)
+			} else {
+				currBuffer = C.rmr_send_msg(m.context, txBuffer)
+			}
 		}
 	}
 
@@ -310,6 +322,23 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool) int {
 	defer m.Free(currBuffer)
 
 	return int(currBuffer.state)
+}
+
+func (m *RMRClient) Openwh(target string) C.rmr_whid_t {
+	return m.Wh_open(target)
+}
+
+func (m *RMRClient) Wh_open(target string) C.rmr_whid_t {
+	endpoint := C.CString(target)
+	return C.rmr_wh_open(m.context, endpoint)
+}
+
+func (m *RMRClient) Closewh(whid int) {
+	m.Wh_close(C.rmr_whid_t(whid))
+}
+
+func (m *RMRClient) Wh_close(whid C.rmr_whid_t) {
+	C.rmr_wh_close(m.context, whid)
 }
 
 func (m *RMRClient) IsRetryError(params *RMRParams) bool {

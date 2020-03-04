@@ -22,6 +22,7 @@
   "maxSize": 2072
   "numWorkers": 1
   "maxRetryOnFailure": 5
+  "threadType": 0
 "subscription":
     "host": "localhost:8088"
     "timeout": 2

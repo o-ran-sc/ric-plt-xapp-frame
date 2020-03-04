@@ -107,6 +107,9 @@ var RICMessageTypes = map[string]int{
 	"RIC_E2_MANAGER_HC_RESPONSE":          C.RIC_E2_MANAGER_HC_RESPONSE,
 	"RIC_CONTROL_XAPP_CONFIG_REQUEST":     C.RIC_CONTROL_XAPP_CONFIG_REQUEST,
 	"RIC_CONTROL_XAPP_CONFIG_RESPONSE":    C.RIC_CONTROL_XAPP_CONFIG_RESPONSE,
+	"RMRRM_TABLE_DATA":                    C.RMRRM_TABLE_DATA,
+	"RMRRM_REQ_TABLE":                     C.RMRRM_REQ_TABLE,
+	"RMRRM_TABLE_STATE":                   C.RMRRM_TABLE_STATE,
 }
 
 //-----------------------------------------------------------------------------
@@ -192,6 +195,9 @@ const (
 	RIC_E2_MANAGER_HC_RESPONSE          = C.RIC_E2_MANAGER_HC_RESPONSE
 	RIC_CONTROL_XAPP_CONFIG_REQUEST     = C.RIC_CONTROL_XAPP_CONFIG_REQUEST
 	RIC_CONTROL_XAPP_CONFIG_RESPONSE    = C.RIC_CONTROL_XAPP_CONFIG_RESPONSE
+	RMRRM_TABLE_DATA                    = C.RMRRM_TABLE_DATA
+	RMRRM_REQ_TABLE                     = C.RMRRM_REQ_TABLE
+	RMRRM_TABLE_STATE                   = C.RMRRM_TABLE_STATE
 )
 
 //-----------------------------------------------------------------------------
@@ -277,4 +283,7 @@ var RicMessageTypeToName = map[int]string{
 	RIC_E2_MANAGER_HC_RESPONSE:          "RIC_E2_MANAGER_HC_RESPONSE",
 	RIC_CONTROL_XAPP_CONFIG_REQUEST:     "RIC_CONTROL_XAPP_CONFIG_REQUEST",
 	RIC_CONTROL_XAPP_CONFIG_RESPONSE:    "RIC_CONTROL_XAPP_CONFIG_RESPONSE",
+	RMRRM_TABLE_DATA:                    "RMRRM_TABLE_DATA",
+	RMRRM_REQ_TABLE:                     "RMRRM_REQ_TABLE",
+	RMRRM_TABLE_STATE:                   "RMRRM_TABLE_STATE",
 }
