@@ -143,6 +143,51 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 	}
 }
 
+func TestMessagesReceivedSuccessfullyUsingWh(t *testing.T) {
+	time.Sleep(time.Duration(5) * time.Second)
+	whid := Rmr.Openwh("localhost:4560")
+	for i := 0; i < 100; i++ {
+		params := &RMRParams{}
+		params.Mtype = 10004
+		params.SubId = -1
+		params.Payload = []byte{1, 2, 3, 4, 5, 6}
+		params.Meid = &RMRMeid{PlmnID: "1234", EnbID: "7788", RanName: "RanName-1234"}
+		params.Xid = "TestXID"
+		params.Whid = int(whid)
+		Rmr.SendMsg(params)
+	}
+
+	// Allow time to process the messages
+	time.Sleep(time.Duration(2) * time.Second)
+
+	waitForSdl := viper.GetBool("db.waitForSdl")
+	stats := getMetrics(t)
+	if !strings.Contains(stats, "ricxapp_RMR_Transmitted 200") {
+		t.Errorf("Error: ricxapp_RMR_Transmitted value incorrect: %v", stats)
+	}
+
+	if !strings.Contains(stats, "ricxapp_RMR_Received 200") {
+		t.Errorf("Error: ricxapp_RMR_Received value incorrect: %v", stats)
+	}
+
+	if !strings.Contains(stats, "ricxapp_RMR_TransmitError 0") {
+		t.Errorf("Error: ricxapp_RMR_TransmitError value incorrect")
+	}
+
+	if !strings.Contains(stats, "ricxapp_RMR_ReceiveError 0") {
+		t.Errorf("Error: ricxapp_RMR_ReceiveError value incorrect")
+	}
+
+	if waitForSdl && !strings.Contains(stats, "ricxapp_SDL_Stored 200") {
+		t.Errorf("Error: ricxapp_SDL_Stored value incorrect")
+	}
+
+	if waitForSdl && !strings.Contains(stats, "ricxapp_SDL_StoreError 0") {
+		t.Errorf("Error: ricxapp_SDL_StoreError value incorrect")
+	}
+	Rmr.Closewh(int(whid))
+}
+
 func TestSubscribeChannels(t *testing.T) {
 	if !viper.GetBool("db.waitForSdl") {
 		return
