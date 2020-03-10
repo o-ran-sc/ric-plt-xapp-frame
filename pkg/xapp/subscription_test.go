@@ -7,11 +7,11 @@
 package xapp
 
 import (
+	apimodel "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-	"github.com/stretchr/testify/assert"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
-    apimodel "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 )
 
 var suite *testing.T
@@ -26,8 +26,8 @@ var reportParams = apimodel.ReportParams{
 	EventTriggers: apimodel.EventTriggerList{
 		&apimodel.EventTrigger{
 			InterfaceDirection: &direction,
-			ProcedureCode: &procedureCode,
-			TypeOfMessage: &typeOfMessage,
+			ProcedureCode:      &procedureCode,
+			TypeOfMessage:      &typeOfMessage,
 		},
 	},
 }
@@ -63,8 +63,8 @@ func queryHandler() (models.SubscriptionList, error) {
 	resp := models.SubscriptionList{
 		&models.SubscriptionData{
 			SubscriptionID: 11,
-			Meid: "Test-Gnb",
-			Endpoint: []string{"127.0.0.1:4056"},
+			Meid:           "Test-Gnb",
+			Endpoint:       []string{"127.0.0.1:4056"},
 		},
 	}
 

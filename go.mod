@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	gerrit.o-ran-sc.org/r/com/golog v0.0.1
+	gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.4.0
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.21
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.21
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.21
@@ -21,11 +22,11 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/prometheus/client_golang v0.9.3
 	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
 )
 
-replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.3.1
+replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2
 
 replace gerrit.o-ran-sc.org/r/com/golog => gerrit.o-ran-sc.org/r/com/golog.git v0.0.0-20190604083303-aaffc8ebe3f1
 
@@ -34,3 +35,5 @@ replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common => gerrit.o-ran-sc.o
 replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.21
 
 replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.21
+
+replace gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm => gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.4.0

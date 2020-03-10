@@ -37,6 +37,7 @@ var (
 	Logger        *Log
 	Config        Configurator
 	Subscription  *Subscriber
+	Alarm         *AlarmClient
 	readyCb       ReadyCB
 	readyCbParams interface{}
 )
@@ -65,6 +66,7 @@ func init() {
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
 	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
+	Alarm = NewAlarmClient(viper.GetString("alarm.MOId"), viper.GetString("alarm.APPId"))
 
 	if viper.IsSet("db.namespaces") {
 		namespaces := viper.GetStringSlice("db.namespaces")
