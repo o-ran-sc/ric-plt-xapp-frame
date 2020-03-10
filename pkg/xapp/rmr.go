@@ -32,7 +32,7 @@ void write_bytes_array(unsigned char *dst, void *data, int len) {
 }
 
 #cgo CFLAGS: -I../
-#cgo LDFLAGS: -lrmr_nng -lnng
+#cgo LDFLAGS: -lrmr_si
 */
 import "C"
 
