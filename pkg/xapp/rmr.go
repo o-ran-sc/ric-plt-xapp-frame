@@ -82,6 +82,8 @@ type RMRParams struct {
 	Src        string
 	Mbuf       *C.rmr_mbuf_t
 	Whid       int
+	Callid     int
+	Timeout    int
 	status     int
 }
 
@@ -233,6 +235,69 @@ func (m *RMRClient) SendRts(params *RMRParams) bool {
 	return m.Send(params, true)
 }
 
+func (m *RMRClient) CallMsg(params *RMRParams) (int,string) {
+        var (
+                currBuffer  *C.rmr_mbuf_t
+                counterName string = "Transmitted"
+        )
+
+        txBuffer := params.Mbuf
+        if txBuffer == nil {
+                txBuffer = m.Allocate()
+                if txBuffer == nil {
+                        return 0, ""
+                }
+        }
+
+        txBuffer.mtype = C.int(params.Mtype)
+        txBuffer.sub_id = C.int(params.SubId)
+        txBuffer.len = C.int(len(params.Payload))
+        if params.PayloadLen != 0 {
+                txBuffer.len = C.int(params.PayloadLen)
+        }
+        datap := C.CBytes(params.Payload)
+        defer C.free(datap)
+
+        if params != nil {
+                if params.Meid != nil {
+                        b := make([]byte, int(C.RMR_MAX_MEID))
+                        copy(b, []byte(params.Meid.RanName))
+                        C.rmr_bytes2meid(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
+                }
+                xidLen := len(params.Xid)
+                if xidLen > 0 && xidLen <= C.RMR_MAX_XID {
+                        b := make([]byte, int(C.RMR_MAX_XID))
+                        copy(b, []byte(params.Xid))
+                        C.rmr_bytes2xact(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
+                }
+        }
+        C.write_bytes_array(txBuffer.payload, datap, txBuffer.len)
+        txBuffer.state = 0
+
+        //currBuffer = C.rmr_wh_call(m.context, C.rmr_whid_t(params.Whid), txBuffer, C.int(params.Callid), 1000)
+        currBuffer = C.rmr_wh_call(m.context, C.rmr_whid_t(params.Whid), txBuffer, C.int(params.Callid), C.int(params.Timeout))
+
+        if currBuffer == nil {
+                m.UpdateStatCounter("TransmitError")
+                return m.LogMBufError("SendBuf failed", txBuffer),""
+        }
+
+        if currBuffer.state != C.RMR_OK {
+                counterName = "TransmitError"
+                m.LogMBufError("SendBuf failed", currBuffer)
+        }
+
+        m.UpdateStatCounter(counterName)
+        defer m.Free(currBuffer)
+
+
+        cptr := unsafe.Pointer(currBuffer.payload)
+        payload := C.GoBytes(cptr, C.int(currBuffer.len))
+
+        return int(currBuffer.state), string(payload)
+
+}
+
 func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 	txBuffer := params.Mbuf
 	if txBuffer == nil {
@@ -332,6 +397,11 @@ func (m *RMRClient) Wh_open(target string) C.rmr_whid_t {
 	endpoint := C.CString(target)
 	return C.rmr_wh_open(m.context, endpoint)
 }
+
+func (m *RMRClient) StatusWh(whid int) int {
+	return int(C.rmr_wh_state(m.context,C.rmr_whid_t(whid)))
+}
+
 
 func (m *RMRClient) Closewh(whid int) {
 	m.Wh_close(C.rmr_whid_t(whid))
