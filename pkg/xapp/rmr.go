@@ -82,6 +82,8 @@ type RMRParams struct {
 	Src        string
 	Mbuf       *C.rmr_mbuf_t
 	Whid       int
+	Callid     int
+	Timeout    int
 	status     int
 }
 
@@ -233,12 +235,12 @@ func (m *RMRClient) SendRts(params *RMRParams) bool {
 	return m.Send(params, true)
 }
 
-func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
+func (m *RMRClient) CopyBuffer(params *RMRParams) *C.rmr_mbuf_t {
 	txBuffer := params.Mbuf
 	if txBuffer == nil {
 		txBuffer = m.Allocate()
 		if txBuffer == nil {
-			return false
+			return nil
 		}
 	}
 
@@ -265,7 +267,15 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 		}
 	}
 	C.write_bytes_array(txBuffer.payload, datap, txBuffer.len)
+	return txBuffer
+}
 
+func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
+
+	txBuffer := m.CopyBuffer(params)
+	if txBuffer == nil {
+		return false
+	}
 	params.status = m.SendBuf(txBuffer, isRts, params.Whid)
 	if params.status == int(C.RMR_OK) {
 		return true
@@ -322,6 +332,39 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 	defer m.Free(currBuffer)
 
 	return int(currBuffer.state)
+}
+
+func (m *RMRClient) SendCallMsg(params *RMRParams) (int, string) {
+	var (
+		currBuffer  *C.rmr_mbuf_t
+		counterName string = "Transmitted"
+	)
+	txBuffer := m.CopyBuffer(params)
+	if txBuffer == nil {
+		return C.RMR_ERR_INITFAILED, ""
+	}
+
+	txBuffer.state = 0
+
+	currBuffer = C.rmr_wh_call(m.context, C.int(params.Whid), txBuffer, C.int(params.Callid), C.int(params.Timeout))
+
+	if currBuffer == nil {
+		m.UpdateStatCounter("TransmitError")
+		return m.LogMBufError("SendBuf failed", txBuffer), ""
+	}
+
+	if currBuffer.state != C.RMR_OK {
+		counterName = "TransmitError"
+		m.LogMBufError("SendBuf failed", currBuffer)
+	}
+
+	m.UpdateStatCounter(counterName)
+	defer m.Free(currBuffer)
+
+	cptr := unsafe.Pointer(currBuffer.payload)
+	payload := C.GoBytes(cptr, C.int(currBuffer.len))
+
+	return int(currBuffer.state), string(payload)
 }
 
 func (m *RMRClient) Openwh(target string) C.rmr_whid_t {
