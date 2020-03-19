@@ -1,7 +1,7 @@
 /*
 ==================================================================================
-  Copyright (c) 2019 AT&T Intellectual Property.
-  Copyright (c) 2019 Nokia
+  Copyright (c) 2020 AT&T Intellectual Property.
+  Copyright (c) 2020 Nokia
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ import (
 
 // This could be defined in types.go
 type ExampleXapp struct {
-	msgChan  chan *xapp.RMRParams
-	stats    map[string]xapp.Counter
-	appReady bool
-	rmrReady bool
+	msgChan  	chan *xapp.RMRParams
+	stats    	map[string]xapp.Counter
+	rmrReady 	bool
+	waitForSdl	bool
 }
 
 func (e *ExampleXapp) handleRICIndication(ranName string, r *xapp.RMRParams) {
@@ -98,7 +98,7 @@ func (e *ExampleXapp) Run() {
 	xapp.Resource.InjectRoute("/ric/v1/testing", e.TestRestHandler, "POST")
 
 	go e.messageLoop()
-	xapp.Run(e)
+	xapp.RunWithParams(e, e.waitForSdl)
 }
 
 func GetMetricsOpts() []xapp.CounterOpts {
@@ -108,16 +108,16 @@ func GetMetricsOpts() []xapp.CounterOpts {
 	}
 }
 
-func NewExampleXapp(appReady, rmrReady bool) *ExampleXapp {
+func NewExampleXapp(rmrReady bool) *ExampleXapp {
 	metrics := GetMetricsOpts()
 	return &ExampleXapp{
-		msgChan:  make(chan *xapp.RMRParams),
-		stats:    xapp.Metric.RegisterCounterGroup(metrics, "ExampleXapp"),
-		rmrReady: rmrReady,
-		appReady: appReady,
+		msgChan:  	make(chan *xapp.RMRParams),
+		stats:    	xapp.Metric.RegisterCounterGroup(metrics, "ExampleXapp"),
+		rmrReady: 	rmrReady,
+		waitForSdl: xapp.Config.GetBool("db.waitForSdl"),
 	}
 }
 
 func main() {
-	NewExampleXapp(true, false).Run()
+	NewExampleXapp(true).Run()
 }
