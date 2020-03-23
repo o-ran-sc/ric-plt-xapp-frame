@@ -45,7 +45,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
 )
 
-type SubscriptionHandler func(models.SubscriptionType, interface{}) (models.SubscriptionResponse, error)
+type SubscriptionHandler func(models.SubscriptionType, interface{}) (*models.SubscriptionResponse, error)
 type SubscriptionQueryHandler func() (models.SubscriptionList, error)
 type SubscriptionDeleteHandler func(string) error
 
@@ -135,22 +135,22 @@ func (r *Subscriber) Listen(add SubscriptionHandler, get SubscriptionQueryHandle
 }
 
 // Subscription interface for xApp: REPORT
-func (r *Subscriber) SubscribeReport(p *apimodel.ReportParams) (apimodel.SubscriptionResponse, error) {
+func (r *Subscriber) SubscribeReport(p *apimodel.ReportParams) (*apimodel.SubscriptionResponse, error) {
 	params := apireport.NewSubscribeReportParamsWithTimeout(r.timeout).WithReportParams(p)
 	result, err := r.CreateTransport().Report.SubscribeReport(params)
 	if err != nil {
-		return apimodel.SubscriptionResponse{}, err
+		return &apimodel.SubscriptionResponse{}, err
 	}
 
 	return result.Payload, err
 }
 
 // Subscription interface for xApp: POLICY
-func (r *Subscriber) SubscribePolicy(p *apimodel.PolicyParams) (apimodel.SubscriptionResponse, error) {
+func (r *Subscriber) SubscribePolicy(p *apimodel.PolicyParams) (*apimodel.SubscriptionResponse, error) {
 	params := apipolicy.NewSubscribePolicyParamsWithTimeout(r.timeout).WithPolicyParams(p)
 	result, err := r.CreateTransport().Policy.SubscribePolicy(params)
 	if err != nil {
-		return apimodel.SubscriptionResponse{}, err
+		return &apimodel.SubscriptionResponse{}, err
 	}
 
 	return result.Payload, err

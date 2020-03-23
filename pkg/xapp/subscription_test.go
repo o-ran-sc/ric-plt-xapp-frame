@@ -50,7 +50,7 @@ var policyParams = apimodel.PolicyParams{
 	PolicyActionDefinitions: &apimodel.PolicyActionDefinition{},
 }
 
-func subscriptionHandler(stype models.SubscriptionType, params interface{}) (models.SubscriptionResponse, error) {
+func subscriptionHandler(stype models.SubscriptionType, params interface{}) (*models.SubscriptionResponse, error) {
 	switch stype {
 	case models.SubscriptionTypeReport:
 		p := params.(*models.ReportParams)
@@ -68,9 +68,12 @@ func subscriptionHandler(stype models.SubscriptionType, params interface{}) (mod
 	subId := "xapp-11"
 	reqId := int64(11)
 	instanceId := int64(22)
-	return models.SubscriptionResponse{
-		&models.SubscriptionResponseItem{SubscriptionID: &subId, RequestorID: &reqId, InstanceID: &instanceId}, 
-		&models.SubscriptionResponseItem{SubscriptionID: &subId, RequestorID: &reqId, InstanceID: &instanceId},
+	return &models.SubscriptionResponse{
+		SubscriptionID: &subId,
+		SubscriptionInstances: []*models.SubscriptionInstance{
+			&models.SubscriptionInstance{RequestorID: &reqId, InstanceID: &instanceId}, 
+			&models.SubscriptionInstance{RequestorID: &reqId, InstanceID: &instanceId},
+		},
 	}, nil
 }
 
@@ -110,23 +113,23 @@ func TestSubscriptionQueryHandling(t *testing.T) {
 }
 
 func TestSubscriptionReportHandling(t *testing.T) {
-	result, err := Subscription.SubscribeReport(&reportParams)
+	resp, err := Subscription.SubscribeReport(&reportParams)
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, len(result), 2)
-	assert.Equal(t, *result[0].RequestorID, int64(11))
-	assert.Equal(t, *result[0].InstanceID, int64(22))
-	assert.Equal(t, *result[1].RequestorID, int64(11))
-	assert.Equal(t, *result[1].InstanceID, int64(22))
+	assert.Equal(t, len(resp.SubscriptionInstances), 2)
+	assert.Equal(t, *resp.SubscriptionInstances[0].RequestorID, int64(11))
+	assert.Equal(t, *resp.SubscriptionInstances[0].InstanceID, int64(22))
+	assert.Equal(t, *resp.SubscriptionInstances[1].RequestorID, int64(11))
+	assert.Equal(t, *resp.SubscriptionInstances[1].InstanceID, int64(22))
 }
 
 func TestSubscriptionPolicytHandling(t *testing.T) {
-	result, err := Subscription.SubscribePolicy(&policyParams)
+	resp, err := Subscription.SubscribePolicy(&policyParams)
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, len(result), 2)
-	assert.Equal(t, *result[0].RequestorID, int64(11))
-	assert.Equal(t, *result[0].InstanceID, int64(22))
+	assert.Equal(t, len(resp.SubscriptionInstances), 2)
+	assert.Equal(t, *resp.SubscriptionInstances[0].RequestorID, int64(11))
+	assert.Equal(t, *resp.SubscriptionInstances[0].InstanceID, int64(22))
 }
 
 func TestSubscriptionDeleteHandling(t *testing.T) {
