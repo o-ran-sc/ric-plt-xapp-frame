@@ -82,6 +82,10 @@ paths:
       - "common"
       summary: Unsubscribe X2AP events from Subscription Manager
       operationId: Unsubscribe
+      consumes:
+        - application/json
+      produces:
+        - application/json
       parameters:
         - name: subscriptionId
           in: path
@@ -242,23 +246,28 @@ definitions:
         type: integer
       PolicyParameterValue:
         type: integer
-  SubscriptionResponseItem:
+  SubscriptionInstance:
     type: object
     required:
-      - SubscriptionId
       - RequestorId
       - InstanceId
     properties:
-      SubscriptionId:
-        type: string
       RequestorId:
         type: integer
       InstanceId:
         type: integer
   SubscriptionResponse:
-    type: array
-    items:
-      $ref: '#/definitions/SubscriptionResponseItem'
+    type: object
+    required:
+      - SubscriptionId
+      - SubscriptionInstances
+    properties:
+      SubscriptionId:
+        type: string
+      SubscriptionInstances:
+        type: array
+        items:
+          $ref: '#/definitions/SubscriptionInstance'
   SubscriptionData:
     type: object
     properties:

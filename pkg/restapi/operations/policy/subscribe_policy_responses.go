@@ -25,7 +25,7 @@ type SubscribePolicyCreated struct {
 	/*
 	  In: Body
 	*/
-	Payload models.SubscriptionResponse `json:"body,omitempty"`
+	Payload *models.SubscriptionResponse `json:"body,omitempty"`
 }
 
 // NewSubscribePolicyCreated creates SubscribePolicyCreated with default headers values
@@ -35,13 +35,13 @@ func NewSubscribePolicyCreated() *SubscribePolicyCreated {
 }
 
 // WithPayload adds the payload to the subscribe policy created response
-func (o *SubscribePolicyCreated) WithPayload(payload models.SubscriptionResponse) *SubscribePolicyCreated {
+func (o *SubscribePolicyCreated) WithPayload(payload *models.SubscriptionResponse) *SubscribePolicyCreated {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the subscribe policy created response
-func (o *SubscribePolicyCreated) SetPayload(payload models.SubscriptionResponse) {
+func (o *SubscribePolicyCreated) SetPayload(payload *models.SubscriptionResponse) {
 	o.Payload = payload
 }
 
@@ -49,14 +49,11 @@ func (o *SubscribePolicyCreated) SetPayload(payload models.SubscriptionResponse)
 func (o *SubscribePolicyCreated) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(201)
-	payload := o.Payload
-	if payload == nil {
-		// return empty array
-		payload = models.SubscriptionResponse{}
-	}
-
-	if err := producer.Produce(rw, payload); err != nil {
-		panic(err) // let the recovery middleware deal with this
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
 	}
 }
 

@@ -137,6 +137,12 @@ func init() {
     },
     "/subscriptions/{subscriptionId}": {
       "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
         "tags": [
           "common"
         ],
@@ -390,23 +396,9 @@ func init() {
         }
       }
     },
-    "SubscriptionList": {
-      "description": "A list of subscriptions",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/SubscriptionData"
-      }
-    },
-    "SubscriptionResponse": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/SubscriptionResponseItem"
-      }
-    },
-    "SubscriptionResponseItem": {
+    "SubscriptionInstance": {
       "type": "object",
       "required": [
-        "SubscriptionId",
         "RequestorId",
         "InstanceId"
       ],
@@ -416,9 +408,31 @@ func init() {
         },
         "RequestorId": {
           "type": "integer"
-        },
+        }
+      }
+    },
+    "SubscriptionList": {
+      "description": "A list of subscriptions",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SubscriptionData"
+      }
+    },
+    "SubscriptionResponse": {
+      "type": "object",
+      "required": [
+        "SubscriptionId",
+        "SubscriptionInstances"
+      ],
+      "properties": {
         "SubscriptionId": {
           "type": "string"
+        },
+        "SubscriptionInstances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SubscriptionInstance"
+          }
         }
       }
     },
@@ -552,6 +566,12 @@ func init() {
     },
     "/subscriptions/{subscriptionId}": {
       "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
         "tags": [
           "common"
         ],
@@ -805,23 +825,9 @@ func init() {
         }
       }
     },
-    "SubscriptionList": {
-      "description": "A list of subscriptions",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/SubscriptionData"
-      }
-    },
-    "SubscriptionResponse": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/SubscriptionResponseItem"
-      }
-    },
-    "SubscriptionResponseItem": {
+    "SubscriptionInstance": {
       "type": "object",
       "required": [
-        "SubscriptionId",
         "RequestorId",
         "InstanceId"
       ],
@@ -831,9 +837,31 @@ func init() {
         },
         "RequestorId": {
           "type": "integer"
-        },
+        }
+      }
+    },
+    "SubscriptionList": {
+      "description": "A list of subscriptions",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SubscriptionData"
+      }
+    },
+    "SubscriptionResponse": {
+      "type": "object",
+      "required": [
+        "SubscriptionId",
+        "SubscriptionInstances"
+      ],
+      "properties": {
         "SubscriptionId": {
           "type": "string"
+        },
+        "SubscriptionInstances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SubscriptionInstance"
+          }
         }
       }
     },

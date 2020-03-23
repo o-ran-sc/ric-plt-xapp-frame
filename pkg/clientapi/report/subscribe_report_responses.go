@@ -61,7 +61,7 @@ func NewSubscribeReportCreated() *SubscribeReportCreated {
 Subscription successfully created
 */
 type SubscribeReportCreated struct {
-	Payload clientmodel.SubscriptionResponse
+	Payload *clientmodel.SubscriptionResponse
 }
 
 func (o *SubscribeReportCreated) Error() string {
@@ -70,8 +70,10 @@ func (o *SubscribeReportCreated) Error() string {
 
 func (o *SubscribeReportCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
+	o.Payload = new(clientmodel.SubscriptionResponse)
+
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
