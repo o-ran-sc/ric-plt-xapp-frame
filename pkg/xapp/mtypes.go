@@ -110,6 +110,9 @@ var RICMessageTypes = map[string]int{
 	"RMRRM_TABLE_DATA":                    C.RMRRM_TABLE_DATA,
 	"RMRRM_REQ_TABLE":                     C.RMRRM_REQ_TABLE,
 	"RMRRM_TABLE_STATE":                   C.RMRRM_TABLE_STATE,
+	"RIC_E2_SETUP_REQ":                    C.RIC_E2_SETUP_REQ,
+	"RIC_E2_SETUP_RESP":                   C.RIC_E2_SETUP_RESP,
+	"RIC_E2_SETUP_FAILURE":                C.RIC_E2_SETUP_FAILURE,
 }
 
 //-----------------------------------------------------------------------------
@@ -198,6 +201,9 @@ const (
 	RMRRM_TABLE_DATA                    = C.RMRRM_TABLE_DATA
 	RMRRM_REQ_TABLE                     = C.RMRRM_REQ_TABLE
 	RMRRM_TABLE_STATE                   = C.RMRRM_TABLE_STATE
+	RIC_E2_SETUP_REQ                    = C.RIC_E2_SETUP_REQ
+	RIC_E2_SETUP_RESP                   = C.RIC_E2_SETUP_RESP
+	RIC_E2_SETUP_FAILURE                = C.RIC_E2_SETUP_FAILURE
 )
 
 //-----------------------------------------------------------------------------
@@ -286,4 +292,7 @@ var RicMessageTypeToName = map[int]string{
 	RMRRM_TABLE_DATA:                    "RMRRM_TABLE_DATA",
 	RMRRM_REQ_TABLE:                     "RMRRM_REQ_TABLE",
 	RMRRM_TABLE_STATE:                   "RMRRM_TABLE_STATE",
+	RIC_E2_SETUP_REQ:                    "RIC_E2_SETUP_REQ",
+	RIC_E2_SETUP_RESP:                   "RIC_E2_SETUP_RESP",
+	RIC_E2_SETUP_FAILURE:                "RIC_E2_SETUP_FAILURE",
 }
