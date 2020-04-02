@@ -26,6 +26,8 @@
 "subscription":
     "host": "localhost:8088"
     "timeout": 2
+    "retryCount": 10
+    "retryDelay": 5
 "db":
   "namespace": "sdl"
   "waitForSdl": false
