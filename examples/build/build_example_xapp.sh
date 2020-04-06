@@ -46,6 +46,6 @@ GO111MODULE=on GO_ENABLED=0 GOOS=linux
 
 
 # Build
-go build -a -installsuffix cgo -o alarm-adapter -o example_xapp cmd/example-xapp.go
+go build -a -installsuffix cgo -o example_xapp cmd/example-xapp.go
 
 echo "--> build_example_xapp.sh ends"
