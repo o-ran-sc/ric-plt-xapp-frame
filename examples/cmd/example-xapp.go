@@ -19,16 +19,20 @@
 package main
 
 import (
+	"gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"net/http"
 )
 
 // This could be defined in types.go
 type ExampleXapp struct {
-	msgChan    chan *xapp.RMRParams
-	stats      map[string]xapp.Counter
-	rmrReady   bool
-	waitForSdl bool
+	msgChan               chan *xapp.RMRParams
+	stats                 map[string]xapp.Counter
+	rmrReady              bool
+	waitForSdl            bool
+	subscriptionInstances []*clientmodel.SubscriptionInstance
+	subscriptionId        *string
 }
 
 func (e *ExampleXapp) handleRICIndication(ranName string, r *xapp.RMRParams) {
@@ -64,6 +68,47 @@ func (e *ExampleXapp) messageLoop() {
 		default:
 			xapp.Logger.Info("Unknown Message Type '%d', discarding", msg.Mtype)
 		}
+	}
+}
+
+func (e *ExampleXapp) Subscribe() {
+	// Setup response callback to handle subscription response from SubMgr
+	xapp.Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
+		if *e.subscriptionId == *resp.SubscriptionID {
+			for _, s := range resp.SubscriptionInstances {
+				e.subscriptionInstances = append(e.subscriptionInstances, s)
+			}
+		}
+	})
+
+	// Fill subscription parameters: type=REPORT
+	ranName := "en-gnb:369-11105-aaaaa8"
+	functionId := int64(1)
+	clientEndpoint := "localhost:4560"
+
+	reportParams := clientmodel.ReportParams{
+		Meid:           ranName,
+		RANFunctionID:  &functionId,
+		ClientEndpoint: &clientEndpoint,
+		EventTriggers: clientmodel.EventTriggerList{
+			&clientmodel.EventTrigger{
+				InterfaceDirection: int64(0),
+				ProcedureCode:      int64(27),
+				TypeOfMessage:      int64(1),
+			},
+		},
+	}
+
+	// Now subscribe ...
+	if resp, err := xapp.Subscription.SubscribeReport(&reportParams); err == nil {
+		e.subscriptionId = resp.SubscriptionID
+		xapp.Logger.Info("Subscriptions for RanName='%s' [subscriptionId=%s] done!", ranName, *resp.SubscriptionID)
+		return
+	}
+
+	// Subscription failed, raise alarm (only for demo purpose!)
+	if err := xapp.Alarm.Raise(8006, alarm.SeverityCritical, ranName, "subscriptionFailed"); err != nil {
+		xapp.Logger.Info("Raising alarm failed with error: %v", err)
 	}
 }
 
