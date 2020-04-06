@@ -15,6 +15,8 @@ gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.0.26 h1:zFsExCZVAX9vTcLEHNsYgxnK
 gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.0.26/go.mod h1:lW3UYpVXwPiOR39t6JgNCE4kdmMSdPVelMPC/Pp9fQM=
 gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.4.1 h1:ydw6WM3PNOKI0LAEyCKWCJ4LncHMfyHdpvCAHBYwrdE=
 gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.4.1/go.mod h1:29CdUcCrNEqVBjQWAlgeGrYxSWqSZ4e67xzhuSf6BkI=
+gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.4.6 h1:Yhizs1A+0n0TLFxeGZO1YYQy8eBX9UEj4e4PgmK008k=
+gerrit.o-ran-sc.org/r/ric-plt/xapp-frame.git v0.4.6/go.mod h1:29CdUcCrNEqVBjQWAlgeGrYxSWqSZ4e67xzhuSf6BkI=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
