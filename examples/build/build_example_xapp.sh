@@ -22,11 +22,11 @@ set -eux
 echo "--> build_example_xapp.sh starts"
 
 # Install RMR from deb packages at packagecloud.io
-rmr=rmr_3.2.4_amd64.deb
+rmr=rmr_3.6.5_amd64.deb
 wget --content-disposition  https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/$rmr/download.deb
 sudo dpkg -i $rmr
 rm $rmr
-rmrdev=rmr-dev_3.2.4_amd64.deb
+rmrdev=rmr-dev_3.6.5_amd64.deb
 wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/$rmrdev/download.deb
 sudo dpkg -i $rmrdev
 rm $rmrdev
