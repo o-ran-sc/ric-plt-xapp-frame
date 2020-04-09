@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"net/http"
+	"os"
+	"io/ioutil"
 )
 
 type ReadyCB func(interface{})
@@ -40,6 +42,8 @@ var (
 	Alarm         *AlarmClient
 	readyCb       ReadyCB
 	readyCbParams interface{}
+	alarmRTFile   string = "/tmp/alarm.rt"
+	alarmRT       string = "newrt|start\nrte|13111|service-ricplt-alarmadapter-rmr.ricplt:4560\nnewrt|end\n"
 )
 
 func IsReady() bool {
@@ -52,6 +56,15 @@ func SetReadyCB(cb ReadyCB, params interface{}) {
 }
 
 func xappReadyCb(params interface{}) {
+	// Setup static RT for alarm system
+	if err := ioutil.WriteFile(alarmRTFile, []byte(alarmRT), 0644); err != nil {
+		Logger.Error("ioutil.WriteFile failed with error: %v", err)
+	}
+	os.Setenv( "RMR_SEED_RT", alarmRTFile )
+	os.Setenv( "RMR_RTG_SVC", "-1" )
+	
+	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
+
 	if readyCb != nil {
 		readyCb(readyCbParams)
 	}
@@ -65,15 +78,14 @@ func init() {
 	Resource = NewRouter()
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
-	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
 	Alarm = NewAlarmClient(viper.GetString("alarm.MOId"), viper.GetString("alarm.APPId"))
 
 	if viper.IsSet("db.namespaces") {
 		namespaces := viper.GetStringSlice("db.namespaces")
-		if namespaces[0] != "" {
+		if len(namespaces) > 0 && namespaces[0] != "" {
 			Sdl = NewSDLClient(viper.GetStringSlice("db.namespaces")[0])
 		}
-		if namespaces[1] != "" {
+		if len(namespaces) > 1 && namespaces[1] != "" {
 			Rnib = NewRNIBClient(viper.GetStringSlice("db.namespaces")[1])
 		}
 	} else {
