@@ -52,6 +52,8 @@ func SetReadyCB(cb ReadyCB, params interface{}) {
 }
 
 func xappReadyCb(params interface{}) {
+	Alarm = NewAlarmClient(viper.GetString("alarm.MOId"), viper.GetString("alarm.APPId"))
+
 	if readyCb != nil {
 		readyCb(readyCbParams)
 	}
@@ -66,14 +68,13 @@ func init() {
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
 	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
-	Alarm = NewAlarmClient(viper.GetString("alarm.MOId"), viper.GetString("alarm.APPId"))
 
 	if viper.IsSet("db.namespaces") {
 		namespaces := viper.GetStringSlice("db.namespaces")
-		if namespaces[0] != "" {
+		if len(namespaces) > 0 && namespaces[0] != "" {
 			Sdl = NewSDLClient(viper.GetStringSlice("db.namespaces")[0])
 		}
-		if namespaces[1] != "" {
+		if len(namespaces) > 1 && namespaces[1] != "" {
 			Rnib = NewRNIBClient(viper.GetStringSlice("db.namespaces")[1])
 		}
 	} else {

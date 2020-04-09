@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 "local":
-  "host": ":8080"
+  "host": ":8086"
 "logger":
   "level": 4
 "rmr":

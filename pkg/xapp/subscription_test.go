@@ -19,7 +19,7 @@ var suite *testing.T
 
 var meid = "gnb123456"
 var funId = int64(1)
-var clientEndpoint = "localhost"
+var clientEndpoint = "localhost:4560"
 var direction = int64(0)
 var procedureCode = int64(27)
 var typeOfMessage = int64(1)

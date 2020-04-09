@@ -29,8 +29,8 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/spf13/viper"
 	"io/ioutil"
+	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	apiclient "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi"
@@ -66,7 +66,7 @@ type Subscriber struct {
 
 func NewSubscriber(host string, timo int) *Subscriber {
 	if host == "" {
-		host = "service-ricplt-submgr-http:8088"
+		host = "service-ricplt-submgr-http.ricplt:8088"
 	}
 
 	if timo == 0 {
@@ -164,8 +164,9 @@ func (r *Subscriber) Notify(resp *models.SubscriptionResponse, clientEndpoint st
 		return err
 	}
 
-	port := strings.Split(viper.GetString("local.host"), ":")[1]
-	clientUrl := fmt.Sprintf("http://%s:%s%s", clientEndpoint, port, r.clientUrl)
+	ep, _, _ := net.SplitHostPort(clientEndpoint)
+	_, port, _ := net.SplitHostPort(viper.GetString("local.host"))
+	clientUrl := fmt.Sprintf("http://%s:%s%s", ep, port, r.clientUrl)
 
 	retries := viper.GetInt("subscription.retryCount")
 	if retries == 0 {
