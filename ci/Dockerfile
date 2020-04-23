@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------
 
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:5-u18.04-nng as xapp-base
+FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:6-u18.04-nng as xapp-base
 RUN apt-get update -y \
     &&apt-get install -y \
     apt-utils \
@@ -35,7 +35,7 @@ RUN apt-get update -y \
 RUN curl -s https://packagecloud.io/install/repositories/o-ran-sc/master/script.deb.sh | bash
 
 # RMR
-ARG RMRVERSION=3.7.2
+ARG RMRVERSION=4.0.0
 #RUN apt-get install -y rmr=${RMRVERSION} rmr-dev=${RMRVERSION}
 RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_${RMRVERSION}_amd64.deb/download.deb && dpkg -i rmr_${RMRVERSION}_amd64.deb
 RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_${RMRVERSION}_amd64.deb/download.deb && dpkg -i rmr-dev_${RMRVERSION}_amd64.deb
