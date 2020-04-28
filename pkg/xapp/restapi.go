@@ -53,7 +53,7 @@ func NewRouter() *Router {
 func (r *Router) serviceChecker(inner http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		Logger.Info("restapi: method=%s url=%s", req.Method, req.URL.RequestURI())
-		if req.URL.RequestURI() == AliveURL || (Rmr.IsReady() && r.CheckStatus()) {
+		if req.URL.RequestURI() == AliveURL || r.CheckStatus() {
 			inner.ServeHTTP(w, req)
 		} else {
 			respondWithJSON(w, http.StatusServiceUnavailable, nil)
