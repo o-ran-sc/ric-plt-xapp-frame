@@ -155,11 +155,14 @@ func (m *RMRClient) Worker(taskName string, msgSize int) {
 		}
 		m.UpdateStatCounter("Received")
 
+		m.msgWg.Add(1)
 		go m.parseMessage(rxBuffer)
+		m.msgWg.Wait()
 	}
 }
 
 func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
+	defer m.msgWg.Done()
 	if len(m.consumers) == 0 {
 		Logger.Info("rmrClient: No message handlers defined, message discarded!")
 		return

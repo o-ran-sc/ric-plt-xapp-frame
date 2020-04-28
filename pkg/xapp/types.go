@@ -32,6 +32,7 @@ type RMRClient struct {
 	context       unsafe.Pointer
 	ready         int
 	wg            sync.WaitGroup
+	msgWg         sync.WaitGroup
 	mux           sync.Mutex
 	stat          map[string]Counter
 	consumers     []MessageConsumer
