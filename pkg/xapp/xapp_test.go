@@ -114,7 +114,7 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 	}
 
 	// Allow time to process the messages
-	time.Sleep(time.Duration(2) * time.Second)
+	time.Sleep(time.Duration(5) * time.Second)
 
 	waitForSdl := viper.GetBool("db.waitForSdl")
 	stats := getMetrics(t)
@@ -159,7 +159,7 @@ func TestMessagesReceivedSuccessfullyUsingWh(t *testing.T) {
 	}
 
 	// Allow time to process the messages
-	time.Sleep(time.Duration(2) * time.Second)
+	time.Sleep(time.Duration(5) * time.Second)
 
 	waitForSdl := viper.GetBool("db.waitForSdl")
 	stats := getMetrics(t)
