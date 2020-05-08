@@ -26,14 +26,29 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type Metrics struct {
-	Namespace string
-}
-
+//-----------------------------------------------------------------------------
 // Alias
+//-----------------------------------------------------------------------------
 type CounterOpts prometheus.Opts
 type Counter prometheus.Counter
 type Gauge prometheus.Gauge
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+
+type MetricGroupsCache struct {
+	Counters map[string]Counter
+	Gauges   map[string]Gauge
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+type Metrics struct {
+	Namespace            string
+	MetricGroupsCacheMap map[string]*MetricGroupsCache
+}
 
 func NewMetrics(url, namespace string, r *mux.Router) *Metrics {
 	if url == "" {
@@ -48,7 +63,7 @@ func NewMetrics(url, namespace string, r *mux.Router) *Metrics {
 	// Expose 'metrics' endpoint with standard golang metrics used by prometheus
 	r.Handle(url, promhttp.Handler())
 
-	return &Metrics{Namespace: namespace}
+	return &Metrics{Namespace: namespace, MetricGroupsCacheMap: make(map[string]*MetricGroupsCache)}
 }
 
 /*
@@ -129,15 +144,19 @@ func (m *Metrics) RegisterCounterVecGroup(opts []CounterOpts, labelNames []strin
 	return
 }
 
-func (m *Metrics) GetCounterGroupFromVects(labels []string, vects ...map[string]CounterVec) (c map[string]Counter) {
+func (m *Metrics) GetCounterGroupFromVectsWithPrefix(prefix string, labels []string, vects ...map[string]CounterVec) (c map[string]Counter) {
 	c = make(map[string]Counter)
 	for _, vec := range vects {
 		for name, opt := range vec {
-			c[name] = opt.Vec.WithLabelValues(labels...)
+			c[prefix+name] = opt.Vec.WithLabelValues(labels...)
 			Logger.Info("Register new counter for vector with opts: %v labels: %v", opt.Opts, labels)
 		}
 	}
 	return
+}
+
+func (m *Metrics) GetCounterGroupFromVects(labels []string, vects ...map[string]CounterVec) (c map[string]Counter) {
+	return m.GetCounterGroupFromVectsWithPrefix("", labels, vects...)
 }
 
 /*
@@ -181,15 +200,20 @@ func (m *Metrics) RegisterGaugeVecGroup(opts []CounterOpts, labelNames []string,
 	return
 }
 
-func (m *Metrics) GetGaugeGroupFromVects(labels []string, vects ...map[string]GaugeVec) (c map[string]Gauge) {
+func (m *Metrics) GetGaugeGroupFromVectsWithPrefix(prefix string, labels []string, vects ...map[string]GaugeVec) (c map[string]Gauge) {
 	c = make(map[string]Gauge)
 	for _, vec := range vects {
 		for name, opt := range vec {
-			c[name] = opt.Vec.WithLabelValues(labels...)
+			c[prefix+name] = opt.Vec.WithLabelValues(labels...)
 			Logger.Info("Register new gauge for vector with opts: %v labels: %v", opt.Opts, labels)
 		}
 	}
 	return
+}
+
+func (m *Metrics) GetGaugeGroupFromVects(labels []string, vects ...map[string]GaugeVec) (c map[string]Gauge) {
+	return m.GetGaugeGroupFromVectsWithPrefix("", labels, vects...)
+
 }
 
 /*
@@ -213,4 +237,33 @@ func (m *Metrics) CombineGaugeGroups(srcs ...map[string]Gauge) map[string]Gauge 
 		}
 	}
 	return trg
+}
+
+/*
+ *
+ */
+func (m *Metrics) GroupCacheGet(id string) *MetricGroupsCache {
+	entry, ok := m.MetricGroupsCacheMap[id]
+	if ok == false {
+		return nil
+	}
+	return entry
+}
+
+func (m *Metrics) GroupCacheAddCounters(id string, vals map[string]Counter) {
+	entry, ok := m.MetricGroupsCacheMap[id]
+	if ok == false {
+		entry = &MetricGroupsCache{}
+		m.MetricGroupsCacheMap[id] = entry
+	}
+	m.MetricGroupsCacheMap[id].Counters = m.CombineCounterGroups(m.MetricGroupsCacheMap[id].Counters, vals)
+}
+
+func (m *Metrics) GroupCacheAddGauges(id string, vals map[string]Gauge) {
+	entry, ok := m.MetricGroupsCacheMap[id]
+	if ok == false {
+		entry = &MetricGroupsCache{}
+		m.MetricGroupsCacheMap[id] = entry
+	}
+	m.MetricGroupsCacheMap[id].Gauges = m.CombineGaugeGroups(m.MetricGroupsCacheMap[id].Gauges, vals)
 }
