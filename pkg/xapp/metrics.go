@@ -129,15 +129,19 @@ func (m *Metrics) RegisterCounterVecGroup(opts []CounterOpts, labelNames []strin
 	return
 }
 
-func (m *Metrics) GetCounterGroupFromVects(labels []string, vects ...map[string]CounterVec) (c map[string]Counter) {
+func (m *Metrics) GetCounterGroupFromVectsWithPrefix(prefix string, labels []string, vects ...map[string]CounterVec) (c map[string]Counter) {
 	c = make(map[string]Counter)
 	for _, vec := range vects {
 		for name, opt := range vec {
-			c[name] = opt.Vec.WithLabelValues(labels...)
+			c[prefix+name] = opt.Vec.WithLabelValues(labels...)
 			Logger.Info("Register new counter for vector with opts: %v labels: %v", opt.Opts, labels)
 		}
 	}
 	return
+}
+
+func (m *Metrics) GetCounterGroupFromVects(labels []string, vects ...map[string]CounterVec) (c map[string]Counter) {
+	return m.GetCounterGroupFromVectsWithPrefix("", labels, vects...)
 }
 
 /*
@@ -181,15 +185,20 @@ func (m *Metrics) RegisterGaugeVecGroup(opts []CounterOpts, labelNames []string,
 	return
 }
 
-func (m *Metrics) GetGaugeGroupFromVects(labels []string, vects ...map[string]GaugeVec) (c map[string]Gauge) {
+func (m *Metrics) GetGaugeGroupFromVectsWithPrefix(prefix string, labels []string, vects ...map[string]GaugeVec) (c map[string]Gauge) {
 	c = make(map[string]Gauge)
 	for _, vec := range vects {
 		for name, opt := range vec {
-			c[name] = opt.Vec.WithLabelValues(labels...)
+			c[prefix+name] = opt.Vec.WithLabelValues(labels...)
 			Logger.Info("Register new gauge for vector with opts: %v labels: %v", opt.Opts, labels)
 		}
 	}
 	return
+}
+
+func (m *Metrics) GetGaugeGroupFromVects(labels []string, vects ...map[string]GaugeVec) (c map[string]Gauge) {
+	return m.GetGaugeGroupFromVectsWithPrefix("", labels, vects...)
+
 }
 
 /*
