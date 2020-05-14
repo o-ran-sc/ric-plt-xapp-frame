@@ -21,15 +21,11 @@ import (
 	"fmt"
 	rnibcommon "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	rnibentities "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
 	"github.com/golang/protobuf/proto"
 )
 
-var writerPool *rnibcommon.Pool
-
 type rNibWriterInstance struct {
-	sdl       *ISdlInstance
-	namespace string
+	sdl rnibcommon.ISdlInstance
 }
 
 /*
@@ -40,44 +36,22 @@ type RNibWriter interface {
 }
 
 /*
-Init initializes the infrastructure required for the RNibWriter instance
+GetRNibWriter returns reference to RNibWriter
 */
-func InitWriter(namespace string, poolSize int) {
-	initWriterPool(poolSize,
-		func() interface{} {
-			var sdlI ISdlInstance = sdlgo.NewSdlInstance(namespace, sdlgo.NewDatabase())
-			return &rNibWriterInstance{sdl: &sdlI, namespace: namespace}
-		},
-		func(obj interface{}) {
-			(*obj.(*rNibWriterInstance).sdl).Close()
-		})
-}
 
-/*
-InitPool initializes the writer's instances pool
-*/
-func initWriterPool(poolSize int, newObj func() interface{}, destroyObj func(interface{})) {
-	writerPool = rnibcommon.NewPool(poolSize, newObj, destroyObj)
-}
-
-/*
-GetRNibWriter returns RNibWriter instance from the pool
-*/
-func GetRNibWriter() RNibWriter {
-	return writerPool.Get().(RNibWriter)
+func GetRNibWriter(sdl rnibcommon.ISdlInstance) RNibWriter {
+	return &rNibWriterInstance{sdl: sdl}
 }
 
 /*
 SaveNodeb saves nodeB entity data in the redis DB according to the specified data model
 */
 func (w *rNibWriterInstance) SaveNodeb(nbIdentity *rnibentities.NbIdentity, entity *rnibentities.NodebInfo) error {
-
 	isNotEmptyIdentity := isNotEmpty(nbIdentity)
 
 	if isNotEmptyIdentity && entity.GetNodeType() == rnibentities.Node_UNKNOWN {
 		return rnibcommon.NewValidationError(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity))
 	}
-	defer writerPool.Put(w)
 	data, err := proto.Marshal(entity)
 	if err != nil {
 		return rnibcommon.NewInternalError(err)
@@ -98,30 +72,44 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *rnibentities.NbIdentity, enti
 	}
 
 	if entity.GetEnb() != nil {
-		pairs, rNibErr = appendEnbCells(nbIdentity, entity.GetEnb().GetServedCells(), pairs)
+		pairs, rNibErr = appendEnbCells(nbIdentity.InventoryName, entity.GetEnb().GetServedCells(), pairs)
 		if rNibErr != nil {
 			return rNibErr
 		}
 	}
 	if entity.GetGnb() != nil {
-		pairs, rNibErr = appendGnbCells(nbIdentity, entity.GetGnb().GetServedNrCells(), pairs)
+		pairs, rNibErr = appendGnbCells(nbIdentity.InventoryName, entity.GetGnb().GetServedNrCells(), pairs)
 		if rNibErr != nil {
 			return rNibErr
 		}
 	}
-	err = (*w.sdl).Set(pairs)
+	err = w.sdl.Set(pairs)
 	if err != nil {
 		return rnibcommon.NewInternalError(err)
 	}
+
+	ranNameIdentity := &rnibentities.NbIdentity{InventoryName: nbIdentity.InventoryName}
+
 	if isNotEmptyIdentity {
-		nbIdData, err := proto.Marshal(nbIdentity)
+		nbIdData, err := proto.Marshal(ranNameIdentity)
 		if err != nil {
 			return rnibcommon.NewInternalError(err)
 		}
-		err = (*w.sdl).AddMember(entity.GetNodeType().String(), nbIdData)
+		err = w.sdl.RemoveMember(rnibentities.Node_UNKNOWN.String(), nbIdData)
 		if err != nil {
 			return rnibcommon.NewInternalError(err)
 		}
+	} else {
+		nbIdentity = ranNameIdentity
+	}
+
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		return rnibcommon.NewInternalError(err)
+	}
+	err = w.sdl.AddMember(entity.GetNodeType().String(), nbIdData)
+	if err != nil {
+		return rnibcommon.NewInternalError(err)
 	}
 	return nil
 }
@@ -130,10 +118,9 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *rnibentities.NbIdentity, enti
 Close closes writer's pool
 */
 func CloseWriter() {
-	writerPool.Close()
 }
 
-func appendEnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.ServedCellInfo, pairs []interface{}) ([]interface{}, error) {
+func appendEnbCells(inventoryName string, cells []*rnibentities.ServedCellInfo, pairs []interface{}) ([]interface{}, error) {
 	for _, cell := range cells {
 		cellEntity := rnibentities.Cell{Type: rnibentities.Cell_LTE_CELL, Cell: &rnibentities.Cell_ServedCellInfo{ServedCellInfo: cell}}
 		cellData, err := proto.Marshal(&cellEntity)
@@ -145,7 +132,7 @@ func appendEnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.S
 			return pairs, rNibErr
 		}
 		pairs = append(pairs, key, cellData)
-		key, rNibErr = rnibcommon.ValidateAndBuildCellNamePciKey(nbIdentity.InventoryName, cell.GetPci())
+		key, rNibErr = rnibcommon.ValidateAndBuildCellNamePciKey(inventoryName, cell.GetPci())
 		if rNibErr != nil {
 			return pairs, rNibErr
 		}
@@ -154,7 +141,7 @@ func appendEnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.S
 	return pairs, nil
 }
 
-func appendGnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.ServedNRCell, pairs []interface{}) ([]interface{}, error) {
+func appendGnbCells(inventoryName string, cells []*rnibentities.ServedNRCell, pairs []interface{}) ([]interface{}, error) {
 	for _, cell := range cells {
 		cellEntity := rnibentities.Cell{Type: rnibentities.Cell_NR_CELL, Cell: &rnibentities.Cell_ServedNrCell{ServedNrCell: cell}}
 		cellData, err := proto.Marshal(&cellEntity)
@@ -166,7 +153,7 @@ func appendGnbCells(nbIdentity *rnibentities.NbIdentity, cells []*rnibentities.S
 			return pairs, rNibErr
 		}
 		pairs = append(pairs, key, cellData)
-		key, rNibErr = rnibcommon.ValidateAndBuildCellNamePciKey(nbIdentity.InventoryName, cell.GetServedNrCellInformation().GetNrPci())
+		key, rNibErr = rnibcommon.ValidateAndBuildCellNamePciKey(inventoryName, cell.GetServedNrCellInformation().GetNrPci())
 		if rNibErr != nil {
 			return pairs, rNibErr
 		}
