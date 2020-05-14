@@ -113,6 +113,7 @@ var RICMessageTypes = map[string]int{
 	"RIC_E2_SETUP_REQ":                    C.RIC_E2_SETUP_REQ,
 	"RIC_E2_SETUP_RESP":                   C.RIC_E2_SETUP_RESP,
 	"RIC_E2_SETUP_FAILURE":                C.RIC_E2_SETUP_FAILURE,
+	"DCAPTERM_RTPM_RMR_MGSTYPE":           33001,
 }
 
 //-----------------------------------------------------------------------------
