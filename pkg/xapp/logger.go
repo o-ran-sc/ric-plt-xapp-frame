@@ -45,21 +45,33 @@ func (l *Log) SetMdc(key string, value string) {
 }
 
 func (l *Log) Error(pattern string, args ...interface{}) {
+	if l.logger.LevelGet() < mdclog.ERR {
+		return
+	}
 	l.SetMdc("time", timeFormat())
 	l.logger.Error(pattern, args...)
 }
 
 func (l *Log) Warn(pattern string, args ...interface{}) {
+	if l.logger.LevelGet() < mdclog.WARN {
+		return
+	}
 	l.SetMdc("time", timeFormat())
 	l.logger.Warning(pattern, args...)
 }
 
 func (l *Log) Info(pattern string, args ...interface{}) {
+	if l.logger.LevelGet() < mdclog.INFO {
+		return
+	}
 	l.SetMdc("time", timeFormat())
 	l.logger.Info(pattern, args...)
 }
 
 func (l *Log) Debug(pattern string, args ...interface{}) {
+	if l.logger.LevelGet() < mdclog.DEBUG {
+		return
+	}
 	l.SetMdc("time", timeFormat())
 	l.logger.Debug(pattern, args...)
 }
