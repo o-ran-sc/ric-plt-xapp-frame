@@ -29,7 +29,9 @@ type RMRStatistics struct{}
 type RMRClient struct {
 	protPort      string
 	numWorkers    int
+	ctxtMux       sync.Mutex
 	context       unsafe.Pointer
+	ctxtEpoll     chan struct{}
 	ready         int
 	wg            sync.WaitGroup
 	msgWg         sync.WaitGroup

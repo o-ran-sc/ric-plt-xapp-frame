@@ -26,9 +26,29 @@ package xapp
 #include <string.h>
 #include <rmr/rmr.h>
 #include <rmr/RIC_message_types.h>
+#include <sys/epoll.h>
 
 void write_bytes_array(unsigned char *dst, void *data, int len) {
     memcpy((void *)dst, (void *)data, len);
+}
+
+int init_epoll(int rcv_fd) {
+	struct	epoll_event epe;
+	int epoll_fd = epoll_create1( 0 );
+	epe.events = EPOLLIN;
+	epe.data.fd = rcv_fd;
+	epoll_ctl( epoll_fd, EPOLL_CTL_ADD, rcv_fd, &epe );
+	return epoll_fd;
+}
+
+int wait_epoll(int epoll_fd,int rcv_fd) {
+	struct	epoll_event events[1];
+	if( epoll_wait( epoll_fd, events, 1, 0 ) > 0 ) {
+		if( events[0].data.fd == rcv_fd ) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 #cgo CFLAGS: -I../
@@ -99,11 +119,11 @@ func NewRMRClientWithParams(protPort string, maxSize int, numWorkers int, thread
 	if ctx == nil {
 		Logger.Error("rmrClient: Initializing RMR context failed, bailing out!")
 	}
-
 	return &RMRClient{
 		protPort:   protPort,
 		numWorkers: numWorkers,
 		context:    ctx,
+		ctxtEpoll:  make(chan struct{}),
 		consumers:  make([]MessageConsumer, 0),
 		stat:       Metric.RegisterCounterGroup(RMRCounterOpts, statDesc),
 	}
@@ -120,7 +140,10 @@ func (m *RMRClient) Start(c MessageConsumer) {
 
 	var counter int = 0
 	for {
-		if m.ready = int(C.rmr_ready(m.context)); m.ready == 1 {
+		m.ctxtMux.Lock()
+		m.ready = int(C.rmr_ready(m.context))
+		m.ctxtMux.Unlock()
+		if m.ready == 1 {
 			Logger.Info("rmrClient: RMR is ready after %d seconds waiting...", counter)
 			break
 		}
@@ -136,18 +159,32 @@ func (m *RMRClient) Start(c MessageConsumer) {
 		go m.readyCb(m.readyCbParams)
 	}
 
+	m.ctxtMux.Lock()
+	rfd := C.rmr_get_rcvfd(m.context)
+	m.ctxtMux.Unlock()
+	efd := C.init_epoll(rfd)
+	go func() {
+		for {
+			if int(C.wait_epoll(efd, rfd)) > 0 {
+				m.ctxtEpoll <- struct{}{}
+			}
+		}
+	}()
+
 	for w := 0; w < m.numWorkers; w++ {
 		go m.Worker("worker-"+strconv.Itoa(w), 0)
 	}
-	m.Wait()
+	m.wg.Wait()
 }
 
 func (m *RMRClient) Worker(taskName string, msgSize int) {
 	Logger.Info("rmrClient: '%s': receiving messages on [%s]", taskName, m.protPort)
 
 	defer m.wg.Done()
-	for {
+	for range m.ctxtEpoll {
+		m.ctxtMux.Lock()
 		rxBuffer := C.rmr_rcv_msg(m.context, nil)
+		m.ctxtMux.Unlock()
 		if rxBuffer == nil {
 			m.LogMBufError("RecvMsg failed", rxBuffer)
 			m.UpdateStatCounter("ReceiveError")
@@ -216,6 +253,8 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 }
 
 func (m *RMRClient) Allocate(size int) *C.rmr_mbuf_t {
+	m.ctxtMux.Lock()
+	defer m.ctxtMux.Unlock()
 	buf := C.rmr_alloc_msg(m.context, C.int(size))
 	if buf == nil {
 		Logger.Error("rmrClient: Allocating message buffer failed!")
@@ -227,6 +266,8 @@ func (m *RMRClient) Free(mbuf *C.rmr_mbuf_t) {
 	if mbuf == nil {
 		return
 	}
+	m.ctxtMux.Lock()
+	defer m.ctxtMux.Unlock()
 	C.rmr_free_msg(mbuf)
 }
 
@@ -296,6 +337,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 		counterName string = "Transmitted"
 	)
 
+	m.ctxtMux.Lock()
 	txBuffer.state = 0
 	if whid != 0 {
 		currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
@@ -306,7 +348,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 			currBuffer = C.rmr_send_msg(m.context, txBuffer)
 		}
 	}
-
+	m.ctxtMux.Unlock()
 	if currBuffer == nil {
 		m.UpdateStatCounter("TransmitError")
 		return m.LogMBufError("SendBuf failed", txBuffer)
@@ -319,6 +361,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 	}
 
 	for j := 0; j < maxRetryOnFailure && currBuffer != nil && currBuffer.state == C.RMR_ERR_RETRY; j++ {
+		m.ctxtMux.Lock()
 		if whid != 0 {
 			currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
 		} else {
@@ -328,6 +371,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 				currBuffer = C.rmr_send_msg(m.context, txBuffer)
 			}
 		}
+		m.ctxtMux.Unlock()
 	}
 
 	if currBuffer.state != C.RMR_OK {
@@ -353,7 +397,9 @@ func (m *RMRClient) SendCallMsg(params *RMRParams) (int, string) {
 
 	txBuffer.state = 0
 
+	m.ctxtMux.Lock()
 	currBuffer = C.rmr_wh_call(m.context, C.int(params.Whid), txBuffer, C.int(params.Callid), C.int(params.Timeout))
+	m.ctxtMux.Unlock()
 
 	if currBuffer == nil {
 		m.UpdateStatCounter("TransmitError")
@@ -375,19 +421,27 @@ func (m *RMRClient) SendCallMsg(params *RMRParams) (int, string) {
 }
 
 func (m *RMRClient) Openwh(target string) C.rmr_whid_t {
+	m.ctxtMux.Lock()
+	defer m.ctxtMux.Unlock()
 	return m.Wh_open(target)
 }
 
 func (m *RMRClient) Wh_open(target string) C.rmr_whid_t {
+	m.ctxtMux.Lock()
+	defer m.ctxtMux.Unlock()
 	endpoint := C.CString(target)
 	return C.rmr_wh_open(m.context, endpoint)
 }
 
 func (m *RMRClient) Closewh(whid int) {
+	m.ctxtMux.Lock()
+	defer m.ctxtMux.Unlock()
 	m.Wh_close(C.rmr_whid_t(whid))
 }
 
 func (m *RMRClient) Wh_close(whid C.rmr_whid_t) {
+	m.ctxtMux.Lock()
+	defer m.ctxtMux.Unlock()
 	C.rmr_wh_close(m.context, whid)
 }
 
