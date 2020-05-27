@@ -20,7 +20,6 @@
 "rmr":
   "protPort": "tcp:4560"
   "maxSize": 2072
-  "numWorkers": 1
 "db":
   "host": "localhost"
   "port": 6379

@@ -15,7 +15,6 @@
     "rmr": {
        "protPort": "tcp:4560",
        "maxSize": 65536,
-       "numWorkers": 1,
        "rxMessages": ["RIC_SUB_RESP", "RIC_SUB_FAILURE", "RIC_SUB_DEL_RESP", "RIC_INDICATION"],
        "txMessages": ["RIC_SUB_REQ", "RIC_SUB_DEL_REQ", "RIC_SGNB_ADDITION_REQ", "RIC_SGNB_ADDITION_ACK"]
     },

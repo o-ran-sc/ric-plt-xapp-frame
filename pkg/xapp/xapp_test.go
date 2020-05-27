@@ -51,6 +51,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetHealthCheckRetursServiceUnavailableError(t *testing.T) {
+	Logger.Info("CASE: TestGetHealthCheckRetursServiceUnavailableError")
 	req, _ := http.NewRequest("GET", "/ric/v1/health/ready", nil)
 	/*response :=*/ executeRequest(req)
 
@@ -58,6 +59,7 @@ func TestGetHealthCheckRetursServiceUnavailableError(t *testing.T) {
 }
 
 func TestGetHealthCheckReturnsSuccess(t *testing.T) {
+	Logger.Info("CASE: TestGetHealthCheckReturnsSuccess")
 	for Rmr.IsReady() == false {
 		time.Sleep(time.Duration(2) * time.Second)
 	}
@@ -69,6 +71,7 @@ func TestGetHealthCheckReturnsSuccess(t *testing.T) {
 }
 
 func TestInjectQuerySinglePath(t *testing.T) {
+	Logger.Info("CASE: TestInjectQuerySinglePath")
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 	}
 
@@ -80,6 +83,7 @@ func TestInjectQuerySinglePath(t *testing.T) {
 }
 
 func TestInjectQueryMultiplePaths(t *testing.T) {
+	Logger.Info("CASE: TestInjectQueryMultiplePaths")
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 	}
 
@@ -91,6 +95,7 @@ func TestInjectQueryMultiplePaths(t *testing.T) {
 }
 
 func TestInjectQueryFailures(t *testing.T) {
+	Logger.Info("CASE: TestInjectQueryFailures")
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 	}
 
@@ -102,6 +107,7 @@ func TestInjectQueryFailures(t *testing.T) {
 }
 
 func TestMessagesReceivedSuccessfully(t *testing.T) {
+	Logger.Info("CASE: TestMessagesReceivedSuccessfully")
 	time.Sleep(time.Duration(5) * time.Second)
 	for i := 0; i < 100; i++ {
 		params := &RMRParams{}
@@ -144,6 +150,7 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 }
 
 func TestMessagesReceivedSuccessfullyUsingWh(t *testing.T) {
+	Logger.Info("CASE: TestMessagesReceivedSuccessfullyUsingWh")
 	time.Sleep(time.Duration(5) * time.Second)
 	whid := Rmr.Openwh("localhost:4560")
 	time.Sleep(time.Duration(1) * time.Second)
@@ -190,6 +197,7 @@ func TestMessagesReceivedSuccessfullyUsingWh(t *testing.T) {
 }
 
 func TestMessagesReceivedSuccessfullyUsingWhCall(t *testing.T) {
+	Logger.Info("CASE: TestMessagesReceivedSuccessfullyUsingWhCall")
 	time.Sleep(time.Duration(5) * time.Second)
 	whid := Rmr.Openwh("localhost:4560")
 	params := &RMRParams{}
@@ -231,6 +239,7 @@ func TestMessagesReceivedSuccessfullyUsingWhCall(t *testing.T) {
 }
 
 func TestSubscribeChannels(t *testing.T) {
+	Logger.Info("CASE: TestSubscribeChannels")
 	if !viper.GetBool("db.waitForSdl") {
 		return
 	}
@@ -252,6 +261,7 @@ func TestSubscribeChannels(t *testing.T) {
 }
 
 func TestGetRicMessageSuccess(t *testing.T) {
+	Logger.Info("CASE: TestGetRicMessageSuccess")
 	id, ok := Rmr.GetRicMessageId("RIC_SUB_REQ")
 	if !ok || id != 12010 {
 		t.Errorf("Error: GetRicMessageId failed: id=%d", id)
@@ -264,6 +274,7 @@ func TestGetRicMessageSuccess(t *testing.T) {
 }
 
 func TestGetRicMessageFails(t *testing.T) {
+	Logger.Info("CASE: TestGetRicMessageFails")
 	ok := Rmr.IsRetryError(&RMRParams{status: 0})
 	if ok {
 		t.Errorf("Error: IsRetryError returned wrong value")
@@ -286,6 +297,7 @@ func TestGetRicMessageFails(t *testing.T) {
 }
 
 func TestIsErrorFunctions(t *testing.T) {
+	Logger.Info("CASE: TestIsErrorFunctions")
 	id, ok := Rmr.GetRicMessageId("RIC_SUB_REQ")
 	if !ok || id != 12010 {
 		t.Errorf("Error: GetRicMessageId failed: id=%d", id)
@@ -298,6 +310,7 @@ func TestIsErrorFunctions(t *testing.T) {
 }
 
 func TestTeardown(t *testing.T) {
+	Logger.Info("CASE: TestTeardown")
 	Sdl.Clear()
 }
 

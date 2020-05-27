@@ -24,11 +24,38 @@ package xapp
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/epoll.h>
+#include <unistd.h>
 #include <rmr/rmr.h>
 #include <rmr/RIC_message_types.h>
 
 void write_bytes_array(unsigned char *dst, void *data, int len) {
     memcpy((void *)dst, (void *)data, len);
+}
+
+int init_epoll(int rcv_fd) {
+	struct	epoll_event epe;
+	int epoll_fd = epoll_create1( 0 );
+	epe.events = EPOLLIN;
+	epe.data.fd = rcv_fd;
+	epoll_ctl( epoll_fd, EPOLL_CTL_ADD, rcv_fd, &epe );
+	return epoll_fd;
+}
+
+void close_epoll(int epoll_fd) {
+	if(epoll_fd >= 0) {
+		close(epoll_fd);
+	}
+}
+
+int wait_epoll(int epoll_fd,int rcv_fd) {
+	struct	epoll_event events[1];
+	if( epoll_wait( epoll_fd, events, 1, -1 ) > 0 ) {
+		if( events[0].data.fd == rcv_fd ) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 #cgo CFLAGS: -I../
@@ -39,7 +66,6 @@ import "C"
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"strconv"
 	"strings"
 	"time"
 	"unsafe"
@@ -87,30 +113,25 @@ type RMRParams struct {
 	status     int
 }
 
-func NewRMRClientWithParams(protPort string, maxSize int, numWorkers int, threadType int, statDesc string) *RMRClient {
+func NewRMRClientWithParams(protPort string, maxSize int, threadType int, statDesc string) *RMRClient {
 	p := C.CString(protPort)
 	m := C.int(maxSize)
 	c := C.int(threadType)
 	defer C.free(unsafe.Pointer(p))
-
-	//ctx := C.rmr_init(p, m, C.int(0))
-	//ctx := C.rmr_init(p, m, C.RMRFL_NOTHREAD)
 	ctx := C.rmr_init(p, m, c)
 	if ctx == nil {
 		Logger.Error("rmrClient: Initializing RMR context failed, bailing out!")
 	}
-
 	return &RMRClient{
-		protPort:   protPort,
-		numWorkers: numWorkers,
-		context:    ctx,
-		consumers:  make([]MessageConsumer, 0),
-		stat:       Metric.RegisterCounterGroup(RMRCounterOpts, statDesc),
+		protPort:  protPort,
+		context:   ctx,
+		consumers: make([]MessageConsumer, 0),
+		stat:      Metric.RegisterCounterGroup(RMRCounterOpts, statDesc),
 	}
 }
 
 func NewRMRClient() *RMRClient {
-	return NewRMRClientWithParams(viper.GetString("rmr.protPort"), viper.GetInt("rmr.maxSize"), viper.GetInt("rmr.numWorkers"), viper.GetInt("rmr.threadType"), "RMR")
+	return NewRMRClientWithParams(viper.GetString("rmr.protPort"), viper.GetInt("rmr.maxSize"), viper.GetInt("rmr.threadType"), "RMR")
 }
 
 func (m *RMRClient) Start(c MessageConsumer) {
@@ -120,7 +141,10 @@ func (m *RMRClient) Start(c MessageConsumer) {
 
 	var counter int = 0
 	for {
-		if m.ready = int(C.rmr_ready(m.context)); m.ready == 1 {
+		m.contextMux.Lock()
+		m.ready = int(C.rmr_ready(m.context))
+		m.contextMux.Unlock()
+		if m.ready == 1 {
 			Logger.Info("rmrClient: RMR is ready after %d seconds waiting...", counter)
 			break
 		}
@@ -130,39 +154,41 @@ func (m *RMRClient) Start(c MessageConsumer) {
 		time.Sleep(1 * time.Second)
 		counter++
 	}
-	m.wg.Add(m.numWorkers)
+	m.wg.Add(1)
 
 	if m.readyCb != nil {
 		go m.readyCb(m.readyCbParams)
 	}
 
-	for w := 0; w < m.numWorkers; w++ {
-		go m.Worker("worker-"+strconv.Itoa(w), 0)
-	}
-	m.Wait()
-}
+	go func() {
+		m.contextMux.Lock()
+		rfd := C.rmr_get_rcvfd(m.context)
+		m.contextMux.Unlock()
+		efd := C.init_epoll(rfd)
 
-func (m *RMRClient) Worker(taskName string, msgSize int) {
-	Logger.Info("rmrClient: '%s': receiving messages on [%s]", taskName, m.protPort)
+		defer m.wg.Done()
+		for {
+			if int(C.wait_epoll(efd, rfd)) == 0 {
+				continue
+			}
+			m.contextMux.Lock()
+			rxBuffer := C.rmr_rcv_msg(m.context, nil)
+			m.contextMux.Unlock()
 
-	defer m.wg.Done()
-	for {
-		rxBuffer := C.rmr_rcv_msg(m.context, nil)
-		if rxBuffer == nil {
-			m.LogMBufError("RecvMsg failed", rxBuffer)
-			m.UpdateStatCounter("ReceiveError")
-			continue
+			if rxBuffer == nil {
+				m.LogMBufError("RecvMsg failed", rxBuffer)
+				m.UpdateStatCounter("ReceiveError")
+				continue
+			}
+			m.UpdateStatCounter("Received")
+			m.parseMessage(rxBuffer)
 		}
-		m.UpdateStatCounter("Received")
+	}()
 
-		m.msgWg.Add(1)
-		go m.parseMessage(rxBuffer)
-		m.msgWg.Wait()
-	}
+	m.wg.Wait()
 }
 
 func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
-	defer m.msgWg.Done()
 	if len(m.consumers) == 0 {
 		Logger.Info("rmrClient: No message handlers defined, message discarded!")
 		return
@@ -216,6 +242,8 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 }
 
 func (m *RMRClient) Allocate(size int) *C.rmr_mbuf_t {
+	m.contextMux.Lock()
+	defer m.contextMux.Unlock()
 	buf := C.rmr_alloc_msg(m.context, C.int(size))
 	if buf == nil {
 		Logger.Error("rmrClient: Allocating message buffer failed!")
@@ -227,6 +255,8 @@ func (m *RMRClient) Free(mbuf *C.rmr_mbuf_t) {
 	if mbuf == nil {
 		return
 	}
+	m.contextMux.Lock()
+	defer m.contextMux.Unlock()
 	C.rmr_free_msg(mbuf)
 }
 
@@ -296,6 +326,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 		counterName string = "Transmitted"
 	)
 
+	m.contextMux.Lock()
 	txBuffer.state = 0
 	if whid != 0 {
 		currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
@@ -306,6 +337,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 			currBuffer = C.rmr_send_msg(m.context, txBuffer)
 		}
 	}
+	m.contextMux.Unlock()
 
 	if currBuffer == nil {
 		m.UpdateStatCounter("TransmitError")
@@ -319,6 +351,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 	}
 
 	for j := 0; j < maxRetryOnFailure && currBuffer != nil && currBuffer.state == C.RMR_ERR_RETRY; j++ {
+		m.contextMux.Lock()
 		if whid != 0 {
 			currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
 		} else {
@@ -328,6 +361,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 				currBuffer = C.rmr_send_msg(m.context, txBuffer)
 			}
 		}
+		m.contextMux.Unlock()
 	}
 
 	if currBuffer.state != C.RMR_OK {
@@ -353,7 +387,9 @@ func (m *RMRClient) SendCallMsg(params *RMRParams) (int, string) {
 
 	txBuffer.state = 0
 
+	m.contextMux.Lock()
 	currBuffer = C.rmr_wh_call(m.context, C.int(params.Whid), txBuffer, C.int(params.Callid), C.int(params.Timeout))
+	m.contextMux.Unlock()
 
 	if currBuffer == nil {
 		m.UpdateStatCounter("TransmitError")
@@ -379,6 +415,8 @@ func (m *RMRClient) Openwh(target string) C.rmr_whid_t {
 }
 
 func (m *RMRClient) Wh_open(target string) C.rmr_whid_t {
+	m.contextMux.Lock()
+	defer m.contextMux.Unlock()
 	endpoint := C.CString(target)
 	return C.rmr_wh_open(m.context, endpoint)
 }
@@ -388,6 +426,8 @@ func (m *RMRClient) Closewh(whid int) {
 }
 
 func (m *RMRClient) Wh_close(whid C.rmr_whid_t) {
+	m.contextMux.Lock()
+	defer m.contextMux.Unlock()
 	C.rmr_wh_close(m.context, whid)
 }
 

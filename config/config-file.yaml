@@ -20,7 +20,6 @@
 "rmr":
   "protPort": "tcp:4560"
   "maxSize": 2072
-  "numWorkers": 1
   "maxRetryOnFailure": 5
   "threadType": 0
 "subscription":
