@@ -113,6 +113,10 @@ var RICMessageTypes = map[string]int{
 	"RIC_E2_SETUP_REQ":                    C.RIC_E2_SETUP_REQ,
 	"RIC_E2_SETUP_RESP":                   C.RIC_E2_SETUP_RESP,
 	"RIC_E2_SETUP_FAILURE":                C.RIC_E2_SETUP_FAILURE,
+	"TS_UE_LIST":                          C.TS_UE_LIST,
+	"TS_QOE_PRED_REQ":                     C.TS_QOE_PRED_REQ,
+	"TS_QOE_PREDICTION":                   C.TS_QOE_PREDICTION,
+	"MC_REPORT":                           C.MC_REPORT,
 	"DCAPTERM_RTPM_RMR_MSGTYPE":           C.DCAPTERM_RTPM_RMR_MSGTYPE,
 	"DCAPTERM_GEO_RMR_MSGTYPE":            C.DCAPTERM_GEO_RMR_MSGTYPE,
 }
@@ -206,6 +210,10 @@ const (
 	RIC_E2_SETUP_REQ                    = C.RIC_E2_SETUP_REQ
 	RIC_E2_SETUP_RESP                   = C.RIC_E2_SETUP_RESP
 	RIC_E2_SETUP_FAILURE                = C.RIC_E2_SETUP_FAILURE
+	TS_UE_LIST                          = C.TS_UE_LIST
+	TS_QOE_PRED_REQ                     = C.TS_QOE_PRED_REQ
+	TS_QOE_PREDICTION                   = C.TS_QOE_PREDICTION
+	MC_REPORT                           = C.MC_REPORT
 	DCAPTERM_RTPM_RMR_MSGTYPE           = C.DCAPTERM_RTPM_RMR_MSGTYPE
 	DCAPTERM_GEO_RMR_MSGTYPE            = C.DCAPTERM_GEO_RMR_MSGTYPE
 )
@@ -299,6 +307,10 @@ var RicMessageTypeToName = map[int]string{
 	RIC_E2_SETUP_REQ:                    "RIC_E2_SETUP_REQ",
 	RIC_E2_SETUP_RESP:                   "RIC_E2_SETUP_RESP",
 	RIC_E2_SETUP_FAILURE:                "RIC_E2_SETUP_FAILURE",
+	TS_UE_LIST:                          "TS_UE_LIST",
+	TS_QOE_PRED_REQ:                     "TS_QOE_PRED_REQ",
+	TS_QOE_PREDICTION:                   "TS_QOE_PREDICTION",
+	MC_REPORT:                           "MC_REPORT",
 	DCAPTERM_RTPM_RMR_MSGTYPE:           "DCAPTERM_RTPM_RMR_MSGTYPE",
 	DCAPTERM_GEO_RMR_MSGTYPE:            "DCAPTERM_GEO_RMR_MSGTYPE",
 }
