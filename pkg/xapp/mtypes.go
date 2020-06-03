@@ -28,6 +28,8 @@ import "C"
 //
 //-----------------------------------------------------------------------------
 var RICMessageTypes = map[string]int{
+	"RIC_HEALTH_CHECK_REQ":                C.RIC_HEALTH_CHECK_REQ,
+	"RIC_HEALTH_CHECK_RESP":               C.RIC_HEALTH_CHECK_RESP,
 	"RIC_SCTP_CONNECTION_FAILURE":         C.RIC_SCTP_CONNECTION_FAILURE,
 	"RIC_SCTP_CLEAR_ALL":                  C.RIC_SCTP_CLEAR_ALL,
 	"E2_TERM_INIT":                        C.E2_TERM_INIT,
@@ -125,6 +127,8 @@ var RICMessageTypes = map[string]int{
 //
 //-----------------------------------------------------------------------------
 const (
+	RIC_HEALTH_CHECK_REQ                = C.RIC_HEALTH_CHECK_REQ
+	RIC_HEALTH_CHECK_RESP               = C.RIC_HEALTH_CHECK_RESP
 	RIC_SCTP_CONNECTION_FAILURE         = C.RIC_SCTP_CONNECTION_FAILURE
 	RIC_SCTP_CLEAR_ALL                  = C.RIC_SCTP_CLEAR_ALL
 	E2_TERM_INIT                        = C.E2_TERM_INIT
@@ -222,6 +226,8 @@ const (
 //
 //-----------------------------------------------------------------------------
 var RicMessageTypeToName = map[int]string{
+	RIC_HEALTH_CHECK_REQ:                "RIC_HEALTH_CHECK_REQ",
+	RIC_HEALTH_CHECK_RESP:               "RIC_HEALTH_CHECK_RESP",
 	RIC_SCTP_CONNECTION_FAILURE:         "RIC SCTP CONNECTION FAILURE",
 	RIC_SCTP_CLEAR_ALL:                  "RIC SCTP CLEAR ALL",
 	E2_TERM_INIT:                        "E2 TERM INIT",
