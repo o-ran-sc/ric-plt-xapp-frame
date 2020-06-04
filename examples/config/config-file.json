@@ -16,7 +16,11 @@
        "protPort": "tcp:4560",
        "maxSize": 65536,
        "rxMessages": ["RIC_SUB_RESP", "RIC_SUB_FAILURE", "RIC_SUB_DEL_RESP", "RIC_INDICATION"],
-       "txMessages": ["RIC_SUB_REQ", "RIC_SUB_DEL_REQ", "RIC_SGNB_ADDITION_REQ", "RIC_SGNB_ADDITION_ACK"]
+       "txMessages": ["RIC_SUB_REQ", "RIC_SUB_DEL_REQ", "RIC_SGNB_ADDITION_REQ", "RIC_SGNB_ADDITION_ACK"],
+       "mtypes" : [
+            {"name":"TESTNAME1","id":55555},
+            {"name":"TESTNAME2","id":55556}
+       ]
     },
     "metrics": [
         {

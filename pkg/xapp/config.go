@@ -27,6 +27,15 @@ import (
 	"path/filepath"
 )
 
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+
+type mtype struct {
+	Name string
+	Id   int
+}
+
 type Configurator struct {
 }
 
@@ -51,10 +60,42 @@ func LoadConfig() (l *Log) {
 	}
 	l.Info("Using config file: %s", viper.ConfigFileUsed())
 
+	updatemtypes := func() {
+		var mtypes []mtype
+		viper.UnmarshalKey("rmr.mtypes", &mtypes)
+
+		if len(mtypes) > 0 {
+			l.Info("Config mtypes before RICMessageTypes:%d RicMessageTypeToName:%d", len(RICMessageTypes), len(RicMessageTypeToName))
+			for _, v := range mtypes {
+				nadd := false
+				iadd := false
+				if _, ok := RICMessageTypes[v.Name]; ok == false {
+					nadd = true
+				}
+				if _, ok := RicMessageTypeToName[int(v.Id)]; ok == false {
+					iadd = true
+				}
+				if iadd != nadd {
+					l.Error("Config mtypes rmr.mtypes entry skipped due conflict with existing values %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
+				} else if iadd {
+					l.Info("Config mtypes rmr.mtypes entry added %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
+					RICMessageTypes[v.Name] = int(v.Id)
+					RicMessageTypeToName[int(v.Id)] = v.Name
+				} else {
+					l.Info("Config mtypes rmr.mtypes entry skipped %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
+				}
+			}
+			l.Info("Config mtypes after RICMessageTypes:%d RicMessageTypeToName:%d", len(RICMessageTypes), len(RicMessageTypeToName))
+		}
+	}
+
+	updatemtypes()
+
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		l.Info("config file %s changed ", e.Name)
 
+		updatemtypes()
 		Logger.SetLevel(viper.GetInt("logger.level"))
 		if len(ConfigChangeListeners) > 0 {
 			for _, f := range ConfigChangeListeners {
