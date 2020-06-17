@@ -29,7 +29,7 @@ Release-Notes
 =============
 
 
-This document provides the release notes for v0.0.22 of xapp-frame.
+This document provides the release notes for v0.4.16 of xapp-frame.
 
 .. contents::
    :depth: 3
@@ -44,6 +44,9 @@ Version history
 |                    |                    |                    |                    |
 +--------------------+--------------------+--------------------+--------------------+
 | 2019-11-21         | 0.0.22             | Abukar Mohamed     | Latest version     |
+|                    |                    |                    |                    |
++--------------------+--------------------+--------------------+--------------------+
+| 2020-06-17         | 0.4.16             | Juha Hyttinen      | Bronze release     |
 |                    |                    |                    |                    |
 +--------------------+--------------------+--------------------+--------------------+
 
@@ -65,10 +68,10 @@ Release Data
 | **Repo/commit-ID**                   | ric-plt/xapp-frame                   |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
-| **Release designation**              | Amber                                |
+| **Release designation**              | Bronze                               |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
-| **Release date**                     | 2019-11-21                           |
+| **Release date**                     | 2020-06-17                           |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
 | **Purpose of the delivery**          | First Release                        |
