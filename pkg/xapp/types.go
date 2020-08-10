@@ -26,6 +26,9 @@ import (
 // To be removed ...
 type RMRStatistics struct{}
 
+//
+//
+//
 type RMRClient struct {
 	protPort      string
 	contextMux    sync.Mutex
@@ -39,12 +42,46 @@ type RMRClient struct {
 	readyCbParams interface{}
 }
 
+//
+//
+//
 type RMRMeid struct {
 	PlmnID  string
 	EnbID   string
 	RanName string
 }
 
+func (meid *RMRMeid) String() string {
+	str := "meid("
+	pad := ""
+	if len(meid.PlmnID) > 0 {
+		str += pad + "PlmnID=" + meid.PlmnID
+		pad = " "
+	}
+	if len(meid.EnbID) > 0 {
+		str += pad + "EnbID=" + meid.EnbID
+		pad = " "
+	}
+	if len(meid.RanName) > 0 {
+		str += pad + "RanName=" + meid.RanName
+		pad = " "
+	}
+	str += ")"
+	return str
+}
+
+//
+//
+//
+type MessageConsumerFunc func(*RMRParams) error
+
+func (fn MessageConsumerFunc) Consume(params *RMRParams) error {
+	return fn(params)
+}
+
+//
+//
+//
 type MessageConsumer interface {
 	Consume(params *RMRParams) error
 }

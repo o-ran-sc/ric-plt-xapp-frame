@@ -42,6 +42,18 @@ type MetricGroupsCache struct {
 	Gauges   map[string]Gauge
 }
 
+func (met *MetricGroupsCache) CInc(metric string) {
+	met.Counters[metric].Inc()
+}
+
+func (met *MetricGroupsCache) CAdd(metric string, val float64) {
+	met.Counters[metric].Add(val)
+}
+
+func (met *MetricGroupsCache) GSet(metric string, val float64) {
+	met.Gauges[metric].Set(val)
+}
+
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
