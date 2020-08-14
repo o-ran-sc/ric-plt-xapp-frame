@@ -62,11 +62,15 @@ func (r *Router) serviceChecker(inner http.HandlerFunc) http.HandlerFunc {
 }
 
 func (r *Router) InjectRoute(url string, handler http.HandlerFunc, method string) *mux.Route {
-	return r.router.HandleFunc(url, r.serviceChecker(handler)).Methods(method)
+	return r.router.Path(url).HandlerFunc(r.serviceChecker(handler)).Methods(method)
 }
 
 func (r *Router) InjectQueryRoute(url string, h http.HandlerFunc, m string, q ...string) *mux.Route {
-	return r.router.HandleFunc(url, r.serviceChecker(h)).Methods(m).Queries(q...)
+	return r.router.Path(url).HandlerFunc(r.serviceChecker(h)).Methods(m).Queries(q...)
+}
+
+func (r *Router) InjectRoutePrefix(prefix string, handler http.HandlerFunc) *mux.Route {
+	return r.router.PathPrefix(prefix).HandlerFunc(r.serviceChecker(handler))
 }
 
 func (r *Router) InjectStatusCb(f StatusCb) {
