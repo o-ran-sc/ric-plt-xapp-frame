@@ -174,6 +174,14 @@ func NewRNIBClient(ns string) *RNIBClient {
 	}
 }
 
+func (r *RNIBClient) Subscribe(cb func(string, ...string), channel string) error {
+	return r.db.SubscribeChannel(cb, channel)
+}
+
+func (r *RNIBClient) StoreAndPublish(channel string, event string, pairs ...interface{}) error {
+	return r.db.SetAndPublish([]string{channel, event}, pairs...)
+}
+
 func (r *RNIBClient) GetNodeb(invName string) (*RNIBNodebInfo, RNIBIRNibError) {
 	return rnibreader.GetRNibReader(r.db).GetNodeb(invName)
 }
