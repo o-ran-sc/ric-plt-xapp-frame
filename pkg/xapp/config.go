@@ -21,6 +21,7 @@ package xapp
 
 import (
 	"flag"
+	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"os"
@@ -40,6 +41,8 @@ type Configurator struct {
 }
 
 type ConfigChangeCB func(filename string)
+
+type SDLNotificationCB func(string, ...string)
 
 var ConfigChangeListeners []ConfigChangeCB
 
@@ -112,6 +115,19 @@ func AddConfigChangeListener(f ConfigChangeCB) {
 		ConfigChangeListeners = make([]ConfigChangeCB, 0)
 	}
 	ConfigChangeListeners = append(ConfigChangeListeners, f)
+}
+
+func PublishConfigChange(appName, eventJson string) error {
+	channel := fmt.Sprintf("CM_UPDATE:%s", appName)
+	if err := Sdl.StoreAndPublish(channel, eventJson, appName, eventJson); err != nil {
+		Logger.Error("Sdl.Store failed: %v", err)
+		return err
+	}
+	return nil
+}
+
+func (*Configurator) SetSDLNotificationCB(appName string, sdlNotificationCb SDLNotificationCB) error {
+	return Sdl.Subscribe(sdlNotificationCb, fmt.Sprintf("CM_UPDATE:%s", appName))
 }
 
 func (*Configurator) GetString(key string) string {

@@ -22,12 +22,14 @@ package xapp
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"io/ioutil"
 	"net/http"
 )
 
 const (
-	ReadyURL = "/ric/v1/health/ready"
-	AliveURL = "/ric/v1/health/alive"
+	ReadyURL  = "/ric/v1/health/ready"
+	AliveURL  = "/ric/v1/health/alive"
+	ConfigURL = "/ric/v1/cm/{name}"
 )
 
 type StatusCb func() bool
@@ -46,6 +48,7 @@ func NewRouter() *Router {
 	// Inject default routes for health probes
 	r.InjectRoute(ReadyURL, readyHandler, "GET")
 	r.InjectRoute(AliveURL, aliveHandler, "GET")
+	r.InjectRoute(ConfigURL, configHandler, "POST")
 
 	return r
 }
@@ -93,6 +96,29 @@ func readyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func aliveHandler(w http.ResponseWriter, r *http.Request) {
+	respondWithJSON(w, http.StatusOK, nil)
+}
+
+func configHandler(w http.ResponseWriter, r *http.Request) {
+	xappName := mux.Vars(r)["name"]
+	if xappName == "" || r.Body == nil {
+		respondWithJSON(w, http.StatusBadRequest, nil)
+		return
+	}
+	defer r.Body.Close()
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		Logger.Error("ioutil.ReadAll failed: %v", err)
+		respondWithJSON(w, http.StatusInternalServerError, nil)
+		return
+	}
+
+	if err := PublishConfigChange(xappName, string(body)); err != nil {
+		respondWithJSON(w, http.StatusInternalServerError, nil)
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, nil)
 }
 
