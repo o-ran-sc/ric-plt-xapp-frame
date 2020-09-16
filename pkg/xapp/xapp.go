@@ -23,9 +23,15 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync/atomic"
+	"syscall"
+	"time"
 )
 
 type ReadyCB func(interface{})
+type ShutdownCB func()
 
 var (
 	// XApp is an application instance
@@ -40,6 +46,9 @@ var (
 	Alarm         *AlarmClient
 	readyCb       ReadyCB
 	readyCbParams interface{}
+	shutdownCb    ShutdownCB
+	shutdownFlag  int32
+	shutdownCnt   int32
 )
 
 func IsReady() bool {
@@ -53,10 +62,13 @@ func SetReadyCB(cb ReadyCB, params interface{}) {
 
 func xappReadyCb(params interface{}) {
 	Alarm = NewAlarmClient(viper.GetString("alarm.MOId"), viper.GetString("alarm.APPId"))
-
 	if readyCb != nil {
 		readyCb(readyCbParams)
 	}
+}
+
+func SetShutdownCB(cb ShutdownCB) {
+	shutdownCb = cb
 }
 
 func init() {
@@ -80,6 +92,52 @@ func init() {
 	} else {
 		Sdl = NewSDLClient(viper.GetString("db.namespace"))
 	}
+
+	//
+	// Signal handlers to really exit program.
+	// shutdownCb can hang until application has
+	// made all needed gracefull shutdown actions
+	// hardcoded limit for shutdown is 20 seconds
+	//
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+	//signal handler function
+	go func() {
+		for _ = range interrupt {
+			if atomic.CompareAndSwapInt32(&shutdownFlag, 0, 1) {
+				// close function
+				go func() {
+					timeout := int(20)
+					sentry := make(chan struct{})
+					defer close(sentry)
+
+					// close callback
+					go func() {
+						if shutdownCb != nil {
+							shutdownCb()
+						}
+						sentry <- struct{}{}
+					}()
+					select {
+					case <-time.After(time.Duration(timeout) * time.Second):
+						Logger.Info("xapp-frame shutdown callback took more than %d seconds", timeout)
+					case <-sentry:
+						Logger.Info("xapp-frame shutdown callback handled within %d seconds", timeout)
+					}
+					os.Exit(0)
+				}()
+			} else {
+				newCnt := atomic.AddInt32(&shutdownCnt, 1)
+				Logger.Info("xapp-frame shutdown already ongoing. Forced exit counter %d/%d ", newCnt, 5)
+				if newCnt >= 5 {
+					Logger.Info("xapp-frame shutdown forced exit")
+					os.Exit(0)
+				}
+				continue
+			}
+
+		}
+	}()
 }
 
 func RunWithParams(c MessageConsumer, sdlcheck bool) {
