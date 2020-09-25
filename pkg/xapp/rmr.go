@@ -258,11 +258,21 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 func (m *RMRClient) Allocate(size int) *C.rmr_mbuf_t {
 	m.contextMux.Lock()
 	defer m.contextMux.Unlock()
-	buf := C.rmr_alloc_msg(m.context, C.int(size))
-	if buf == nil {
+	outbuf := C.rmr_alloc_msg(m.context, C.int(size))
+	if outbuf == nil {
 		Logger.Error("rmrClient: Allocating message buffer failed!")
 	}
-	return buf
+	return outbuf
+}
+
+func (m *RMRClient) ReAllocate(inbuf *C.rmr_mbuf_t, size int) *C.rmr_mbuf_t {
+	m.contextMux.Lock()
+	defer m.contextMux.Unlock()
+	outbuf := C.rmr_realloc_msg(inbuf, C.int(size))
+	if outbuf == nil {
+		Logger.Error("rmrClient: Allocating message buffer failed!")
+	}
+	return outbuf
 }
 
 func (m *RMRClient) Free(mbuf *C.rmr_mbuf_t) {
@@ -302,17 +312,21 @@ func (m *RMRClient) SendWithRetry(params *RMRParams, isRts bool, to time.Duratio
 }
 
 func (m *RMRClient) CopyBuffer(params *RMRParams) *C.rmr_mbuf_t {
-	if params.Mbuf != nil {
-		m.Free(params.Mbuf)
-		params.Mbuf = nil
-	}
 
 	payLen := len(params.Payload)
 	if params.PayloadLen != 0 {
 		payLen = params.PayloadLen
 	}
 
-	txBuffer := m.Allocate(payLen)
+	txBuffer := params.Mbuf
+	params.Mbuf = nil
+
+	if txBuffer != nil {
+		txBuffer = m.ReAllocate(txBuffer, payLen)
+	} else {
+		txBuffer = m.Allocate(payLen)
+	}
+
 	if txBuffer == nil {
 		return nil
 	}
