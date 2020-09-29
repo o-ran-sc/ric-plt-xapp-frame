@@ -313,6 +313,10 @@ func (m *RMRClient) SendWithRetry(params *RMRParams, isRts bool, to time.Duratio
 
 func (m *RMRClient) CopyBuffer(params *RMRParams) *C.rmr_mbuf_t {
 
+	if params == nil {
+		return nil
+	}
+
 	payLen := len(params.Payload)
 	if params.PayloadLen != 0 {
 		payLen = params.PayloadLen
@@ -337,20 +341,21 @@ func (m *RMRClient) CopyBuffer(params *RMRParams) *C.rmr_mbuf_t {
 	datap := C.CBytes(params.Payload)
 	defer C.free(datap)
 
-	if params != nil {
-		if params.Meid != nil {
-			b := make([]byte, int(C.RMR_MAX_MEID))
-			copy(b, []byte(params.Meid.RanName))
-			C.rmr_bytes2meid(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
-		}
-		xidLen := len(params.Xid)
-		if xidLen > 0 && xidLen <= C.RMR_MAX_XID {
-			b := make([]byte, int(C.RMR_MAX_XID))
-			copy(b, []byte(params.Xid))
-			C.rmr_bytes2xact(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
-		}
+	if params.Meid != nil {
+		b := make([]byte, int(C.RMR_MAX_MEID))
+		copy(b, []byte(params.Meid.RanName))
+		C.rmr_bytes2meid(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
 	}
+
+	xidLen := len(params.Xid)
+	if xidLen > 0 && xidLen <= C.RMR_MAX_XID {
+		b := make([]byte, int(C.RMR_MAX_XID))
+		copy(b, []byte(params.Xid))
+		C.rmr_bytes2xact(txBuffer, (*C.uchar)(unsafe.Pointer(&b[0])), C.int(len(b)))
+	}
+
 	C.write_bytes_array(txBuffer.payload, datap, txBuffer.len)
+
 	return txBuffer
 }
 
