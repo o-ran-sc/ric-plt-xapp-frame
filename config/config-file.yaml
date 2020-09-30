@@ -27,6 +27,8 @@
       "id" : 55555
     - "name": "TESTNAME2"
       "id" : 55556
+  "lowLatency": False
+  "fastAck": False
 "subscription":
     "host": "localhost:8088"
     "timeout": 2
