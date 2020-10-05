@@ -128,26 +128,26 @@ func (params *RMRParams) String() string {
 //
 //-----------------------------------------------------------------------------
 type RMRClientParams struct {
-	protPort   string
-	maxSize    int
-	threadType int
-	statDesc   string
-	lowLatency bool
-	fastAck    bool
+	ProtPort   string
+	MaxSize    int
+	ThreadType int
+	StatDesc   string
+	LowLatency bool
+	FastAck    bool
 }
 
 func (params *RMRClientParams) String() string {
-	return fmt.Sprintf("protPort=%s maxSize=%d threadType=%d statDesc=%s lowLatency=%t fastAck=%t",
-		params.protPort, params.maxSize, params.threadType, params.statDesc, params.lowLatency, params.fastAck)
+	return fmt.Sprintf("ProtPort=%s MaxSize=%d ThreadType=%d StatDesc=%s LowLatency=%t FastAck=%t",
+		params.ProtPort, params.MaxSize, params.ThreadType, params.StatDesc, params.LowLatency, params.FastAck)
 }
 
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
 func NewRMRClientWithParams(params *RMRClientParams) *RMRClient {
-	p := C.CString(params.protPort)
-	m := C.int(params.maxSize)
-	c := C.int(params.threadType)
+	p := C.CString(params.ProtPort)
+	m := C.int(params.MaxSize)
+	c := C.int(params.ThreadType)
 	defer C.free(unsafe.Pointer(p))
 	ctx := C.rmr_init(p, m, c)
 	if ctx == nil {
@@ -156,30 +156,30 @@ func NewRMRClientWithParams(params *RMRClientParams) *RMRClient {
 
 	Logger.Info("new rmrClient with parameters: %s", params.String())
 
-	if params.lowLatency {
+	if params.LowLatency {
 		C.rmr_set_low_latency(ctx)
 	}
-	if params.fastAck {
+	if params.FastAck {
 		C.rmr_set_fack(ctx)
 	}
 
 	return &RMRClient{
-		protPort:  params.protPort,
+		protPort:  params.ProtPort,
 		context:   ctx,
 		consumers: make([]MessageConsumer, 0),
-		stat:      Metric.RegisterCounterGroup(RMRCounterOpts, params.statDesc),
+		stat:      Metric.RegisterCounterGroup(RMRCounterOpts, params.StatDesc),
 	}
 }
 
 func NewRMRClient() *RMRClient {
 	return NewRMRClientWithParams(
 		&RMRClientParams{
-			protPort:   viper.GetString("rmr.protPort"),
-			maxSize:    viper.GetInt("rmr.maxSize"),
-			threadType: viper.GetInt("rmr.threadType"),
-			statDesc:   "RMR",
-			lowLatency: viper.GetBool("rmr.lowLatency"),
-			fastAck:    viper.GetBool("rmr.fastAck"),
+			ProtPort:   viper.GetString("rmr.protPort"),
+			MaxSize:    viper.GetInt("rmr.maxSize"),
+			ThreadType: viper.GetInt("rmr.threadType"),
+			StatDesc:   "RMR",
+			LowLatency: viper.GetBool("rmr.lowLatency"),
+			FastAck:    viper.GetBool("rmr.fastAck"),
 		})
 }
 
