@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"sync"
 )
 
 //-----------------------------------------------------------------------------
@@ -58,6 +59,7 @@ func (met *MetricGroupsCache) GSet(metric string, val float64) {
 //
 //-----------------------------------------------------------------------------
 type Metrics struct {
+	lock                 sync.Mutex
 	Namespace            string
 	MetricGroupsCacheMap map[string]*MetricGroupsCache
 }
@@ -255,6 +257,8 @@ func (m *Metrics) CombineGaugeGroups(srcs ...map[string]Gauge) map[string]Gauge 
  *
  */
 func (m *Metrics) GroupCacheGet(id string) *MetricGroupsCache {
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	entry, ok := m.MetricGroupsCacheMap[id]
 	if ok == false {
 		return nil
@@ -263,6 +267,8 @@ func (m *Metrics) GroupCacheGet(id string) *MetricGroupsCache {
 }
 
 func (m *Metrics) GroupCacheAddCounters(id string, vals map[string]Counter) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	entry, ok := m.MetricGroupsCacheMap[id]
 	if ok == false {
 		entry = &MetricGroupsCache{}
@@ -272,6 +278,8 @@ func (m *Metrics) GroupCacheAddCounters(id string, vals map[string]Counter) {
 }
 
 func (m *Metrics) GroupCacheAddGauges(id string, vals map[string]Gauge) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	entry, ok := m.MetricGroupsCacheMap[id]
 	if ok == false {
 		entry = &MetricGroupsCache{}
