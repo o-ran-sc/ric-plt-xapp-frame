@@ -570,8 +570,11 @@ func (m *RMRClient) GetRicMessageName(id int) (s string) {
 }
 
 func (m *RMRClient) LogMBufError(text string, mbuf *C.rmr_mbuf_t) int {
-	Logger.Debug(fmt.Sprintf("rmrClient: %s -> [tp=%v] %v - %s", text, mbuf.tp_state, mbuf.state, RMRErrors[int(mbuf.state)]))
-	return int(mbuf.state)
+	if mbuf != nil {
+		Logger.Debug(fmt.Sprintf("rmrClient: %s -> [tp=%v] %v - %s", text, mbuf.tp_state, mbuf.state, RMRErrors[int(mbuf.state)]))
+		return int(mbuf.state)
+	}
+	return 0
 }
 
 // To be removed ...
