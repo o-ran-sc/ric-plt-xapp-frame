@@ -409,8 +409,7 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 
 func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 	var (
-		currBuffer  *C.rmr_mbuf_t
-		counterName string = "Transmitted"
+		currBuffer *C.rmr_mbuf_t
 	)
 
 	m.contextMux.Lock()
@@ -451,15 +450,21 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 		m.contextMux.Unlock()
 	}
 
-	if currBuffer.state != C.RMR_OK {
-		counterName = "TransmitError"
+	if currBuffer == nil {
+		m.UpdateStatCounter("TransmitError")
 		m.LogMBufError("SendBuf failed", currBuffer)
+		return int(C.RMR_ERR_INITFAILED)
 	}
 
-	m.UpdateStatCounter(counterName)
+	if currBuffer.state != C.RMR_OK {
+		m.UpdateStatCounter("TransmitError")
+		m.LogMBufError("SendBuf failed", currBuffer)
+	} else {
+		m.UpdateStatCounter("Transmitted")
+	}
 	defer m.Free(currBuffer)
-
 	return int(currBuffer.state)
+
 }
 
 func (m *RMRClient) SendCallMsg(params *RMRParams) (int, string) {
