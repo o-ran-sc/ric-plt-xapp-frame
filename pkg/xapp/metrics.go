@@ -52,6 +52,12 @@ func (met *MetricGroupsCache) CIs(metric string) bool {
 	return ok
 }
 
+func (met *MetricGroupsCache) CGet(metric string) Counter {
+	met.RLock()
+	defer met.RUnlock()
+	return met.counters[metric]
+}
+
 func (met *MetricGroupsCache) CInc(metric string) {
 	met.RLock()
 	defer met.RUnlock()
@@ -69,6 +75,12 @@ func (met *MetricGroupsCache) GIs(metric string) bool {
 	defer met.RUnlock()
 	_, ok := met.gauges[metric]
 	return ok
+}
+
+func (met *MetricGroupsCache) GGet(metric string) Gauge {
+	met.RLock()
+	defer met.RUnlock()
+	return met.gauges[metric]
 }
 
 func (met *MetricGroupsCache) GSet(metric string, val float64) {
