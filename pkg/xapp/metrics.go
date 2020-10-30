@@ -20,6 +20,7 @@
 package xapp
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -39,29 +40,100 @@ type Gauge prometheus.Gauge
 //-----------------------------------------------------------------------------
 
 type MetricGroupsCache struct {
-	Counters map[string]Counter
-	Gauges   map[string]Gauge
+	sync.RWMutex //This is for map locking
+	counters     map[string]Counter
+	gauges       map[string]Gauge
+}
+
+func (met *MetricGroupsCache) CIs(metric string) bool {
+	met.RLock()
+	defer met.RUnlock()
+	_, ok := met.counters[metric]
+	return ok
 }
 
 func (met *MetricGroupsCache) CInc(metric string) {
-	met.Counters[metric].Inc()
+	met.RLock()
+	defer met.RUnlock()
+	met.counters[metric].Inc()
 }
 
 func (met *MetricGroupsCache) CAdd(metric string, val float64) {
-	met.Counters[metric].Add(val)
+	met.RLock()
+	defer met.RUnlock()
+	met.counters[metric].Add(val)
+}
+
+func (met *MetricGroupsCache) GIs(metric string) bool {
+	met.RLock()
+	defer met.RUnlock()
+	_, ok := met.gauges[metric]
+	return ok
 }
 
 func (met *MetricGroupsCache) GSet(metric string, val float64) {
-	met.Gauges[metric].Set(val)
+	met.RLock()
+	defer met.RUnlock()
+	met.gauges[metric].Set(val)
+}
+
+func (met *MetricGroupsCache) GInc(metric string) {
+	met.RLock()
+	defer met.RUnlock()
+	met.gauges[metric].Inc()
+}
+
+func (met *MetricGroupsCache) GDec(metric string) {
+	met.RLock()
+	defer met.RUnlock()
+	met.gauges[metric].Dec()
+}
+
+func (met *MetricGroupsCache) CombineCounterGroups(srcs ...map[string]Counter) {
+	met.Lock()
+	defer met.Unlock()
+	for _, src := range srcs {
+		for k, v := range src {
+			met.counters[k] = v
+		}
+	}
+}
+
+func (met *MetricGroupsCache) CombineGaugeGroups(srcs ...map[string]Gauge) {
+	met.Lock()
+	defer met.Unlock()
+	for _, src := range srcs {
+		for k, v := range src {
+			met.gauges[k] = v
+		}
+	}
+}
+
+func NewMetricGroupsCache() *MetricGroupsCache {
+	entry := &MetricGroupsCache{}
+	entry.counters = make(map[string]Counter)
+	entry.gauges = make(map[string]Gauge)
+	return entry
+}
+
+//-----------------------------------------------------------------------------
+// All counters/gauges registered via Metrics instances:
+// Counter names are build from: namespace, subsystem, metric and possible labels
+//-----------------------------------------------------------------------------
+var globalLock sync.Mutex
+var cache_allcounters map[string]Counter
+var cache_allgauges map[string]Gauge
+
+func init() {
+	cache_allcounters = make(map[string]Counter)
+	cache_allgauges = make(map[string]Gauge)
 }
 
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
 type Metrics struct {
-	lock                 sync.Mutex
-	Namespace            string
-	MetricGroupsCacheMap map[string]*MetricGroupsCache
+	Namespace string
 }
 
 func NewMetrics(url, namespace string, r *mux.Router) *Metrics {
@@ -77,7 +149,22 @@ func NewMetrics(url, namespace string, r *mux.Router) *Metrics {
 	// Expose 'metrics' endpoint with standard golang metrics used by prometheus
 	r.Handle(url, promhttp.Handler())
 
-	return &Metrics{Namespace: namespace, MetricGroupsCacheMap: make(map[string]*MetricGroupsCache)}
+	return &Metrics{Namespace: namespace}
+}
+
+/*
+ * Helpers
+ */
+func (m *Metrics) getFullName(opts prometheus.Opts, labels []string) string {
+	labelname := ""
+	for _, lbl := range labels {
+		if len(labelname) == 0 {
+			labelname += lbl
+		} else {
+			labelname += "_" + lbl
+		}
+	}
+	return fmt.Sprintf("%s_%s_%s_%s", opts.Namespace, opts.Subsystem, opts.Name, labelname)
 }
 
 /*
@@ -89,11 +176,19 @@ func (m *Metrics) registerCounter(opts CounterOpts) Counter {
 }
 
 func (m *Metrics) RegisterCounterGroup(opts []CounterOpts, subsytem string) (c map[string]Counter) {
+	globalLock.Lock()
+	defer globalLock.Unlock()
 	c = make(map[string]Counter)
 	for _, opt := range opts {
 		opt.Namespace = m.Namespace
 		opt.Subsystem = subsytem
-		c[opt.Name] = m.registerCounter(opt)
+
+		id := m.getFullName(prometheus.Opts(opt), []string{})
+		if _, ok := cache_allcounters[id]; !ok {
+			cache_allcounters[id] = m.registerCounter(opt)
+		}
+
+		c[opt.Name] = cache_allcounters[id]
 	}
 
 	return
@@ -108,11 +203,19 @@ func (m *Metrics) registerGauge(opts CounterOpts) Gauge {
 }
 
 func (m *Metrics) RegisterGaugeGroup(opts []CounterOpts, subsytem string) (c map[string]Gauge) {
+	globalLock.Lock()
+	defer globalLock.Unlock()
 	c = make(map[string]Gauge)
 	for _, opt := range opts {
 		opt.Namespace = m.Namespace
 		opt.Subsystem = subsytem
-		c[opt.Name] = m.registerGauge(opt)
+
+		id := m.getFullName(prometheus.Opts(opt), []string{})
+		if _, ok := cache_allgauges[id]; !ok {
+			cache_allgauges[id] = m.registerGauge(opt)
+		}
+
+		c[opt.Name] = cache_allgauges[id]
 	}
 
 	return
@@ -141,7 +244,6 @@ type CounterVec struct {
 
 func (m *Metrics) registerCounterVec(opts CounterOpts, labelNames []string) *prometheus.CounterVec {
 	Logger.Info("Register new counter vector with opts: %v labelNames: %v", opts, labelNames)
-
 	return promauto.NewCounterVec(prometheus.CounterOpts(opts), labelNames)
 }
 
@@ -159,11 +261,18 @@ func (m *Metrics) RegisterCounterVecGroup(opts []CounterOpts, labelNames []strin
 }
 
 func (m *Metrics) GetCounterGroupFromVectsWithPrefix(prefix string, labels []string, vects ...map[string]CounterVec) (c map[string]Counter) {
+	globalLock.Lock()
+	defer globalLock.Unlock()
 	c = make(map[string]Counter)
 	for _, vec := range vects {
 		for name, opt := range vec {
-			c[prefix+name] = opt.Vec.WithLabelValues(labels...)
-			Logger.Info("Register new counter for vector with opts: %v labels: %v", opt.Opts, labels)
+
+			id := m.getFullName(prometheus.Opts(opt.Opts), labels)
+			if _, ok := cache_allcounters[id]; !ok {
+				Logger.Info("Register new counter from vector with opts: %v labels: %v prefix: %s", opt.Opts, labels, prefix)
+				cache_allcounters[id] = opt.Vec.WithLabelValues(labels...)
+			}
+			c[prefix+name] = cache_allcounters[id]
 		}
 	}
 	return
@@ -196,7 +305,6 @@ type GaugeVec struct {
 
 func (m *Metrics) registerGaugeVec(opts CounterOpts, labelNames []string) *prometheus.GaugeVec {
 	Logger.Info("Register new gauge vector with opts: %v labelNames: %v", opts, labelNames)
-
 	return promauto.NewGaugeVec(prometheus.GaugeOpts(opts), labelNames)
 }
 
@@ -215,11 +323,18 @@ func (m *Metrics) RegisterGaugeVecGroup(opts []CounterOpts, labelNames []string,
 }
 
 func (m *Metrics) GetGaugeGroupFromVectsWithPrefix(prefix string, labels []string, vects ...map[string]GaugeVec) (c map[string]Gauge) {
+	globalLock.Lock()
+	defer globalLock.Unlock()
 	c = make(map[string]Gauge)
 	for _, vec := range vects {
 		for name, opt := range vec {
-			c[prefix+name] = opt.Vec.WithLabelValues(labels...)
-			Logger.Info("Register new gauge for vector with opts: %v labels: %v", opt.Opts, labels)
+
+			id := m.getFullName(prometheus.Opts(opt.Opts), labels)
+			if _, ok := cache_allgauges[id]; !ok {
+				Logger.Info("Register new gauge from vector with opts: %v labels: %v prefix: %s", opt.Opts, labels, prefix)
+				cache_allgauges[id] = opt.Vec.WithLabelValues(labels...)
+			}
+			c[prefix+name] = cache_allgauges[id]
 		}
 	}
 	return
@@ -227,63 +342,4 @@ func (m *Metrics) GetGaugeGroupFromVectsWithPrefix(prefix string, labels []strin
 
 func (m *Metrics) GetGaugeGroupFromVects(labels []string, vects ...map[string]GaugeVec) (c map[string]Gauge) {
 	return m.GetGaugeGroupFromVectsWithPrefix("", labels, vects...)
-
-}
-
-/*
- *
- */
-func (m *Metrics) CombineCounterGroups(srcs ...map[string]Counter) map[string]Counter {
-	trg := make(map[string]Counter)
-	for _, src := range srcs {
-		for k, v := range src {
-			trg[k] = v
-		}
-	}
-	return trg
-}
-
-func (m *Metrics) CombineGaugeGroups(srcs ...map[string]Gauge) map[string]Gauge {
-	trg := make(map[string]Gauge)
-	for _, src := range srcs {
-		for k, v := range src {
-			trg[k] = v
-		}
-	}
-	return trg
-}
-
-/*
- *
- */
-func (m *Metrics) GroupCacheGet(id string) *MetricGroupsCache {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	entry, ok := m.MetricGroupsCacheMap[id]
-	if ok == false {
-		return nil
-	}
-	return entry
-}
-
-func (m *Metrics) GroupCacheAddCounters(id string, vals map[string]Counter) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	entry, ok := m.MetricGroupsCacheMap[id]
-	if ok == false {
-		entry = &MetricGroupsCache{}
-		m.MetricGroupsCacheMap[id] = entry
-	}
-	m.MetricGroupsCacheMap[id].Counters = m.CombineCounterGroups(m.MetricGroupsCacheMap[id].Counters, vals)
-}
-
-func (m *Metrics) GroupCacheAddGauges(id string, vals map[string]Gauge) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	entry, ok := m.MetricGroupsCacheMap[id]
-	if ok == false {
-		entry = &MetricGroupsCache{}
-		m.MetricGroupsCacheMap[id] = entry
-	}
-	m.MetricGroupsCacheMap[id].Gauges = m.CombineGaugeGroups(m.MetricGroupsCacheMap[id].Gauges, vals)
 }

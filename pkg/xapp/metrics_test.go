@@ -40,6 +40,32 @@ func TestMetricSetup(t *testing.T) {
 		},
 		[]string{"name", "event"},
 		"SUBSYSTEM")
+
+}
+
+func TestMetricCounter(t *testing.T) {
+	var TestCounterOpts = []CounterOpts{
+		{Name: "Blaah1", Help: "Blaah1"},
+		{Name: "Blaah2", Help: "Blaah2"},
+		{Name: "Blaah3", Help: "Blaah3"},
+		{Name: "Blaah4", Help: "Blaah4"},
+	}
+
+	ret1 := Metric.RegisterCounterGroup(TestCounterOpts, "TestMetricCounter")
+
+	if len(ret1) == 0 {
+		t.Errorf("ret1 counter group is empty")
+	}
+
+	ret2 := Metric.RegisterCounterGroup(TestCounterOpts, "TestMetricCounter")
+
+	if len(ret2) == 0 {
+		t.Errorf("ret2 counter group is empty")
+	}
+
+	if len(ret1) != len(ret2) {
+		t.Errorf("ret1 len %d differs from ret2 len %d", len(ret1), len(ret2))
+	}
 }
 
 func TestMetricCounterVector(t *testing.T) {
@@ -97,21 +123,22 @@ func TestMetricCounterVectorPrefix(t *testing.T) {
 
 	//
 	//
-	c_grp := Metric.CombineCounterGroups(c_grp1, c_grp2)
+	m_grp := NewMetricGroupsCache()
+	m_grp.CombineCounterGroups(c_grp1, c_grp2)
 
 	//
 	//
-	if _, ok := c_grp["event1_counter1"]; ok == false {
-		t.Errorf("c_grp event1_counter1 not exists")
+	if m_grp.CIs("event1_counter1") == false {
+		t.Errorf("m_grp event1_counter1 not exists")
 	}
-	c_grp["event1_counter1"].Inc()
+	m_grp.CInc("event1_counter1")
 
 	//
 	//
-	if _, ok := c_grp["event2_counter1"]; ok == false {
-		t.Errorf("c_grp event2_counter1 not exists")
+	if m_grp.CIs("event2_counter1") == false {
+		t.Errorf("m_grp event2_counter1 not exists")
 	}
-	c_grp["event2_counter1"].Inc()
+	m_grp.CInc("event2_counter1")
 }
 
 func TestMetricGaugeVectorPrefix(t *testing.T) {
@@ -131,23 +158,22 @@ func TestMetricGaugeVectorPrefix(t *testing.T) {
 	}
 	g_grp2["event2_counter2"].Inc()
 
-	//
-	//
-	g_grp := Metric.CombineGaugeGroups(g_grp1, g_grp2)
+	m_grp := NewMetricGroupsCache()
+	m_grp.CombineGaugeGroups(g_grp1, g_grp2)
 
 	//
 	//
-	if _, ok := g_grp["event1_counter2"]; ok == false {
-		t.Errorf("g_grp event1_counter2 not exists")
+	if m_grp.GIs("event1_counter2") == false {
+		t.Errorf("m_grp event1_counter2 not exists")
 	}
-	g_grp["event1_counter2"].Inc()
+	m_grp.GInc("event1_counter2")
 
 	//
 	//
-	if _, ok := g_grp["event2_counter2"]; ok == false {
-		t.Errorf("g_grp event2_counter2 not exists")
+	if m_grp.GIs("event2_counter2") == false {
+		t.Errorf("m_grp event2_counter2 not exists")
 	}
-	g_grp["event2_counter2"].Inc()
+	m_grp.GInc("event2_counter2")
 }
 
 func TestMetricGroupCache(t *testing.T) {
@@ -185,38 +211,34 @@ func TestMetricGroupCache(t *testing.T) {
 
 	//
 	//
-	cacheid := "CACHEID"
-	entry := Metric.GroupCacheGet(cacheid)
-	if entry == nil {
-		Metric.GroupCacheAddCounters(cacheid, c_grp1)
-		Metric.GroupCacheAddCounters(cacheid, c_grp2)
-		Metric.GroupCacheAddGauges(cacheid, g_grp1)
-		Metric.GroupCacheAddGauges(cacheid, g_grp2)
-		entry = Metric.GroupCacheGet(cacheid)
-	}
+	m_grp := NewMetricGroupsCache()
+	m_grp.CombineCounterGroups(c_grp1)
+	m_grp.CombineCounterGroups(c_grp2)
+	m_grp.CombineGaugeGroups(g_grp1)
+	m_grp.CombineGaugeGroups(g_grp2)
 
-	if entry == nil {
+	if m_grp == nil {
 		t.Errorf("Cache failed")
 	}
 
-	if _, ok := entry.Counters["event1_counter1"]; ok == false {
-		t.Errorf("entry.Counters event1_counter1 not exists")
+	if m_grp.CIs("event1_counter1") == false {
+		t.Errorf("m_grp.Counters event1_counter1 not exists")
 	}
-	entry.Counters["event1_counter1"].Inc()
+	m_grp.CInc("event1_counter1")
 
-	if _, ok := entry.Counters["event2_counter1"]; ok == false {
-		t.Errorf("entry.Counters event2_counter1 not exists")
+	if m_grp.CIs("event2_counter1") == false {
+		t.Errorf("m_grp.Counters event2_counter1 not exists")
 	}
-	entry.Counters["event2_counter1"].Inc()
+	m_grp.CInc("event2_counter1")
 
-	if _, ok := entry.Gauges["event1_counter2"]; ok == false {
-		t.Errorf("entry.Gauges event1_counter2 not exists")
+	if m_grp.GIs("event1_counter2") == false {
+		t.Errorf("m_grp.Gauges event1_counter2 not exists")
 	}
-	entry.Gauges["event1_counter2"].Inc()
+	m_grp.GInc("event1_counter2")
 
-	if _, ok := entry.Gauges["event2_counter2"]; ok == false {
-		t.Errorf("entry.Gauges event2_counter2 not exists")
+	if m_grp.GIs("event2_counter2") == false {
+		t.Errorf("m_grp.Gauges event2_counter2 not exists")
 	}
-	entry.Gauges["event2_counter2"].Inc()
+	m_grp.GInc("event2_counter2")
 
 }
