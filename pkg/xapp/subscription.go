@@ -32,6 +32,7 @@ import (
 	"net"
 	"net/http"
 	"time"
+	"os"
 
 	apiclient "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi"
 	apicommon "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/common"
@@ -66,7 +67,12 @@ type Subscriber struct {
 
 func NewSubscriber(host string, timo int) *Subscriber {
 	if host == "" {
-		host = "service-ricplt-submgr-http.ricplt:8088"
+                pltnamespace := os.Getenv("PLT_NAMESPACE")
+                if pltnamespace == "" {
+                    pltnamespace = "ricplt"
+                }
+                host = fmt.Sprintf("service-%s-submgr-http.%s:8088", pltnamespace, pltnamespace)
+
 	}
 
 	if timo == 0 {
