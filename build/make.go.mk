@@ -65,7 +65,7 @@ $(GO_CACHE_DIR)/%: $(GOFILES) $(GOMODFILES) $$(BUILDDEPS)
 $(GO_CACHE_DIR)/%_test: $(GOALLFILES) $(GOMODFILES) $$(BUILDDEPS) FORCE
 	@echo "Testing:\t$*"
 	@eval GO111MODULE=on GOSUMDB=off GO_ENABLED=0 GOOS=linux $(BUILDARGS) $(GOTEST) -coverprofile $(COVEROUT) -c -o $@ ./$*
-	@if test -e $@ ; then eval $(TESTENV) $@ -test.coverprofile $(COVEROUT); else true ; fi
+	@if test -e $@ ; then eval $(TESTENV) $@ -test.v -test.coverprofile $(COVEROUT); else true ; fi
 	@if test -e $@ ; then go tool cover -html=$(COVEROUT) -o $(COVERHTML); else true ; fi
 
 
