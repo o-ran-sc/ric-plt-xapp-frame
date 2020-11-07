@@ -23,28 +23,19 @@ import (
 	"unsafe"
 )
 
-// To be removed ...
-type RMRStatistics struct{}
-
-//
-//
-//
 type RMRClient struct {
-	protPort      string
-	contextMux    sync.Mutex
-	context       unsafe.Pointer
-	ready         int
-	wg            sync.WaitGroup
-	mux           sync.Mutex
-	stat          map[string]Counter
-	consumers     []MessageConsumer
-	readyCb       ReadyCB
-	readyCbParams interface{}
+	contextMux        sync.Mutex
+	context           unsafe.Pointer
+	ready             int
+	wg                sync.WaitGroup
+	mux               sync.Mutex
+	stat              map[string]Counter
+	consumers         []MessageConsumer
+	readyCb           ReadyCB
+	readyCbParams     interface{}
+	maxRetryOnFailure int
 }
 
-//
-//
-//
 type RMRMeid struct {
 	PlmnID  string
 	EnbID   string
@@ -70,18 +61,22 @@ func (meid *RMRMeid) String() string {
 	return str
 }
 
-//
-//
-//
 type MessageConsumerFunc func(*RMRParams) error
 
 func (fn MessageConsumerFunc) Consume(params *RMRParams) error {
 	return fn(params)
 }
 
-//
-//
-//
 type MessageConsumer interface {
 	Consume(params *RMRParams) error
+}
+
+type PortData struct {
+	Name              string
+	Port              int
+	MaxSize           int
+	ThreadType        int
+	LowLatency        bool
+	FastAck           bool
+	MaxRetryOnFailure int
 }

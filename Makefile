@@ -32,10 +32,10 @@ CACHE_DIR:=$(abspath $(ROOT_DIR)/cache)
 
 XAPP_NAME:=xapp
 XAPP_ROOT:=test
-XAPP_TESTENV:="RMR_SEED_RT=config/uta_rtg.rt CFG_FILE=$(ROOT_DIR)config/config-file.yaml"
+XAPP_TESTENV:="RMR_SEED_RT=config/uta_rtg.rt CFG_FILE=$(ROOT_DIR)config/config-file.json"
 include build/make.go.mk 
 
 XAPP_NAME:=xapp
 XAPP_ROOT:=pkg
-XAPP_TESTENV:="RMR_SEED_RT=config/uta_rtg.rt CFG_FILE=$(ROOT_DIR)config/config-file.yaml"
+XAPP_TESTENV:="RMR_SEED_RT=config/uta_rtg.rt CFG_FILE=$(ROOT_DIR)config/config-file.json"
 include build/make.go.mk 

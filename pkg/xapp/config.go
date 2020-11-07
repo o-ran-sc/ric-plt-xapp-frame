@@ -99,7 +99,7 @@ func LoadConfig() (l *Log) {
 		l.Info("config file %s changed ", e.Name)
 
 		updatemtypes()
-		Logger.SetLevel(viper.GetInt("logger.level"))
+		Logger.SetLevel(viper.GetInt("controls.logger.level"))
 		if len(ConfigChangeListeners) > 0 {
 			for _, f := range ConfigChangeListeners {
 				go f(e.Name)
@@ -124,6 +124,33 @@ func PublishConfigChange(appName, eventJson string) error {
 		return err
 	}
 	return nil
+}
+
+func GetPortData(pname string) (d PortData) {
+	for _, v := range viper.GetStringMap("messaging")["ports"].([]interface{}) {
+		if n, ok := v.(map[string]interface{})["name"].(string); ok && n == pname {
+			d.Name = n
+			if p, _ := v.(map[string]interface{})["port"].(float64); ok {
+				d.Port = int(p)
+			}
+			if m, _ := v.(map[string]interface{})["maxSize"].(float64); ok {
+				d.MaxSize = int(m)
+			}
+			if m, _ := v.(map[string]interface{})["threadType"].(float64); ok {
+				d.ThreadType = int(m)
+			}
+			if m, _ := v.(map[string]interface{})["lowLatency"].(bool); ok {
+				d.LowLatency = bool(m)
+			}
+			if m, _ := v.(map[string]interface{})["fastAck"].(bool); ok {
+				d.FastAck = bool(m)
+			}
+			if m, _ := v.(map[string]interface{})["maxRetryOnFailure"].(float64); ok {
+				d.MaxRetryOnFailure = int(m)
+			}
+		}
+	}
+	return
 }
 
 func (*Configurator) SetSDLNotificationCB(appName string, sdlNotificationCb SDLNotificationCB) error {

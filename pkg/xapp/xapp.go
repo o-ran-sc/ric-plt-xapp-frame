@@ -60,8 +60,8 @@ func SetReadyCB(cb ReadyCB, params interface{}) {
 	readyCbParams = params
 }
 
-func xappReadyCb(params interface{}) {
-	Alarm = NewAlarmClient(viper.GetString("alarm.MOId"), viper.GetString("alarm.APPId"))
+func XappReadyCb(params interface{}) {
+	Alarm = NewAlarmClient(viper.GetString("moId"), viper.GetString("name"))
 	if readyCb != nil {
 		readyCb(readyCbParams)
 	}
@@ -71,28 +71,7 @@ func SetShutdownCB(cb ShutdownCB) {
 	shutdownCb = cb
 }
 
-func init() {
-	// Load xapp configuration
-	Logger = LoadConfig()
-
-	Logger.SetLevel(viper.GetInt("logger.level"))
-	Resource = NewRouter()
-	Config = Configurator{}
-	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
-	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
-
-	if viper.IsSet("db.namespaces") {
-		namespaces := viper.GetStringSlice("db.namespaces")
-		if len(namespaces) > 0 && namespaces[0] != "" {
-			Sdl = NewSDLClient(viper.GetStringSlice("db.namespaces")[0])
-		}
-		if len(namespaces) > 1 && namespaces[1] != "" {
-			Rnib = NewRNIBClient(viper.GetStringSlice("db.namespaces")[1])
-		}
-	} else {
-		Sdl = NewSDLClient(viper.GetString("db.namespace"))
-	}
-
+func InstallSignalHandler() {
 	//
 	// Signal handlers to really exit program.
 	// shutdownCb can hang until application has
@@ -103,7 +82,7 @@ func init() {
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 	//signal handler function
 	go func() {
-		for _ = range interrupt {
+		for range interrupt {
 			if atomic.CompareAndSwapInt32(&shutdownFlag, 0, 1) {
 				// close function
 				go func() {
@@ -140,11 +119,28 @@ func init() {
 	}()
 }
 
+func init() {
+	// Load xapp configuration
+	Logger = LoadConfig()
+
+	Logger.SetLevel(viper.GetInt("controls.logger.level"))
+	Resource = NewRouter()
+	Config = Configurator{}
+	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
+	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
+	Sdl = NewSDLClient(viper.GetString("db.namespace"))
+	Rnib = NewRNIBClient()
+
+	InstallSignalHandler()
+}
+
 func RunWithParams(c MessageConsumer, sdlcheck bool) {
 	Rmr = NewRMRClient()
-	Rmr.SetReadyCB(xappReadyCb, nil)
-	go http.ListenAndServe(viper.GetString("local.host"), Resource.router)
-	Logger.Info(fmt.Sprintf("Xapp started, listening on: %s", viper.GetString("local.host")))
+	Rmr.SetReadyCB(XappReadyCb, nil)
+
+	host := fmt.Sprintf(":%d", GetPortData("http").Port)
+	go http.ListenAndServe(host, Resource.router)
+	Logger.Info(fmt.Sprintf("Xapp started, listening on: %s", host))
 	if sdlcheck {
 		Sdl.TestConnection()
 	}

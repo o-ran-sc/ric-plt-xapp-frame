@@ -67,7 +67,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"github.com/spf13/viper"
 	"strings"
 	"time"
 	"unsafe"
@@ -128,26 +127,22 @@ func (params *RMRParams) String() string {
 //
 //-----------------------------------------------------------------------------
 type RMRClientParams struct {
-	ProtPort   string
-	MaxSize    int
-	ThreadType int
-	StatDesc   string
-	LowLatency bool
-	FastAck    bool
+	StatDesc string
+	RmrData  PortData
 }
 
 func (params *RMRClientParams) String() string {
-	return fmt.Sprintf("ProtPort=%s MaxSize=%d ThreadType=%d StatDesc=%s LowLatency=%t FastAck=%t",
-		params.ProtPort, params.MaxSize, params.ThreadType, params.StatDesc, params.LowLatency, params.FastAck)
+	return fmt.Sprintf("ProtPort=%d MaxSize=%d ThreadType=%d StatDesc=%s LowLatency=%t FastAck=%t",
+		params.RmrData.Port, params.RmrData.MaxSize, params.RmrData.ThreadType, params.StatDesc, params.RmrData.LowLatency, params.RmrData.FastAck)
 }
 
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
 func NewRMRClientWithParams(params *RMRClientParams) *RMRClient {
-	p := C.CString(params.ProtPort)
-	m := C.int(params.MaxSize)
-	c := C.int(params.ThreadType)
+	p := C.CString(fmt.Sprintf("%d", params.RmrData.Port))
+	m := C.int(params.RmrData.MaxSize)
+	c := C.int(params.RmrData.ThreadType)
 	defer C.free(unsafe.Pointer(p))
 	ctx := C.rmr_init(p, m, c)
 	if ctx == nil {
@@ -156,30 +151,27 @@ func NewRMRClientWithParams(params *RMRClientParams) *RMRClient {
 
 	Logger.Info("new rmrClient with parameters: %s", params.String())
 
-	if params.LowLatency {
+	if params.RmrData.LowLatency {
 		C.rmr_set_low_latency(ctx)
 	}
-	if params.FastAck {
+	if params.RmrData.FastAck {
 		C.rmr_set_fack(ctx)
 	}
 
 	return &RMRClient{
-		protPort:  params.ProtPort,
-		context:   ctx,
-		consumers: make([]MessageConsumer, 0),
-		stat:      Metric.RegisterCounterGroup(RMRCounterOpts, params.StatDesc),
+		context:           ctx,
+		consumers:         make([]MessageConsumer, 0),
+		stat:              Metric.RegisterCounterGroup(RMRCounterOpts, params.StatDesc),
+		maxRetryOnFailure: params.RmrData.MaxRetryOnFailure,
 	}
 }
 
 func NewRMRClient() *RMRClient {
+	p := GetPortData("rmr-data")
 	return NewRMRClientWithParams(
 		&RMRClientParams{
-			ProtPort:   viper.GetString("rmr.protPort"),
-			MaxSize:    viper.GetInt("rmr.maxSize"),
-			ThreadType: viper.GetInt("rmr.threadType"),
-			StatDesc:   "RMR",
-			LowLatency: viper.GetBool("rmr.lowLatency"),
-			FastAck:    viper.GetBool("rmr.fastAck"),
+			RmrData:  p,
+			StatDesc: "RMR",
 		})
 }
 
@@ -431,12 +423,11 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 	}
 
 	// Just quick retry seems to help for K8s issue
-	maxRetryOnFailure := viper.GetInt("rmr.maxRetryOnFailure")
-	if maxRetryOnFailure == 0 {
-		maxRetryOnFailure = 5
+	if m.maxRetryOnFailure == 0 {
+		m.maxRetryOnFailure = 5
 	}
 
-	for j := 0; j < maxRetryOnFailure && currBuffer != nil && currBuffer.state == C.RMR_ERR_RETRY; j++ {
+	for j := 0; j < m.maxRetryOnFailure && currBuffer != nil && currBuffer.state == C.RMR_ERR_RETRY; j++ {
 		m.contextMux.Lock()
 		if whid != 0 {
 			currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
@@ -581,9 +572,4 @@ func (m *RMRClient) LogMBufError(text string, mbuf *C.rmr_mbuf_t) int {
 	}
 	Logger.Debug(fmt.Sprintf("rmrClient: %s -> mbuf nil", text))
 	return 0
-}
-
-// To be removed ...
-func (m *RMRClient) GetStat() (r RMRStatistics) {
-	return
 }

@@ -170,7 +170,7 @@ func (r *Subscriber) Notify(resp *models.SubscriptionResponse, clientEndpoint st
 	}
 
 	ep, _, _ := net.SplitHostPort(clientEndpoint)
-	_, port, _ := net.SplitHostPort(viper.GetString("local.host"))
+	_, port, _ := net.SplitHostPort(fmt.Sprintf(":%d", GetPortData("http").Port))
 	clientUrl := fmt.Sprintf("http://%s:%s%s", ep, port, r.clientUrl)
 
 	retries := viper.GetInt("subscription.retryCount")

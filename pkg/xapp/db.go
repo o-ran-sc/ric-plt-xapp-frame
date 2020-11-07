@@ -165,7 +165,7 @@ func (c *SDLClient) GetStat() (t SDLStatistics) {
 	return
 }
 
-func NewRNIBClient(ns string) *RNIBClient {
+func NewRNIBClient() *RNIBClient {
 	s := sdl.NewSdlInstance("e2Manager", sdl.NewDatabase())
 	return &RNIBClient{
 		db:     s,

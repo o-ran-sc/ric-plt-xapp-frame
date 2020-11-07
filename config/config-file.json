@@ -1,0 +1,88 @@
+{
+    "name": "xapp",
+    "version": "0.7.0",
+    "vendor": "Nokia",
+    "moId": "SEP",
+    "containers": [
+        {
+            "name": "ueec",
+            "image": {
+                "registry": "ranco-dev-tools.eastus.cloudapp.azure.com:10001",
+                "name": "ueec-xapp",
+                "tag": "0.5.3"
+            }
+        }
+    ],
+    "livenessProbe": {
+        "httpGet": {
+            "path": "ric/v1/health/alive",
+            "port": 8080
+        },
+        "initialDelaySeconds": 5,
+        "periodSeconds": 15
+    },
+    "readinessProbe": {
+        "httpGet": {
+            "path": "ric/v1/health/ready",
+            "port": 8080
+        },
+        "initialDelaySeconds": 5,
+        "periodSeconds": 15
+    },
+    "messaging": {
+        "ports": [
+            {
+                "name": "http",
+                "container": "ueec",
+                "port": 8086,
+                "description": "http service"
+            },
+            {
+                "name": "rmr-route",
+                "container": "ueec",
+                "port": 4561,
+                "description": "rmr route port for ueec"
+            },
+            {
+                "name": "rmr-data",
+                "container": "ueec",
+                "port": 4560,
+                "maxSize": 2072,
+                "threadType": 0,
+                "lowLatency": false,
+                "maxRetryOnFailure": 5,
+                "rxMessages": ["RIC_SUB_RESP", "RIC_SUB_FAILURE"],
+                "txMessages": ["RIC_SGNB_ADDITION_REQ", "RIC_SGNB_ADDITION_ACK"],
+                "policies": [],
+                "description": "rmr data port for ueec"
+            }
+        ]
+    },
+    "controls": {
+        "logger": {
+            "level": 3
+        },
+        "subscription": {
+            "subscriptionActive": true,
+            "functionId": 1,
+            "plmnId": "310150",
+            "eNBId": "202251",
+            "timeout": 5,
+            "host": "service-ricplt-submgr-http.ricplt:8088",
+            "clientEndpoint": "service-ricxapp-ueec-http.ricxapp:8080"
+        }
+    },
+    "metrics": {
+        "url": "/ric/v1/metrics",
+        "namespace": "ricxapp"
+    },
+    "subscription": {
+        "host": "localhost:8088",
+        "timeout": 2,
+        "retryCount": 10,
+        "retryDelay": 5
+    },
+    "faults": {},
+    "measurements": []
+}
+
