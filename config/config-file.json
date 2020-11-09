@@ -53,7 +53,7 @@
                 "maxRetryOnFailure": 5,
                 "rxMessages": ["RIC_SUB_RESP", "RIC_SUB_FAILURE"],
                 "txMessages": ["RIC_SGNB_ADDITION_REQ", "RIC_SGNB_ADDITION_ACK"],
-                "policies": [],
+                "policies": [801111, 902222],
                 "description": "rmr data port for ueec"
             }
         ]

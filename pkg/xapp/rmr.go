@@ -132,8 +132,9 @@ type RMRClientParams struct {
 }
 
 func (params *RMRClientParams) String() string {
-	return fmt.Sprintf("ProtPort=%d MaxSize=%d ThreadType=%d StatDesc=%s LowLatency=%t FastAck=%t",
-		params.RmrData.Port, params.RmrData.MaxSize, params.RmrData.ThreadType, params.StatDesc, params.RmrData.LowLatency, params.RmrData.FastAck)
+	return fmt.Sprintf("ProtPort=%d MaxSize=%d ThreadType=%d StatDesc=%s LowLatency=%t FastAck=%t Policies=%v",
+		params.RmrData.Port, params.RmrData.MaxSize, params.RmrData.ThreadType, params.StatDesc,
+		params.RmrData.LowLatency, params.RmrData.FastAck, params.RmrData.Policies)
 }
 
 //-----------------------------------------------------------------------------

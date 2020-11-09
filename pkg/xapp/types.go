@@ -78,5 +78,6 @@ type PortData struct {
 	ThreadType        int
 	LowLatency        bool
 	FastAck           bool
+	Policies          []int
 	MaxRetryOnFailure int
 }

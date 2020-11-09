@@ -127,6 +127,13 @@ func PublishConfigChange(appName, eventJson string) error {
 }
 
 func GetPortData(pname string) (d PortData) {
+	var getPolicies = func(policies []interface{}) (plist []int) {
+		for _, p := range policies {
+			plist = append(plist, int(p.(float64)))
+		}
+		return plist
+	}
+
 	for _, v := range viper.GetStringMap("messaging")["ports"].([]interface{}) {
 		if n, ok := v.(map[string]interface{})["name"].(string); ok && n == pname {
 			d.Name = n
@@ -147,6 +154,9 @@ func GetPortData(pname string) (d PortData) {
 			}
 			if m, _ := v.(map[string]interface{})["maxRetryOnFailure"].(float64); ok {
 				d.MaxRetryOnFailure = int(m)
+			}
+			if policies, ok := v.(map[string]interface{})["policies"]; ok {
+				d.Policies = getPolicies(policies.([]interface{}))
 			}
 		}
 	}
