@@ -135,7 +135,7 @@ func (u *ExampleXapp) StatusCB() bool {
 
 func (e *ExampleXapp) Run() {
 	// Set MDC (read: name visible in the logs)
-	xapp.Logger.SetMdc("example-xapp", "0.1.2")
+	xapp.Logger.SetMdc("example-xapp", "0.1.3")
 
 	// Register various callback functions for application management
 	xapp.SetReadyCB(func(d interface{}) { e.rmrReady = true }, true)

@@ -59,7 +59,7 @@ func main() {
 
 #### To run the generated executable binary locally, run the following command:
 
-    RMR_SEED_RT=config/uta_rtg.rt ./example-xapp -f config/config-file.yaml
+    RMR_SEED_RT=config/uta_rtg.rt ./example_xapp -f config/config-file.json
 
 Congratulations! You've just built your first **xapp** application.
 

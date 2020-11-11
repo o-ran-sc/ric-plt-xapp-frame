@@ -22,6 +22,6 @@
 #	Abstract:	Starts the example xApp service
 #	Date:		19 March 2020
 #
-export RMR_SEED_RT=./uta_rtg.rt
+export RMR_SEED_RT=./config/uta_rtg.rt
 
-exec ./example_xapp -f ./config-file.json
+exec ./example_xapp -f ./config/config-file.json
