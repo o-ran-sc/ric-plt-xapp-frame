@@ -73,6 +73,9 @@ type RNIBClient struct {
 
 // NewSDLClient returns a new SDLClient.
 func NewSDLClient(ns string) *SDLClient {
+	if ns == "" {
+		ns = "sdl"
+	}
 	return &SDLClient{
 		db:    sdl.NewSdlInstance(ns, sdl.NewDatabase()),
 		stat:  Metric.RegisterCounterGroup(SDLCounterOpts, "SDL"),

@@ -63,7 +63,7 @@ func LoadConfig() (l *Log) {
 	}
 	l.Info("Using config file: %s", viper.ConfigFileUsed())
 
-	updatemtypes := func() {
+	updateMTypes := func() {
 		var mtypes []mtype
 		viper.UnmarshalKey("rmr.mtypes", &mtypes)
 
@@ -92,14 +92,19 @@ func LoadConfig() (l *Log) {
 		}
 	}
 
-	updatemtypes()
+	updateMTypes()
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		l.Info("config file %s changed ", e.Name)
 
-		updatemtypes()
-		Logger.SetLevel(viper.GetInt("controls.logger.level"))
+		updateMTypes()
+		if viper.IsSet("controls.logger.level") {
+			Logger.SetLevel(viper.GetInt("controls.logger.level"))
+		} else {
+			Logger.SetLevel(viper.GetInt("logger.level"))
+		}
+
 		if len(ConfigChangeListeners) > 0 {
 			for _, f := range ConfigChangeListeners {
 				go f(e.Name)

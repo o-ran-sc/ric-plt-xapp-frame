@@ -70,7 +70,8 @@
             "timeout": 5,
             "host": "service-ricplt-submgr-http.ricplt:8088",
             "clientEndpoint": "service-ricxapp-ueec-http.ricxapp:8080"
-        }
+        },
+        "waitForSdl": false
     },
     "metrics": {
         "url": "/ric/v1/metrics",

@@ -123,12 +123,16 @@ func init() {
 	// Load xapp configuration
 	Logger = LoadConfig()
 
-	Logger.SetLevel(viper.GetInt("controls.logger.level"))
+	if viper.IsSet("controls.logger.level") {
+		Logger.SetLevel(viper.GetInt("controls.logger.level"))
+	} else {
+		Logger.SetLevel(viper.GetInt("logger.level"))
+	}
 	Resource = NewRouter()
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
 	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
-	Sdl = NewSDLClient(viper.GetString("db.namespace"))
+	Sdl = NewSDLClient(viper.GetString("controls.db.namespace"))
 	Rnib = NewRNIBClient()
 
 	InstallSignalHandler()

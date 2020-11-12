@@ -44,7 +44,7 @@ func (m Consumer) Consume(params *RMRParams) (err error) {
 
 // Test cases
 func TestMain(m *testing.M) {
-	go RunWithParams(Consumer{}, viper.GetBool("db.waitForSdl"))
+	go RunWithParams(Consumer{}, viper.GetBool("controls.waitForSdl"))
 	time.Sleep(time.Duration(5) * time.Second)
 	code := m.Run()
 	os.Exit(code)
@@ -122,7 +122,7 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 	// Allow time to process the messages
 	time.Sleep(time.Duration(5) * time.Second)
 
-	waitForSdl := viper.GetBool("db.waitForSdl")
+	waitForSdl := viper.GetBool("controls.waitForSdl")
 	stats := getMetrics(t)
 	if !strings.Contains(stats, "ricxapp_RMR_Transmitted 100") {
 		t.Errorf("Error: ricxapp_RMR_Transmitted value incorrect: %v", stats)
@@ -168,7 +168,7 @@ func TestMessagesReceivedSuccessfullyUsingWh(t *testing.T) {
 	// Allow time to process the messages
 	time.Sleep(time.Duration(5) * time.Second)
 
-	waitForSdl := viper.GetBool("db.waitForSdl")
+	waitForSdl := viper.GetBool("controls.waitForSdl")
 	stats := getMetrics(t)
 	if !strings.Contains(stats, "ricxapp_RMR_Transmitted 200") {
 		t.Errorf("Error: ricxapp_RMR_Transmitted value incorrect: %v", stats)
@@ -210,7 +210,7 @@ func TestMessagesReceivedSuccessfullyUsingWhCall(t *testing.T) {
 	// Allow time to process the messages
 	time.Sleep(time.Duration(2) * time.Second)
 
-	waitForSdl := viper.GetBool("db.waitForSdl")
+	waitForSdl := viper.GetBool("controls.waitForSdl")
 	stats := getMetrics(t)
 	if !strings.Contains(stats, "ricxapp_RMR_Transmitted 200") {
 		t.Errorf("Error: ricxapp_RMR_Transmitted value incorrect: %v", stats)
@@ -240,7 +240,7 @@ func TestMessagesReceivedSuccessfullyUsingWhCall(t *testing.T) {
 
 func TestSubscribeChannels(t *testing.T) {
 	Logger.Info("CASE: TestSubscribeChannels")
-	if !viper.GetBool("db.waitForSdl") {
+	if !viper.GetBool("controls.waitForSdl") {
 		return
 	}
 

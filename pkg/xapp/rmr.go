@@ -67,6 +67,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
+	"github.com/spf13/viper"
 	"strings"
 	"time"
 	"unsafe"
@@ -169,6 +170,16 @@ func NewRMRClientWithParams(params *RMRClientParams) *RMRClient {
 
 func NewRMRClient() *RMRClient {
 	p := GetPortData("rmr-data")
+	if p.Port == 0 || viper.IsSet("rmr.protPort") {
+		// Old xApp descriptor used, fallback to rmr section
+		fmt.Sscanf(viper.GetString("rmr.protPort"), "tcp:%d", &p.Port)
+		p.MaxSize = viper.GetInt("rmr.maxSize")
+		p.ThreadType = viper.GetInt("rmr.threadType")
+		p.LowLatency = viper.GetBool("rmr.lowLatency")
+		p.FastAck = viper.GetBool("rmr.fastAck")
+		p.MaxRetryOnFailure = viper.GetInt("rmr.maxRetryOnFailure")
+	}
+
 	return NewRMRClientWithParams(
 		&RMRClientParams{
 			RmrData:  p,
