@@ -65,7 +65,7 @@ func LoadConfig() (l *Log) {
 
 	updateMTypes := func() {
 		var mtypes []mtype
-		viper.UnmarshalKey("rmr.mtypes", &mtypes)
+		viper.UnmarshalKey("messaging.mtypes", &mtypes)
 
 		if len(mtypes) > 0 {
 			l.Info("Config mtypes before RICMessageTypes:%d RicMessageTypeToName:%d", len(RICMessageTypes), len(RicMessageTypeToName))
