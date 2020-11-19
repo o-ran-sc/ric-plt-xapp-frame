@@ -25,6 +25,7 @@ import (
 
 var mCVect map[string]CounterVec
 var mGVect map[string]GaugeVec
+var mGGroup map[string]Gauge
 
 func TestMetricSetup(t *testing.T) {
 	mCVect = Metric.RegisterCounterVecGroup(
@@ -40,7 +41,12 @@ func TestMetricSetup(t *testing.T) {
 		},
 		[]string{"name", "event"},
 		"SUBSYSTEM")
-
+	
+	mGGroup = Metric.RegisterGaugeGroup(
+		[]CounterOpts{
+			{Name: "counter3", Help: "counter3"},
+		},
+		"SUBSYSTEM2")
 }
 
 func TestMetricCounter(t *testing.T) {
@@ -138,7 +144,9 @@ func TestMetricCounterVectorPrefix(t *testing.T) {
 	if m_grp.CIs("event2_counter1") == false {
 		t.Errorf("m_grp event2_counter1 not exists")
 	}
-	m_grp.CInc("event2_counter1")
+
+	m_grp.CAdd("event2_counter1", 1)
+	m_grp.CGet("event2_counter1")
 }
 
 func TestMetricGaugeVectorPrefix(t *testing.T) {
@@ -174,6 +182,10 @@ func TestMetricGaugeVectorPrefix(t *testing.T) {
 		t.Errorf("m_grp event2_counter2 not exists")
 	}
 	m_grp.GInc("event2_counter2")
+
+	m_grp.GGet("event2_counter2")
+	m_grp.GDec("event2_counter2")
+	m_grp.GSet("event2_counter2", 1)
 }
 
 func TestMetricGroupCache(t *testing.T) {
@@ -241,4 +253,10 @@ func TestMetricGroupCache(t *testing.T) {
 	}
 	m_grp.GInc("event2_counter2")
 
+	m_grp.CAdd("event2_counter1", 1)
+	m_grp.CGet("event2_counter1")
+	m_grp.GGet("event2_counter2")
+	m_grp.GDec("event2_counter2")
+	m_grp.GSet("event2_counter2", 1)
 }
+

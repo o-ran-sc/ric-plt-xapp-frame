@@ -1,7 +1,7 @@
 # XAPP-FRAME
 
 ## Introduction
-**xapp-frame** is a simple framework for rapid development of RIC xapps, and supports various services essential for RIC xapps such as RESTful APIs, RMR (RIC Message Routing), database backend services and watching and populating config-map changes in K8S environment.
+**xapp-frame** is a simple framework for rapid development of RIC xapps, and supports various services essential for RIC xapps such as RESTful APIs, RMR (RIC Message Routing), logging, performance metrics and database backend services. It also provides configuration interface for reading, watching and populating config-map changes in K8S environment.
 
 ## Architecture
 
@@ -59,7 +59,7 @@ func main() {
 
 #### To run the generated executable binary locally, run the following command:
 
-    RMR_SEED_RT=config/uta_rtg.rt ./example_xapp -f config/config-file.json
+    RMR_SEED_RT=examples/config/uta_rtg.rt ./example_xapp -f examples/config/config-file.json
 
 Congratulations! You've just built your first **xapp** application.
 

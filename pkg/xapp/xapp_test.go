@@ -24,10 +24,12 @@ import (
 	"github.com/spf13/viper"
 	"net/http"
 	"net/http/httptest"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
 	"time"
+	"bytes"
 )
 
 //var _ = func() bool {
@@ -53,7 +55,7 @@ func TestMain(m *testing.M) {
 func TestGetHealthCheckRetursServiceUnavailableError(t *testing.T) {
 	Logger.Info("CASE: TestGetHealthCheckRetursServiceUnavailableError")
 	req, _ := http.NewRequest("GET", "/ric/v1/health/ready", nil)
-	/*response :=*/ executeRequest(req)
+	/*response :=*/ executeRequest(req, nil)
 
 	//checkResponseCode(t, http.StatusServiceUnavailable, response.Code)
 }
@@ -65,7 +67,7 @@ func TestGetHealthCheckReturnsSuccess(t *testing.T) {
 	}
 
 	req, _ := http.NewRequest("GET", "/ric/v1/health/ready", nil)
-	response := executeRequest(req)
+	response := executeRequest(req, nil)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
@@ -78,7 +80,7 @@ func TestInjectQuerySinglePath(t *testing.T) {
 	Resource.InjectQueryRoute("/ric/v1/user", handler, "GET", "foo", "bar")
 
 	req, _ := http.NewRequest("GET", "/ric/v1/user?foo=bar", nil)
-	response := executeRequest(req)
+	response := executeRequest(req, nil)
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
@@ -90,7 +92,7 @@ func TestInjectQueryMultiplePaths(t *testing.T) {
 	Resource.InjectQueryRoute("/ric/v1/user", handler, "GET", "foo", "bar", "id", "mykey")
 
 	req, _ := http.NewRequest("GET", "/ric/v1/user?foo=bar&id=mykey", nil)
-	response := executeRequest(req)
+	response := executeRequest(req, nil)
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
@@ -102,7 +104,7 @@ func TestInjectQueryFailures(t *testing.T) {
 	Resource.InjectQueryRoute("/ric/v1/user", handler, "GET", "foo", "bar", "id", "mykey")
 
 	req, _ := http.NewRequest("GET", "/ric/v1/user?invalid=bar&no=mykey", nil)
-	response := executeRequest(req)
+	response := executeRequest(req, nil)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 }
 
@@ -116,8 +118,14 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 		params.Payload = []byte{1, 2, 3, 4, 5, 6}
 		params.Meid = &RMRMeid{PlmnID: "1234", EnbID: "7788", RanName: "RanName-1234"}
 		params.Xid = "TestXID"
-		Rmr.SendMsg(params)
+		
+		if i % 2 == 0 {
+			Rmr.SendMsg(params)
+		} else {
+			Rmr.SendWithRetry(params, false, 1)
+		}
 	}
+	Rmr.RegisterMetrics()
 
 	// Allow time to process the messages
 	time.Sleep(time.Duration(5) * time.Second)
@@ -162,6 +170,11 @@ func TestMessagesReceivedSuccessfullyUsingWh(t *testing.T) {
 		params.Meid = &RMRMeid{PlmnID: "1234", EnbID: "7788", RanName: "RanName-1234"}
 		params.Xid = "TestXID"
 		params.Whid = int(whid)
+
+		if i == 0 {
+			Logger.Info("%+v", params.String())
+		}
+
 		Rmr.SendMsg(params)
 	}
 
@@ -258,6 +271,9 @@ func TestSubscribeChannels(t *testing.T) {
 	if err := Sdl.StoreAndPublish("channel1", "event", "key1", "data1"); err != nil {
 		t.Errorf("Error: Publish failed: %v", err)
 	}
+
+	// Misc.
+	Sdl.MStoreAndPublish([]string{"channel1"}, "event", "key1", "data1")
 }
 
 func TestGetRicMessageSuccess(t *testing.T) {
@@ -309,18 +325,131 @@ func TestIsErrorFunctions(t *testing.T) {
 	}
 }
 
+func TestAddConfigChangeListener(t *testing.T) {
+	Logger.Info("CASE: AddConfigChangeListener")
+	AddConfigChangeListener(func(f string) {})
+}
+
+func TestConfigAccess(t *testing.T) {
+	Logger.Info("CASE: AddConfigChangeListener")
+	
+	assert.Equal(t,  Config.GetString("name"), "xapp")
+	assert.Equal(t,  Config.GetInt("controls.logger.level"), 3)
+	assert.Equal(t,  Config.GetUint32("controls.logger.level"), uint32(3))
+	assert.Equal(t,  Config.GetBool("controls.waitForSdl"), false)
+	Config.Get("controls")
+	Config.GetStringSlice("messaging.ports")
+	Config.GetStringMap("messaging.ports")
+}
+
+func TestPublishConfigChange(t *testing.T) {
+	Logger.Info("CASE: AddConfigChangeListener")
+	PublishConfigChange("testApp", "values")
+}
+
+func TestNewSubscriber(t *testing.T) {
+	Logger.Info("CASE: TestNewSubscriber")
+	assert.NotNil(t, NewSubscriber("", 0), "NewSubscriber failed")
+}
+
+func TestNewRMRClient(t *testing.T) {
+	c := map[string]interface{} {"protPort": "tcp:4560"}
+	viper.Set("rmr", c)
+	assert.NotNil(t, NewRMRClient(), "NewRMRClient failed")
+
+	params := &RMRParams{}
+	params.Mtype = 1234
+	params.SubId = -1
+	params.Payload = []byte{1, 2, 3, 4, 5, 6}
+	Rmr.SendWithRetry(params, false, 1)
+}
+
+func TestInjectRoutePrefix(t *testing.T) {
+	Logger.Info("CASE: TestInjectRoutePrefix")
+	assert.NotNil(t, Resource.InjectRoutePrefix("test", nil), "InjectRoutePrefix failed")
+}
+
+func TestInjectStatusCb(t *testing.T) {
+	Logger.Info("CASE: TestInjectStatusCb")
+
+	var f = func() bool {
+		return true
+	}
+	Resource.InjectStatusCb(f)
+}
+
+func TestSdlInterfaces(t *testing.T) {
+	Sdl.Read("myKey")
+	Sdl.MRead([]string{"myKey"})
+	Sdl.ReadAllKeys("myKey")
+	Sdl.Store("myKey", "Values")
+	Sdl.MStore("myKey", "Values")
+	Sdl.RegisterMetrics()
+
+	// Misc.
+	var NotificationCb = func(ch string, events ...string) {}
+	Sdl.Subscribe(NotificationCb, "channel1")
+	Sdl.MSubscribe(NotificationCb, "channel1", "channel2")
+	Sdl.MStoreAndPublish([]string{"channel1"}, "event", "key1", "data1")
+}
+
+func TestRnibInterfaces(t *testing.T) {
+	Rnib.GetNodeb("test-gnb")
+	Rnib.GetCellList("test-gnb")
+	Rnib.GetListGnbIds()
+	Rnib.GetListEnbIds()
+	Rnib.GetCountGnbList()
+	Rnib.GetCell("test-gnb", 0)
+	Rnib.GetCell("test-gnb", 0)
+	Rnib.GetCellById(0, "cell-1")
+
+	// Misc.
+	var NotificationCb = func(ch string, events ...string) {}
+	Rnib.Subscribe(NotificationCb, "channel1")
+	Rnib.StoreAndPublish("channel1", "event", "key1", "data1")
+}
+
+func TestLogger(t *testing.T) {
+	Logger.Error("CASE: TestNewSubscriber")
+	Logger.Warn("CASE: TestNewSubscriber")
+}
+
+func TestConfigHandler(t *testing.T) {
+	Logger.Error("CASE: TestConfigHandler")
+	req, _ := http.NewRequest("POST", "/ric/v1/cm/appname", bytes.NewBuffer([]byte{}))
+	handleFunc := http.HandlerFunc(configHandler)
+	executeRequest(req, handleFunc)
+}
+
+func TestMisc(t *testing.T) {
+	Logger.Info("CASE: TestMisc")
+
+	IsReady()
+	SetReadyCB(func(interface{}) {}, "")
+	XappReadyCb("")
+	SetShutdownCB(func() {})
+}
+
 func TestTeardown(t *testing.T) {
 	Logger.Info("CASE: TestTeardown")
+	Sdl.Delete([]string{"myKey"})
 	Sdl.Clear()
+	Sdl.IsReady()
+	Sdl.GetStat()
 }
 
 // Helper functions
-func executeRequest(req *http.Request) *httptest.ResponseRecorder {
+func executeRequest(req *http.Request, handleR http.HandlerFunc) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	vars := map[string]string{"id": "1"}
-	req = mux.SetURLVars(req, vars)
-	Resource.router.ServeHTTP(rr, req)
-
+	if handleR != nil {
+		vars := map[string]string{"name": "myxapp"}
+		req = mux.SetURLVars(req, vars)
+		handleR.ServeHTTP(rr, req)
+	} else {
+		vars := map[string]string{"id": "1"}
+		req = mux.SetURLVars(req, vars)
+		Resource.router.ServeHTTP(rr, req)
+	}
 	return rr
 }
 
@@ -332,7 +461,7 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 
 func getMetrics(t *testing.T) string {
 	req, _ := http.NewRequest("GET", "/ric/v1/metrics", nil)
-	response := executeRequest(req)
+	response := executeRequest(req, nil)
 
 	return response.Body.String()
 }

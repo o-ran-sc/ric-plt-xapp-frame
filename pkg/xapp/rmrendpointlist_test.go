@@ -26,7 +26,7 @@ import (
 func TestRmrEndpointList(t *testing.T) {
 	Logger.Info("CASE: TestRmrEndpointList")
 
-	epl := &RmrEndpointList{}
+	epl := NewRmrEndpointList()
 
 	// Simple add / has / delete
 	if epl.AddEndpoint(NewRmrEndpoint("127.0.0.1:8080")) == false {
@@ -41,6 +41,9 @@ func TestRmrEndpointList(t *testing.T) {
 	if epl.HasEndpoint(NewRmrEndpoint("127.0.0.1:8081")) == false {
 		t.Errorf("RmrEndpointList: 8081 has failed")
 	}
+
+	Logger.Info("%+v -- %+v -- %d", epl.String(), epl.StringList(), epl.Size())
+
 	if epl.DelEndpoint(NewRmrEndpoint("127.0.0.1:8081")) == false {
 		t.Errorf("RmrEndpointList: 8081 del failed")
 	}

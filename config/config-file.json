@@ -56,6 +56,9 @@
                 "policies": [801111, 902222],
                 "description": "rmr data port for ueec"
             }
+        ],
+        "mtypes": [
+            {"Name": "abdc", "Id": 1234}
         ]
     },
     "controls": {
