@@ -139,6 +139,16 @@ func GetPortData(pname string) (d PortData) {
 		return plist
 	}
 
+	if viper.IsSet("messaging") == false {
+		if pname == "http" {
+			d.Port = 8080
+		}
+		if pname == "rmr-data" {
+			d.Port = 4560
+		}
+		return
+	}
+
 	for _, v := range viper.GetStringMap("messaging")["ports"].([]interface{}) {
 		if n, ok := v.(map[string]interface{})["name"].(string); ok && n == pname {
 			d.Name = n
