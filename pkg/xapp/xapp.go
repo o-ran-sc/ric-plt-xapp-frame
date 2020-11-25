@@ -128,6 +128,8 @@ func init() {
 	} else {
 		Logger.SetLevel(viper.GetInt("logger.level"))
 	}
+	Logger.SetFormat(0)
+
 	Resource = NewRouter()
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)

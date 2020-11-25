@@ -36,6 +36,10 @@ func NewLogger(name string) *Log {
 	}
 }
 
+func (l *Log) SetFormat(logMonitor int) {
+	l.logger.Mdclog_format_initialize(logMonitor)
+}
+
 func (l *Log) SetLevel(level int) {
 	l.logger.LevelSet(mdclog.Level(level))
 }
