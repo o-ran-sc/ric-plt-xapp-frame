@@ -340,6 +340,7 @@ func TestConfigAccess(t *testing.T) {
 	Config.Get("controls")
 	Config.GetStringSlice("messaging.ports")
 	Config.GetStringMap("messaging.ports")
+	Config.IsSet("messaging")
 }
 
 func TestPublishConfigChange(t *testing.T) {
@@ -412,6 +413,7 @@ func TestRnibInterfaces(t *testing.T) {
 func TestLogger(t *testing.T) {
 	Logger.Error("CASE: TestNewSubscriber")
 	Logger.Warn("CASE: TestNewSubscriber")
+	Logger.GetLevel()
 }
 
 func TestConfigHandler(t *testing.T) {
