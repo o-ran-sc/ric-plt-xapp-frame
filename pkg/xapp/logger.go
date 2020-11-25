@@ -48,6 +48,10 @@ func (l *Log) SetMdc(key string, value string) {
 	l.logger.MdcAdd(key, value)
 }
 
+func (l *Log) GetLevel() mdclog.Level {
+	return l.logger.LevelGet()
+}
+
 func (l *Log) Error(pattern string, args ...interface{}) {
 	if l.logger.LevelGet() < mdclog.ERR {
 		return

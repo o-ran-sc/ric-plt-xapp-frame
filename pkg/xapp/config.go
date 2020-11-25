@@ -209,3 +209,7 @@ func (*Configurator) GetStringSlice(key string) []string {
 func (*Configurator) GetStringMap(key string) map[string]interface{} {
 	return viper.GetStringMap(key)
 }
+
+func (*Configurator) IsSet(key string) bool {
+	return viper.IsSet(key)
+}
