@@ -3,7 +3,7 @@ module gerrit.o-ran-sc.org/r/ric-plt/xapp-frame
 go 1.12
 
 require (
-	gerrit.o-ran-sc.org/r/com/golog v0.0.1
+	gerrit.o-ran-sc.org/r/com/golog v0.0.2
 	gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.4.2
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.35
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.35
@@ -24,11 +24,12 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
+	k8s.io/utils v0.0.0-20201110183641-67b214c5f920 // indirect
 )
 
 replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2
 
-replace gerrit.o-ran-sc.org/r/com/golog => gerrit.o-ran-sc.org/r/com/golog.git v0.0.0-20190604083303-aaffc8ebe3f1
+replace gerrit.o-ran-sc.org/r/com/golog => gerrit.o-ran-sc.org/r/com/golog.git v0.0.2
 
 replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.35
 
