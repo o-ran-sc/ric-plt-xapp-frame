@@ -11,6 +11,21 @@ basePath: /ric/v1
 schemes:
   - http
 paths:
+  /config:
+    get:
+      summary: Returns the configuration of all xapps
+      tags:
+        - xapp
+      operationId: getXappConfigList
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful query of xApp config
+          schema:
+            $ref: '#/definitions/XappConfigList'
+        '500':
+          description: Internal error
   /subscriptions:
     get:
       summary: Returns list of subscriptions
@@ -100,6 +115,21 @@ paths:
         '500':
           description: Internal error
 definitions:
+  XAppConfig:
+    type: object
+    required:
+      - metadata
+      - config
+    properties:
+      metadata:
+        $ref: '#/definitions/ConfigMetadata'
+      config:
+        type: object
+        description: Configuration in JSON format
+  XappConfigList:
+    type: array
+    items:
+      $ref: '#/definitions/XAppConfig'
   SubscriptionType:
     type: string
     enum:
