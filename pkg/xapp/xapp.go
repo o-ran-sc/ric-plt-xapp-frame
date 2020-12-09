@@ -21,6 +21,7 @@ package xapp
 
 import (
 	"fmt"
+	"testing"
 	"github.com/spf13/viper"
 	"net/http"
 	"os"
@@ -32,6 +33,11 @@ import (
 
 type ReadyCB func(interface{})
 type ShutdownCB func()
+
+var _ = func() bool {
+	testing.Init()
+	return true
+}()
 
 var (
 	// XApp is an application instance
