@@ -5,6 +5,8 @@ gerrit.o-ran-sc.org/r/com/golog.git v0.0.2 h1:Ix6SgFuzd6yW6Ur6+qDlGhDO65UYs8PiIk
 gerrit.o-ran-sc.org/r/com/golog.git v0.0.2/go.mod h1:A7hUL52YQSO4dFIZNcj76XQ09C9PftAe3LyL7kqBnok=
 gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.4.2 h1:XNfkp3PwZ7pfkPszX7NaX6DzToCGjcWTLbIHYqCFNu0=
 gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.4.2/go.mod h1:AdEWKtERGvOQy9ybLhyhrb9w9LLVn8i9xzTwoR5n4BY=
+gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.0 h1:OKDsIDlttbaoHwleyjflIWVZPgPvYbDhim6gWF0zf5E=
+gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.0/go.mod h1:AdEWKtERGvOQy9ybLhyhrb9w9LLVn8i9xzTwoR5n4BY=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.35 h1:TGXHb4DNY8on+ej4S9VUnk2HibIC/5chDy64OE+bQBQ=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.35/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.35 h1:tkM3yE8UzmuH4nf9TqAmiNBSuIZ2CtcMRH2eBIYIzpQ=
