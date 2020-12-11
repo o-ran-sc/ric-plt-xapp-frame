@@ -19,6 +19,7 @@ paths:
       operationId: getXappConfigList
       produces:
         - application/json
+        - application/xml
       responses:
         '200':
           description: successful query of xApp config
@@ -115,6 +116,22 @@ paths:
         '500':
           description: Internal error
 definitions:
+  ConfigMetadata:
+    type: object
+    required:
+      - xappName
+      - configType
+    properties:
+      xappName:
+        type: string
+        description: Name of the xApp
+      configType:
+        type: string
+        description: The type of the content
+        enum:
+        - json
+        - xml
+        - other
   XAppConfig:
     type: object
     required:
