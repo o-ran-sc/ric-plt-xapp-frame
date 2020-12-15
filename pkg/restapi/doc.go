@@ -17,6 +17,7 @@ This is the initial REST API for RIC subscription
 
     Produces:
     - application/json
+    - application/xml
 
 swagger:meta
 */
