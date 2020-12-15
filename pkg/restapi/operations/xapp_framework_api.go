@@ -23,6 +23,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/policy"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/query"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/xapp"
 )
 
 // NewXappFrameworkAPI creates a new XappFramework instance
@@ -42,11 +43,15 @@ func NewXappFrameworkAPI(spec *loads.Document) *XappFrameworkAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
+		XMLProducer:         runtime.XMLProducer(),
 		CommonUnsubscribeHandler: common.UnsubscribeHandlerFunc(func(params common.UnsubscribeParams) middleware.Responder {
 			return middleware.NotImplemented("operation CommonUnsubscribe has not yet been implemented")
 		}),
 		QueryGetAllSubscriptionsHandler: query.GetAllSubscriptionsHandlerFunc(func(params query.GetAllSubscriptionsParams) middleware.Responder {
 			return middleware.NotImplemented("operation QueryGetAllSubscriptions has not yet been implemented")
+		}),
+		XappGetXappConfigListHandler: xapp.GetXappConfigListHandlerFunc(func(params xapp.GetXappConfigListParams) middleware.Responder {
+			return middleware.NotImplemented("operation XappGetXappConfigList has not yet been implemented")
 		}),
 		PolicySubscribePolicyHandler: policy.SubscribePolicyHandlerFunc(func(params policy.SubscribePolicyParams) middleware.Responder {
 			return middleware.NotImplemented("operation PolicySubscribePolicy has not yet been implemented")
@@ -84,11 +89,15 @@ type XappFrameworkAPI struct {
 
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
+	// XMLProducer registers a producer for a "application/xml" mime type
+	XMLProducer runtime.Producer
 
 	// CommonUnsubscribeHandler sets the operation handler for the unsubscribe operation
 	CommonUnsubscribeHandler common.UnsubscribeHandler
 	// QueryGetAllSubscriptionsHandler sets the operation handler for the get all subscriptions operation
 	QueryGetAllSubscriptionsHandler query.GetAllSubscriptionsHandler
+	// XappGetXappConfigListHandler sets the operation handler for the get xapp config list operation
+	XappGetXappConfigListHandler xapp.GetXappConfigListHandler
 	// PolicySubscribePolicyHandler sets the operation handler for the subscribe policy operation
 	PolicySubscribePolicyHandler policy.SubscribePolicyHandler
 	// ReportSubscribeReportHandler sets the operation handler for the subscribe report operation
@@ -156,12 +165,20 @@ func (o *XappFrameworkAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.XMLProducer == nil {
+		unregistered = append(unregistered, "XMLProducer")
+	}
+
 	if o.CommonUnsubscribeHandler == nil {
 		unregistered = append(unregistered, "common.UnsubscribeHandler")
 	}
 
 	if o.QueryGetAllSubscriptionsHandler == nil {
 		unregistered = append(unregistered, "query.GetAllSubscriptionsHandler")
+	}
+
+	if o.XappGetXappConfigListHandler == nil {
+		unregistered = append(unregistered, "xapp.GetXappConfigListHandler")
 	}
 
 	if o.PolicySubscribePolicyHandler == nil {
@@ -228,6 +245,9 @@ func (o *XappFrameworkAPI) ProducersFor(mediaTypes []string) map[string]runtime.
 		case "application/json":
 			result["application/json"] = o.JSONProducer
 
+		case "application/xml":
+			result["application/xml"] = o.XMLProducer
+
 		}
 
 		if p, ok := o.customProducers[mt]; ok {
@@ -279,6 +299,11 @@ func (o *XappFrameworkAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/subscriptions"] = query.NewGetAllSubscriptions(o.context, o.QueryGetAllSubscriptionsHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/config"] = xapp.NewGetXappConfigList(o.context, o.XappGetXappConfigListHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)

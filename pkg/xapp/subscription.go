@@ -33,6 +33,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+    //"errors"
 
 	apiclient "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi"
 	apicommon "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/common"
@@ -47,6 +48,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/policy"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/query"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
+	//"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/xapp"
 )
 
 type SubscriptionHandler func(models.SubscriptionType, interface{}) (*models.SubscriptionResponse, error)
@@ -148,6 +150,16 @@ func (r *Subscriber) Listen(createSubscription SubscriptionHandler, getSubscript
 			}
 			return common.NewUnsubscribeInternalServerError()
 		})
+
+	// XApp: Get Config
+	/*api.XappGetXappConfigListHandler = xapp.GetXappConfigListHandlerFunc(
+		func(p xapp.GetXappConfigListParams) middleware.Responder {
+            Logger.Info("Hitting xapp config")
+			if resp,err := r.getXappConfig(); err == nil {
+				return xapp.NewGetXappConfigListOK().WithPayload(resp)
+			}
+			return xapp.NewGetXappConfigListInternalServerError()
+	    })*/
 
 	server := restapi.NewServer(api)
 	defer server.Shutdown()
@@ -262,3 +274,33 @@ func (r *Subscriber) QuerySubscriptions() (models.SubscriptionList, error) {
 func (r *Subscriber) CreateTransport() *apiclient.RICSubscription {
 	return apiclient.New(httptransport.New(r.remoteHost, r.remoteUrl, r.remoteProt), strfmt.Default)
 }
+
+/*func (r *Subscriber) getXappConfig() (appconfig models.XappConfigList, err error) {
+
+    Logger.Error("Inside getXappConfig")
+
+		var metadata models.ConfigMetadata
+        var xappconfig models.XAppConfig
+        name := viper.GetString("name")
+        configtype := "json"
+		metadata.XappName = &name
+		metadata.ConfigType = &configtype
+
+        configFile, err := os.Open("/opt/ric/config/config-file.json")
+        if err != nil {
+                Logger.Error("Cannot open config file: %v", err)
+                return nil,errors.New("Could Not parse the config file")
+        }
+
+        body, err := ioutil.ReadAll(configFile)
+
+        defer configFile.Close()
+
+		xappconfig.Metadata = &metadata
+		xappconfig.Config = body
+
+        appconfig = append(appconfig,&xappconfig)
+
+		return appconfig,nil
+}*/
+

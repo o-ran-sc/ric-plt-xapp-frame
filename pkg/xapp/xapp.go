@@ -28,6 +28,10 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+    "strings"
+    "encoding/json"
+    "bytes"
+    "io/ioutil"
 )
 
 type ReadyCB func(interface{})
@@ -64,6 +68,130 @@ func XappReadyCb(params interface{}) {
 	Alarm = NewAlarmClient(viper.GetString("moId"), viper.GetString("name"))
 	if readyCb != nil {
 		readyCb(readyCbParams)
+	}
+}
+
+func xappShutdownCb() {
+	SendDeregistermsg()
+	Logger.Info("Wait for xapp to get unregistered")
+	time.Sleep(10 * time.Second)
+}
+
+func registerxapp() {
+	var (
+		retries int = 10
+	)
+	for retries > 0 {
+		name, _ := os.Hostname()
+		httpservicename := "SERVICE_RICXAPP_" + strings.ToUpper(name) + "_HTTP_PORT"
+		httpendpoint := os.Getenv(strings.Replace(httpservicename, "-", "_", -1))
+		tmpString := strings.Split(httpendpoint, "//")
+		resp, err := http.Get(fmt.Sprintf("http://%v/ric/v1/health/ready", tmpString[1]))
+		retries -= 1
+		time.Sleep(5 * time.Second)
+		if err != nil {
+			Logger.Error("Error in health check: %v", err)
+		}
+		if err == nil {
+			retries -= 10
+			Logger.Info("Health Probe Success with resp.StatusCode is %v", resp.StatusCode)
+			if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+				go SendRegistermsg()
+			}
+		} else {
+			Logger.Info("Health Probe failed, retrying...")
+		}
+	}
+}
+
+func SendRegistermsg() {
+	name, _ := os.Hostname()
+	xappname := viper.GetString("name")
+	xappversion := viper.GetString("version")
+	appnamespace := os.Getenv("APP_NAMESPACE")
+	if appnamespace == "" {
+		appnamespace = "ricxapp"
+	}
+	httpservicename := "SERVICE_" + strings.ToUpper(appnamespace) + "_" + strings.ToUpper(name) + "_HTTP_PORT"
+	rmrservicename := "SERVICE_" + strings.ToUpper(appnamespace) + "_" + strings.ToUpper(name) + "_RMR_PORT"
+	httpendpoint := os.Getenv(strings.Replace(httpservicename, "-", "_", -1))
+	rmrendpoint := os.Getenv(strings.Replace(rmrservicename, "-", "_", -1))
+	pltnamespace := os.Getenv("PLT_NAMESPACE")
+	if pltnamespace == "" {
+		pltnamespace = "ricplt"
+	}
+
+    configpath := "/ric/v1/config"
+
+    requestBody, err := json.Marshal(map[string]string{
+			"appName":         name,
+			"httpEndpoint":    httpendpoint,
+			"rmrEndpoint":     rmrendpoint,
+			"appInstanceName": xappname,
+			"appVersion":      xappversion,
+            "configPath":      configpath,
+		})
+
+	if err != nil {
+		Logger.Info("Error while compiling request to appmgr: %v", err)
+	} else {
+		url := fmt.Sprintf("http://service-%v-appmgr-http.%v:8080/ric/v1/register", pltnamespace, pltnamespace)
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
+		Logger.Info(" Resp is %v", resp)
+		if err != nil {
+			Logger.Info("Error  compiling request to appmgr: %v", err)
+		}
+		Logger.Info("Registering request sent. Response received is :%v", resp)
+
+	    if resp != nil {
+            body, err := ioutil.ReadAll(resp.Body)
+		    Logger.Info("Post body is %v", resp.Body)
+		    if err != nil {
+			    Logger.Info("rsp: Error  compiling request to appmgr: %v", string(body))
+		    }
+		    defer resp.Body.Close()
+        }
+	}
+}
+
+func SendDeregistermsg() {
+
+	name, _ := os.Hostname()
+	xappname := viper.GetString("name")
+
+	appnamespace := os.Getenv("APP_NAMESPACE")
+	if appnamespace == "" {
+		appnamespace = "ricxapp"
+	}
+	pltnamespace := os.Getenv("PLT_NAMESPACE")
+	if pltnamespace == "" {
+		pltnamespace = "ricplt"
+	}
+
+    requestBody, err := json.Marshal(map[string]string{
+		"appName":         name,
+		"appInstanceName": xappname,
+	})
+
+	if err != nil {
+		Logger.Info("Error while compiling request to appmgr: %v", err)
+	} else {
+		url := fmt.Sprintf("http://service-%v-appmgr-http.%v:8080/ric/v1/deregister", pltnamespace, pltnamespace)
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
+		Logger.Info(" Resp is %v", resp)
+		if err != nil {
+			Logger.Info("Error  compiling request to appmgr: %v", err)
+		}
+	    Logger.Info("Deregistering request sent. Response received is :%v", resp)
+
+	    if resp != nil {
+            body, err := ioutil.ReadAll(resp.Body)
+		    Logger.Info("Post body is %v", resp.Body)
+		    if err != nil {
+			    Logger.Info("rsp: Error  compiling request to appmgr: %v", string(body))
+		    }
+		    defer resp.Body.Close()
+	    }
 	}
 }
 
@@ -143,13 +271,14 @@ func init() {
 func RunWithParams(c MessageConsumer, sdlcheck bool) {
 	Rmr = NewRMRClient()
 	Rmr.SetReadyCB(XappReadyCb, nil)
-
+	SetShutdownCB(xappShutdownCb)
 	host := fmt.Sprintf(":%d", GetPortData("http").Port)
 	go http.ListenAndServe(host, Resource.router)
 	Logger.Info(fmt.Sprintf("Xapp started, listening on: %s", host))
 	if sdlcheck {
 		Sdl.TestConnection()
 	}
+	go registerxapp()
 	Rmr.Start(c)
 }
 
