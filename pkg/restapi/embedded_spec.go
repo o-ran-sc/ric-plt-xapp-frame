@@ -34,6 +34,30 @@ func init() {
   "host": "hostname",
   "basePath": "/ric/v1",
   "paths": {
+    "/config": {
+      "get": {
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "tags": [
+          "xapp"
+        ],
+        "summary": "Returns the configuration of all xapps",
+        "operationId": "getXappConfigList",
+        "responses": {
+          "200": {
+            "description": "successful query of xApp config",
+            "schema": {
+              "$ref": "#/definitions/XappConfigList"
+            }
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/subscriptions": {
       "get": {
         "produces": [
@@ -184,6 +208,28 @@ func init() {
         },
         "ActionParameterValue": {
           "type": "boolean"
+        }
+      }
+    },
+    "ConfigMetadata": {
+      "type": "object",
+      "required": [
+        "xappName",
+        "configType"
+      ],
+      "properties": {
+        "configType": {
+          "description": "The type of the content",
+          "type": "string",
+          "enum": [
+            "json",
+            "xml",
+            "other"
+          ]
+        },
+        "xappName": {
+          "description": "Name of the xApp",
+          "type": "string"
         }
       }
     },
@@ -443,6 +489,28 @@ func init() {
         "policy",
         "report"
       ]
+    },
+    "XAppConfig": {
+      "type": "object",
+      "required": [
+        "metadata",
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "description": "Configuration in JSON format",
+          "type": "object"
+        },
+        "metadata": {
+          "$ref": "#/definitions/ConfigMetadata"
+        }
+      }
+    },
+    "XappConfigList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/XAppConfig"
+      }
     }
   }
 }`))
@@ -463,6 +531,30 @@ func init() {
   "host": "hostname",
   "basePath": "/ric/v1",
   "paths": {
+    "/config": {
+      "get": {
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "tags": [
+          "xapp"
+        ],
+        "summary": "Returns the configuration of all xapps",
+        "operationId": "getXappConfigList",
+        "responses": {
+          "200": {
+            "description": "successful query of xApp config",
+            "schema": {
+              "$ref": "#/definitions/XappConfigList"
+            }
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/subscriptions": {
       "get": {
         "produces": [
@@ -613,6 +705,28 @@ func init() {
         },
         "ActionParameterValue": {
           "type": "boolean"
+        }
+      }
+    },
+    "ConfigMetadata": {
+      "type": "object",
+      "required": [
+        "xappName",
+        "configType"
+      ],
+      "properties": {
+        "configType": {
+          "description": "The type of the content",
+          "type": "string",
+          "enum": [
+            "json",
+            "xml",
+            "other"
+          ]
+        },
+        "xappName": {
+          "description": "Name of the xApp",
+          "type": "string"
         }
       }
     },
@@ -872,6 +986,28 @@ func init() {
         "policy",
         "report"
       ]
+    },
+    "XAppConfig": {
+      "type": "object",
+      "required": [
+        "metadata",
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "description": "Configuration in JSON format",
+          "type": "object"
+        },
+        "metadata": {
+          "$ref": "#/definitions/ConfigMetadata"
+        }
+      }
+    },
+    "XappConfigList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/XAppConfig"
+      }
     }
   }
 }`))

@@ -22,14 +22,19 @@ package xapp
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
+	"os"
+
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
 )
 
 const (
-	ReadyURL  = "/ric/v1/health/ready"
-	AliveURL  = "/ric/v1/health/alive"
-	ConfigURL = "/ric/v1/cm/{name}"
+	ReadyURL     = "/ric/v1/health/ready"
+	AliveURL     = "/ric/v1/health/alive"
+	ConfigURL    = "/ric/v1/cm/{name}"
+	AppConfigURL = "/ric/v1/config"
 )
 
 type StatusCb func() bool
@@ -49,6 +54,7 @@ func NewRouter() *Router {
 	r.InjectRoute(ReadyURL, readyHandler, "GET")
 	r.InjectRoute(AliveURL, aliveHandler, "GET")
 	r.InjectRoute(ConfigURL, configHandler, "POST")
+	r.InjectRoute(AppConfigURL, appconfigHandler, "GET")
 
 	return r
 }
@@ -129,4 +135,37 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 		response, _ := json.Marshal(payload)
 		w.Write(response)
 	}
+}
+
+func appconfigHandler(w http.ResponseWriter, r *http.Request) {
+
+	Logger.Info("Inside appconfigHandler")
+
+	var appconfig models.XappConfigList
+	var metadata models.ConfigMetadata
+	var xappconfig models.XAppConfig
+	name := viper.GetString("name")
+	configtype := "json"
+	metadata.XappName = &name
+	metadata.ConfigType = &configtype
+
+	configFile, err := os.Open("/opt/ric/config/config-file.json")
+	if err != nil {
+		Logger.Error("Cannot open config file: %v", err)
+		respondWithJSON(w, http.StatusInternalServerError, nil)
+		// return nil,errors.New("Could Not parse the config file")
+	}
+
+	body, err := ioutil.ReadAll(configFile)
+
+	defer configFile.Close()
+
+	xappconfig.Metadata = &metadata
+	xappconfig.Config = string(body)
+
+	appconfig = append(appconfig, &xappconfig)
+
+	respondWithJSON(w, http.StatusOK, appconfig)
+
+	//return appconfig,nil
 }

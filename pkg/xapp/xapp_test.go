@@ -20,16 +20,16 @@
 package xapp
 
 import (
+	"bytes"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
 	"time"
-	"bytes"
 )
 
 //var _ = func() bool {
@@ -118,8 +118,8 @@ func TestMessagesReceivedSuccessfully(t *testing.T) {
 		params.Payload = []byte{1, 2, 3, 4, 5, 6}
 		params.Meid = &RMRMeid{PlmnID: "1234", EnbID: "7788", RanName: "RanName-1234"}
 		params.Xid = "TestXID"
-		
-		if i % 2 == 0 {
+
+		if i%2 == 0 {
 			Rmr.SendMsg(params)
 		} else {
 			Rmr.SendWithRetry(params, false, 1)
@@ -332,11 +332,11 @@ func TestAddConfigChangeListener(t *testing.T) {
 
 func TestConfigAccess(t *testing.T) {
 	Logger.Info("CASE: AddConfigChangeListener")
-	
-	assert.Equal(t,  Config.GetString("name"), "xapp")
-	assert.Equal(t,  Config.GetInt("controls.logger.level"), 3)
-	assert.Equal(t,  Config.GetUint32("controls.logger.level"), uint32(3))
-	assert.Equal(t,  Config.GetBool("controls.waitForSdl"), false)
+
+	assert.Equal(t, Config.GetString("name"), "xapp")
+	assert.Equal(t, Config.GetInt("controls.logger.level"), 3)
+	assert.Equal(t, Config.GetUint32("controls.logger.level"), uint32(3))
+	assert.Equal(t, Config.GetBool("controls.waitForSdl"), false)
 	Config.Get("controls")
 	Config.GetStringSlice("messaging.ports")
 	Config.GetStringMap("messaging.ports")
@@ -354,7 +354,7 @@ func TestNewSubscriber(t *testing.T) {
 }
 
 func TestNewRMRClient(t *testing.T) {
-	c := map[string]interface{} {"protPort": "tcp:4560"}
+	c := map[string]interface{}{"protPort": "tcp:4560"}
 	viper.Set("rmr", c)
 	assert.NotNil(t, NewRMRClient(), "NewRMRClient failed")
 
@@ -421,6 +421,23 @@ func TestConfigHandler(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/ric/v1/cm/appname", bytes.NewBuffer([]byte{}))
 	handleFunc := http.HandlerFunc(configHandler)
 	executeRequest(req, handleFunc)
+}
+
+func TestappconfigHandler(t *testing.T) {
+	Logger.Error("CASE: TestappconfigHandler")
+	req, _ := http.NewRequest("POST", "/ric/v1/config", bytes.NewBuffer([]byte{}))
+	handleFunc := http.HandlerFunc(appconfigHandler)
+	executeRequest(req, handleFunc)
+}
+
+func TestSendRegistermsg(t *testing.T) {
+	Logger.Error("CASE: TestSendRegistermsg")
+	SendRegistermsg()
+}
+
+func TestSendDeregistermsg(t *testing.T) {
+	Logger.Error("CASE: TestSendDeregistermsg")
+	SendDeregistermsg()
 }
 
 func TestMisc(t *testing.T) {
