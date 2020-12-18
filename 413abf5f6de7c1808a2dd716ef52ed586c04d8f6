@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1072623d_d6b427bc",
+        "filename": "pkg/xapp/restapi.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "This should be read from configuration",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1651a34b_6b8a5d31",
+        "filename": "pkg/xapp/subscription.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "This should be read from configuration",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a1bb8ec_807b3b35",
+        "filename": "pkg/xapp/xapp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "No sleeps in shutdown. This SendDeregistermsg should be wise enough to wait answer.",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c39981d3_da55ccf1",
+        "filename": "pkg/xapp/xapp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "Hardcoded name? Should this be got from outside somehow?",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff94d702_3ef41a3d",
+        "filename": "pkg/xapp/xapp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "Why goroutine is waked here as registerxapp itself is called with goroutine?",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00ea6932_941e3bac",
+        "filename": "pkg/xapp/xapp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "Hardcoded name? Should this be got from outside somehow?",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "474a69c0_1e13233a",
+        "filename": "pkg/xapp/xapp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "Hardcoded. Should this come from somewhere outside?",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fba8ccc_0b0b284c",
+        "filename": "pkg/xapp/xapp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "Hardcoded. Should this come from somewhere outside?",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36c0a110_a2ee7f33",
+        "filename": "pkg/xapp/xapp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "This will override application shutdown callback. Must be fixed. \n\nPossibilities two layers in shutdown callback -\u003e similar way than in ReadyCb. \n\nOR maybe xappShutdownCb(..) calls could be inserted inside  InstallSignalHandler(...) close callback goroutine func\n\n// close callback\ngo func() {\n  if shutdownCb !\u003d nil {\n    shutdownCb()\n  }\n  sentry \u003c- struct{}{}\n}()",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff2c174e_653826c2",
+        "filename": "pkg/xapp/xapp.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1000011
+      },
+      "writtenOn": "2020-12-18T09:53:49Z",
+      "side": 1,
+      "message": "Will this work also in case where there is no appmgr deployed e.g. manually testing with containers or running unittests?",
+      "revId": "413abf5f6de7c1808a2dd716ef52ed586c04d8f6",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
