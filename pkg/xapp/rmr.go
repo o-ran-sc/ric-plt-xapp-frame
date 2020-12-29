@@ -169,7 +169,7 @@ func NewRMRClientWithParams(params *RMRClientParams) *RMRClient {
 }
 
 func NewRMRClient() *RMRClient {
-	p := GetPortData("rmr-data")
+	p := GetPortData("rmrdata")
 	if p.Port == 0 || viper.IsSet("rmr.protPort") {
 		// Old xApp descriptor used, fallback to rmr section
 		fmt.Sscanf(viper.GetString("rmr.protPort"), "tcp:%d", &p.Port)

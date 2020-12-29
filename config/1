@@ -38,7 +38,7 @@
                 "description": "http service"
             },
             {
-                "name": "rmrroute",
+                "name": "rmr-route",
                 "container": "ueec",
                 "port": 4561,
                 "description": "rmr route port for ueec"
