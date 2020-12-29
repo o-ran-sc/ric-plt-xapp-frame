@@ -143,7 +143,7 @@ func GetPortData(pname string) (d PortData) {
 		if pname == "http" {
 			d.Port = 8080
 		}
-		if pname == "rmr-data" {
+		if pname == "rmrdata" {
 			d.Port = 4560
 		}
 		return

@@ -38,13 +38,13 @@
                 "description": "http service"
             },
             {
-                "name": "rmr-route",
+                "name": "rmrroute",
                 "container": "ueec",
                 "port": 4561,
                 "description": "rmr route port for ueec"
             },
             {
-                "name": "rmr-data",
+                "name": "rmrdata",
                 "container": "ueec",
                 "port": 4560,
                 "maxSize": 2072,

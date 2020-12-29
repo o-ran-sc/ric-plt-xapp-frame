@@ -48,13 +48,13 @@
                 "description": "http service"
             },
             {
-                "name": "rmr-route",
+                "name": "rmrroute",
                 "container": "example",
                 "port": 4561,
                 "description": "rmr route port for example"
             },
             {
-                "name": "rmr-data",
+                "name": "rmrdata",
                 "container": "example",
                 "port": 4560,
                 "maxSize": 65536,
