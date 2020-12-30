@@ -430,14 +430,14 @@ func TestappconfigHandler(t *testing.T) {
 	executeRequest(req, handleFunc)
 }
 
-func TestSendRegistermsg(t *testing.T) {
-	Logger.Error("CASE: TestSendRegistermsg")
-	SendRegistermsg()
+func TestRegisterXapp(t *testing.T) {
+	Logger.Error("CASE: TestRegisterXapp")
+	doRegister()
 }
 
-func TestSendDeregistermsg(t *testing.T) {
-	Logger.Error("CASE: TestSendDeregistermsg")
-	SendDeregistermsg()
+func TestDeregisterXapp(t *testing.T) {
+	Logger.Error("CASE: TestDeregisterXapp")
+	doDeregister()
 }
 
 func TestMisc(t *testing.T) {

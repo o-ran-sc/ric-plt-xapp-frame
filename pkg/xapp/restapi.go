@@ -37,6 +37,10 @@ const (
 	AppConfigURL = "/ric/v1/config"
 )
 
+var (
+	healthReady bool
+)
+
 type StatusCb func() bool
 
 type Router struct {
@@ -97,7 +101,12 @@ func (r *Router) CheckStatus() (status bool) {
 	return
 }
 
+func IsHealthProbeReady() bool {
+	return healthReady
+}
+
 func readyHandler(w http.ResponseWriter, r *http.Request) {
+	healthReady = true
 	respondWithJSON(w, http.StatusOK, nil)
 }
 

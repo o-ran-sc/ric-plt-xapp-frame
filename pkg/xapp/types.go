@@ -81,3 +81,14 @@ type PortData struct {
 	Policies          []int
 	MaxRetryOnFailure int
 }
+
+// @todo: read these from config or somewhere else
+const (
+	SERVICE_HTTP    = "SERVICE_%s_%s_HTTP_PORT"
+	SERVICE_RMR     = "SERVICE_%s_%s_RMR_PORT"
+	CONFIG_PATH     = "/ric/v1/config"
+	REGISTER_PATH   = "http://service-%s-appmgr-http.%s:8080/ric/v1/register"
+	DEREGISTER_PATH = "http://service-%s-appmgr-http.%s:8080/ric/v1/deregister"
+	DEFAULT_PLT_NS  = "ricplt"
+	DEFAULT_XAPP_NS = "ricxapp"
+)
