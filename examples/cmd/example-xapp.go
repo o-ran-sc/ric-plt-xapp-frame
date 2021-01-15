@@ -30,7 +30,6 @@ import (
 
 // This could be defined in types.go
 type ExampleXapp struct {
-	msgChan               chan *xapp.RMRParams
 	stats                 map[string]xapp.Counter
 	rmrReady              bool
 	waitForSdl            bool
@@ -52,25 +51,6 @@ func (e *ExampleXapp) handleRICExampleMessage(ranName string, r *xapp.RMRParams)
 	r.Mtype = r.Mtype + 1
 	if ok := xapp.Rmr.SendMsg(r); !ok {
 		xapp.Logger.Info("Rmr.SendMsg failed ...")
-	}
-}
-
-func (e *ExampleXapp) messageLoop() {
-	for {
-		msg := <-e.msgChan
-		id := xapp.Rmr.GetRicMessageName(msg.Mtype)
-		defer xapp.Rmr.Free(msg.Mbuf)
-
-		xapp.Logger.Info("Message received: name=%s meid=%s subId=%d txid=%s len=%d", id, msg.Meid.RanName, msg.SubId, msg.Xid, msg.PayloadLen)
-
-		switch id {
-		case "RIC_INDICATION":
-			e.handleRICIndication(msg.Meid.RanName, msg)
-		case "RIC_EXAMPLE_MESSAGE":
-			e.handleRICExampleMessage(msg.Meid.RanName, msg)
-		default:
-			xapp.Logger.Info("Unknown Message Type '%d', discarding", msg.Mtype)
-		}
 	}
 }
 
@@ -115,8 +95,24 @@ func (e *ExampleXapp) Subscribe() {
 	}
 }
 
-func (e *ExampleXapp) Consume(rp *xapp.RMRParams) (err error) {
-	e.msgChan <- rp
+func (e *ExampleXapp) Consume(msg *xapp.RMRParams) (err error) {
+	id := xapp.Rmr.GetRicMessageName(msg.Mtype)
+
+	xapp.Logger.Info("Message received: name=%s meid=%s subId=%d txid=%s len=%d", id, msg.Meid.RanName, msg.SubId, msg.Xid, msg.PayloadLen)
+
+	switch id {
+	case "RIC_INDICATION":
+		e.handleRICIndication(msg.Meid.RanName, msg)
+	case "RIC_EXAMPLE_MESSAGE":
+		e.handleRICExampleMessage(msg.Meid.RanName, msg)
+	default:
+		xapp.Logger.Info("Unknown Message Type '%d', discarding", msg.Mtype)
+	}
+
+	defer func() {
+		xapp.Rmr.Free(msg.Mbuf)
+		msg.Mbuf = nil
+	}()
 	return
 }
 
@@ -145,7 +141,6 @@ func (e *ExampleXapp) Run() {
 	// Inject own REST handler for testing purpose
 	xapp.Resource.InjectRoute("/ric/v1/testing", e.TestRestHandler, "POST")
 
-	go e.messageLoop()
 	xapp.RunWithParams(e, e.waitForSdl)
 }
 
@@ -159,7 +154,6 @@ func GetMetricsOpts() []xapp.CounterOpts {
 func NewExampleXapp(rmrReady bool) *ExampleXapp {
 	metrics := GetMetricsOpts()
 	return &ExampleXapp{
-		msgChan:    make(chan *xapp.RMRParams),
 		stats:      xapp.Metric.RegisterCounterGroup(metrics, "ExampleXapp"),
 		rmrReady:   rmrReady,
 		waitForSdl: xapp.Config.GetBool("db.waitForSdl"),

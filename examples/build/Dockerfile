@@ -18,7 +18,7 @@
 #   platform project (RICP).
 #==================================================================================
 
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:4-u18.04-nng as ubuntu-example-xapp
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu18-c-go:1.9.0 as ubuntu-example-xapp
 
 # Install utilities
 RUN apt update && apt install -y iputils-ping net-tools curl sudo
