@@ -41,7 +41,7 @@ func TestMetricSetup(t *testing.T) {
 		},
 		[]string{"name", "event"},
 		"SUBSYSTEM")
-	
+
 	mGGroup = Metric.RegisterGaugeGroup(
 		[]CounterOpts{
 			{Name: "counter3", Help: "counter3"},
@@ -259,4 +259,3 @@ func TestMetricGroupCache(t *testing.T) {
 	m_grp.GDec("event2_counter2")
 	m_grp.GSet("event2_counter2", 1)
 }
-

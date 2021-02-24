@@ -21,6 +21,7 @@ package xapp
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 	"io/ioutil"
@@ -99,6 +100,60 @@ func (r *Router) CheckStatus() (status bool) {
 		status = f()
 	}
 	return
+}
+
+func (r *Router) GetSymptomDataParams(w http.ResponseWriter, req *http.Request) SymptomDataParams {
+	params := SymptomDataParams{}
+	queryParams := req.URL.Query()
+
+	for p := range queryParams {
+		if p == "timeout" {
+			fmt.Sscanf(p, "%d", &params.Timeout)
+		}
+		if p == "fromtime" {
+			fmt.Sscanf(p, "%d", &params.FromTime)
+		}
+		if p == "totime" {
+			fmt.Sscanf(p, "%d", &params.ToTime)
+		}
+	}
+	return params
+}
+
+func (r *Router) SendSymptomDataJson(w http.ResponseWriter, req *http.Request, data interface{}, n string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", "attachment; filename="+n)
+	w.WriteHeader(http.StatusOK)
+	if data != nil {
+		response, _ := json.Marshal(data)
+		w.Write(response)
+	}
+}
+
+func (r *Router) SendSymptomDataFile(w http.ResponseWriter, req *http.Request, baseDir, zipFile string) {
+	// Compress and reply with attachment
+	tmpFile, err := ioutil.TempFile("", "symptom")
+	if err != nil {
+		r.SendSymptomDataError(w, req, "Failed to create a tmp file: "+err.Error())
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	var fileList []string
+	fileList = Util.FetchFiles(baseDir, fileList)
+	err = Util.ZipFiles(tmpFile, baseDir, fileList)
+	if err != nil {
+		r.SendSymptomDataError(w, req, "Failed to zip the files: "+err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Disposition", "attachment; filename="+zipFile)
+	http.ServeFile(w, req, tmpFile.Name())
+}
+
+func (r *Router) SendSymptomDataError(w http.ResponseWriter, req *http.Request, message string) {
+	w.Header().Set("Content-Disposition", "attachment; filename=error_status.txt")
+	http.Error(w, message, http.StatusInternalServerError)
 }
 
 func IsHealthProbeReady() bool {
