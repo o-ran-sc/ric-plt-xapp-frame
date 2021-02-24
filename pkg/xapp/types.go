@@ -82,6 +82,12 @@ type PortData struct {
 	MaxRetryOnFailure int
 }
 
+type SymptomDataParams struct {
+	Timeout  uint64
+	FromTime uint64
+	ToTime   uint64
+}
+
 // @todo: read these from config or somewhere else
 const (
 	SERVICE_HTTP    = "SERVICE_%s_%s_HTTP_PORT"
