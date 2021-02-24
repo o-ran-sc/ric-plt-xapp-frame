@@ -20,8 +20,8 @@
 package xapp
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm"
 )

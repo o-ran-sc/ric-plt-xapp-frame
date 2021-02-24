@@ -7,12 +7,12 @@
 package xapp
 
 import (
+	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-	"fmt"
 )
 
 var suite *testing.T
@@ -59,7 +59,7 @@ func processSubscriptions(subscriptionId string) {
 	resp := &models.SubscriptionResponse{
 		SubscriptionID: &subscriptionId,
 		SubscriptionInstances: []*models.SubscriptionInstance{
-			&models.SubscriptionInstance{RequestorID: &reqId, InstanceID: &instanceId},
+			{RequestorID: &reqId, InstanceID: &instanceId},
 		},
 	}
 

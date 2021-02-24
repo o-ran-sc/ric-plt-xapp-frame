@@ -47,6 +47,7 @@ var (
 	Config        Configurator
 	Subscription  *Subscriber
 	Alarm         *AlarmClient
+	Util          *Utils
 	readyCb       ReadyCB
 	readyCbParams interface{}
 	shutdownCb    ShutdownCB
@@ -250,6 +251,7 @@ func init() {
 	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
 	Sdl = NewSDLClient(viper.GetString("controls.db.namespace"))
 	Rnib = NewRNIBClient()
+	Util = NewUtils()
 
 	InstallSignalHandler()
 }
