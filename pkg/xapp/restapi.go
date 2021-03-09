@@ -156,6 +156,21 @@ func (r *Router) SendSymptomDataError(w http.ResponseWriter, req *http.Request, 
 	http.Error(w, message, http.StatusInternalServerError)
 }
 
+func (r *Router) GetLocalMetrics(port int) (string, error) {
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/ric/v1/metrics", port))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	metrics, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(metrics), nil
+}
+
 func IsHealthProbeReady() bool {
 	return healthReady
 }
