@@ -83,9 +83,10 @@ type PortData struct {
 }
 
 type SymptomDataParams struct {
-	Timeout  uint64
-	FromTime uint64
-	ToTime   uint64
+	Timeout       uint64
+	FromTime      uint64
+	ToTime        uint64
+	importantOnly bool
 }
 
 // @todo: read these from config or somewhere else
