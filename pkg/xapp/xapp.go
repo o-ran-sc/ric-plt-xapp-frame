@@ -30,8 +30,15 @@ import (
 	"strings"
 	"sync/atomic"
 	"syscall"
+	"testing"
 	"time"
 )
+
+// For testing purpose
+var _ = func() bool {
+        testing.Init()
+        return true
+}()
 
 type ReadyCB func(interface{})
 type ShutdownCB func()
