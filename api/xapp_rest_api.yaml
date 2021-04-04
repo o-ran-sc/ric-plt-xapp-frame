@@ -31,7 +31,7 @@ paths:
     get:
       summary: Returns list of subscriptions
       tags:
-        - "query"
+        - "common"
       operationId: getAllSubscriptions
       produces:
         - application/json
@@ -42,22 +42,21 @@ paths:
             $ref: '#/definitions/SubscriptionList'
         '500':
           description: Internal error
-  /subscriptions/report:
     post:
       tags:
-      - "report"
-      summary: Subscribe a list of X2AP event triggers to receive "REPORT" messages sent by RAN or Subscribe to receive the content of gNB NRT table in REPORT message sent by RAN
-      operationId: subscribeReport
+        - "common"
+      operationId: Subscribe
+      summary: Subscribe a list of X2AP event triggers to receive messages sent by RAN
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: ReportParams
+        - name: SubscriptionParams
           in: body
-          description: Subscription report parameters
+          description: Subscription parameters
           schema:
-            $ref: '#/definitions/ReportParams'
+            $ref: '#/definitions/SubscriptionParams'
       responses:
         '201':
           description: Subscription successfully created
@@ -67,35 +66,10 @@ paths:
           description: Invalid input
         '500':
           description: Internal error
-  /subscriptions/policy:
-    post:
-      tags:
-      - "policy"
-      summary: Subscribe and send "POLICY" message to RAN to execute a specific POLICY during call processing in RAN after each occurrence of a defined SUBSCRIPTION
-      operationId: subscribePolicy
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: PolicyParams
-          in: body
-          description: Subscription policy parameters
-          schema:
-            $ref: '#/definitions/PolicyParams'
-      responses:
-        '201':
-          description: Subscription successfully created
-          schema:
-            $ref: '#/definitions/SubscriptionResponse'
-        '400':
-          description: Invalid input
-        '500':
-          description: Internal error
-  /subscriptions/{subscriptionId}:
+  '/subscriptions/{subscriptionId}':
     delete:
       tags:
-      - "common"
+        - "common"
       summary: Unsubscribe X2AP events from Subscription Manager
       operationId: Unsubscribe
       consumes:
@@ -147,162 +121,130 @@ definitions:
     type: array
     items:
       $ref: '#/definitions/XAppConfig'
-  SubscriptionType:
-    type: string
-    enum:
-      - insert
-      - policy
-      - report
-  ReportParams:
+
+  ActionDefinition:
+    type: object
+    description: E2SM Octet string. ActionDefinition is an OPTIONAL IE
+    properties:
+      OctetString:
+        type: string
+  SubsequentAction:
+    description: SubsequentAction is an OPTIONAL IE
     type: object
     required:
-      - RANFunctionID
-      - ClientEndpoint
-      - EventTriggers
+      - SubsequentActionType
+      - TimeToWait
     properties:
-      Meid:
-        type: string
-      RANFunctionID:
-        type: integer
-      ClientEndpoint:
-        type: string
-      EventTriggers:
-        $ref: '#/definitions/EventTriggerList'
-      ReportActionDefinitions:
-        $ref: '#/definitions/ReportActionDefinition'
-  EventTrigger:
-    type: object
-    properties:
-      InterfaceDirection:
-        type: integer
-      ProcedureCode:
-        type: integer
-      TypeOfMessage:
-        type: integer
-      TriggerNature:
+      SubsequentActionType:
         type: string
         enum:
-          - now
-          - on change
-      PlmnId:
+          - continue
+          - wait
+      TimeToWait:
         type: string
-      ENBId:
+        enum:
+          - zero
+          - w1ms
+          - w2ms
+          - w5ms
+          - w10ms
+          - w20ms
+          - w30ms
+          - w40ms
+          - w50ms
+          - w100ms
+          - w200ms
+          - w500ms
+          - w1s
+          - w2s
+          - w5s
+          - w10s
+          - w20s
+          - w60s
+  ActionToBeSetup:
+    type: object
+    required:
+      - ActionID
+      - ActionType
+    properties:
+      ActionID:
+        type: integer
+        minimum: 0
+        maximum: 255
+      ActionType:
         type: string
-  EventTriggerList:
+        enum:
+          - insert
+          - policy
+          - report
+      ActionDefinition:
+        $ref: '#/definitions/ActionDefinition'
+      SubsequentAction:
+        $ref: '#/definitions/SubsequentAction'
+  ActionsToBeSetup:
     type: array
     items:
-      $ref: '#/definitions/EventTrigger'
-  ActionParameters:
+      $ref: '#/definitions/ActionToBeSetup'
+  EventTriggerDefinition:
+    type: object
+    description: E2SM Octet string
+    properties:
+      OctetString:
+        type: string
+  SubscriptionDetails:
     type: object
     required:
-      - ActionParameterID
-      - ActionParameterValue
+      - EventTriggerList
+      - ActionToBeSetupList
     properties:
-      ActionParameterID:
-        type: integer
-      ActionParameterValue:
-        type: boolean
-  Format1ActionDefinition:
+      EventTriggerList:
+        $ref: '#/definitions/EventTriggerDefinition'
+      ActionToBeSetupList:
+        $ref: '#/definitions/ActionsToBeSetup'
+  SubscriptionDetailsList:
+    type: array
+    items:
+      $ref: '#/definitions/SubscriptionDetails'
+  SubscriptionParams:
     type: object
     required:
-      - StyleID
-      - ActionParameters
-    properties:
-      StyleID:
-        type: integer
-      ActionParameters:
-        type: array
-        items:
-          $ref: '#/definitions/ActionParameters'
-  ReportActionDefinition:
-    type: object
-    properties:
-      ActionDefinitionFormat1:
-        $ref: '#/definitions/Format1ActionDefinition'
-  PolicyParams:
-    type: object
-    required:
-      - Meid
-      - RANFunctionID
       - ClientEndpoint
-      - EventTriggers
-      - PolicyActionDefinitions
-    properties:
-      Meid:
-        type: string
-      RANFunctionID:
-        type: integer
-      ClientEndpoint:
-        type: string
-      EventTriggers:
-        $ref: '#/definitions/EventTriggerList'
-      PolicyActionDefinitions:
-        $ref: '#/definitions/PolicyActionDefinition'
-  PolicyActionDefinition:
-    type: object
-    properties:
-      ActionDefinitionFormat2:
-        $ref: '#/definitions/Format2ActionDefinition'
-  Format2ActionDefinition:
-    type: object
-    required:
-      - RANUeGroupParameters
-    properties:
-      RANUeGroupParameters:
-        type: array
-        items:
-          $ref: '#/definitions/RANUeGroupList'
-  RANUeGroupList:
-    type: object
-    required:
-      - RANUeGroupID
-      - RANUeGroupDefinition
-      - RANImperativePolicy
-    properties:
-      RANUeGroupID:
-        type: integer
-      RANUeGroupDefinition:
-        $ref: '#/definitions/RANUeGroupParams'
-      RANImperativePolicy:
-        $ref: '#/definitions/ImperativePolicyDefinition'
-  RANUeGroupParams:
-    type: object
-    required:
-      - RANParameterID
-      - RANParameterValue
-    properties:
-      RANParameterID:
-        type: integer
-      RANParameterTestCondition:
-        type: string
-        enum:
-          - equal
-          - greaterthan
-          - lessthan
-          - contains
-          - present
-      RANParameterValue:
-        type: integer
-  ImperativePolicyDefinition:
-    type: object
-    required:
-      - PolicyParameterID
-      - PolicyParameterValue
-    properties:
-      PolicyParameterID:
-        type: integer
-      PolicyParameterValue:
-        type: integer
-  SubscriptionInstance:
-    type: object
-    required:
+      - Meid
       - RequestorId
       - InstanceId
+      - RANFunctionID
+      - SubscriptionDetails
     properties:
+      ClientEndpoint:
+        type: object
+        description: xApp service address and port
+        properties:
+          ServiceName:
+            description: >-
+              xApp service address name like
+              'service-ricxapp-xappname-http.ricxapp'
+            type: string
+          Port:
+            description: xApp service address port
+            type: integer
+            minimum: 0
+            maximum: 65535
+      Meid:
+        type: string
       RequestorId:
         type: integer
+        minimum: 0
+        maximum: 65535
       InstanceId:
         type: integer
+        minimum: 0
+        maximum: 65535
+      RANFunctionID:
+        type: integer
+        minimum: 0
+        maximum: 4095
+      SubscriptionDetails:
+        $ref: '#/definitions/SubscriptionDetailsList'
   SubscriptionResponse:
     type: object
     required:
@@ -315,6 +257,25 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/SubscriptionInstance'
+  SubscriptionInstance:
+    type: object
+    required:
+      - RequestorId
+      - InstanceId
+      - ErrorCause
+    properties:
+      RequestorId:
+        type: integer
+        minimum: 0
+        maximum: 65535
+      InstanceId:
+        type: integer
+        minimum: 0
+        maximum: 65535
+      ErrorCause:
+        description: Empty string when no error.
+        type: string
+
   SubscriptionData:
     type: object
     properties:

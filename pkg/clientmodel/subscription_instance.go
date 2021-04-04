@@ -17,18 +17,30 @@ import (
 // swagger:model SubscriptionInstance
 type SubscriptionInstance struct {
 
+	// Empty string when no error.
+	// Required: true
+	ErrorCause *string `json:"ErrorCause"`
+
 	// instance Id
 	// Required: true
+	// Maximum: 65535
+	// Minimum: 0
 	InstanceID *int64 `json:"InstanceId"`
 
 	// requestor Id
 	// Required: true
+	// Maximum: 65535
+	// Minimum: 0
 	RequestorID *int64 `json:"RequestorId"`
 }
 
 // Validate validates this subscription instance
 func (m *SubscriptionInstance) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateErrorCause(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateInstanceID(formats); err != nil {
 		res = append(res, err)
@@ -44,9 +56,26 @@ func (m *SubscriptionInstance) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *SubscriptionInstance) validateErrorCause(formats strfmt.Registry) error {
+
+	if err := validate.Required("ErrorCause", "body", m.ErrorCause); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *SubscriptionInstance) validateInstanceID(formats strfmt.Registry) error {
 
 	if err := validate.Required("InstanceId", "body", m.InstanceID); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("InstanceId", "body", int64(*m.InstanceID), 0, false); err != nil {
+		return err
+	}
+
+	if err := validate.MaximumInt("InstanceId", "body", int64(*m.InstanceID), 65535, false); err != nil {
 		return err
 	}
 
@@ -56,6 +85,14 @@ func (m *SubscriptionInstance) validateInstanceID(formats strfmt.Registry) error
 func (m *SubscriptionInstance) validateRequestorID(formats strfmt.Registry) error {
 
 	if err := validate.Required("RequestorId", "body", m.RequestorID); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("RequestorId", "body", int64(*m.RequestorID), 0, false); err != nil {
+		return err
+	}
+
+	if err := validate.MaximumInt("RequestorId", "body", int64(*m.RequestorID), 65535, false); err != nil {
 		return err
 	}
 
