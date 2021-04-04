@@ -91,13 +91,13 @@ func registerXapp() {
 	for {
 		time.Sleep(5 * time.Second)
 		if !IsHealthProbeReady() {
-			Logger.Info("xApp is not ready yet, waiting ...")
+			Logger.Info("Application='%s' is not ready yet, waiting ...", viper.GetString("name"))
 			continue
 		}
 
-		Logger.Info("xApp is now up and ready, continue with registration ...")
+		Logger.Debug("Application='%s' is now up and ready, continue with registration ...", viper.GetString("name"))
 		if err := doRegister(); err == nil {
-			Logger.Info("xApp registration done, proceeding with startup ...")
+			Logger.Info("Registration done, proceeding with startup ...")
 			break
 		}
 	}
@@ -243,7 +243,10 @@ func init() {
 	} else {
 		Logger.SetLevel(viper.GetInt("logger.level"))
 	}
-	Logger.SetFormat(0)
+
+	if !viper.IsSet("controls.logger.noFormat") || !viper.GetBool("controls.logger.noFormat") {
+		Logger.SetFormat(0)
+	}
 
 	Resource = NewRouter()
 	Config = Configurator{}

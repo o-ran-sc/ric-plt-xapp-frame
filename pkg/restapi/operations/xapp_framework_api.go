@@ -20,9 +20,6 @@ import (
 	"github.com/go-openapi/swag"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/common"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/policy"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/query"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/xapp"
 )
 
@@ -44,20 +41,17 @@ func NewXappFrameworkAPI(spec *loads.Document) *XappFrameworkAPI {
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
 		XMLProducer:         runtime.XMLProducer(),
+		CommonSubscribeHandler: common.SubscribeHandlerFunc(func(params common.SubscribeParams) middleware.Responder {
+			return middleware.NotImplemented("operation CommonSubscribe has not yet been implemented")
+		}),
 		CommonUnsubscribeHandler: common.UnsubscribeHandlerFunc(func(params common.UnsubscribeParams) middleware.Responder {
 			return middleware.NotImplemented("operation CommonUnsubscribe has not yet been implemented")
 		}),
-		QueryGetAllSubscriptionsHandler: query.GetAllSubscriptionsHandlerFunc(func(params query.GetAllSubscriptionsParams) middleware.Responder {
-			return middleware.NotImplemented("operation QueryGetAllSubscriptions has not yet been implemented")
+		CommonGetAllSubscriptionsHandler: common.GetAllSubscriptionsHandlerFunc(func(params common.GetAllSubscriptionsParams) middleware.Responder {
+			return middleware.NotImplemented("operation CommonGetAllSubscriptions has not yet been implemented")
 		}),
 		XappGetXappConfigListHandler: xapp.GetXappConfigListHandlerFunc(func(params xapp.GetXappConfigListParams) middleware.Responder {
 			return middleware.NotImplemented("operation XappGetXappConfigList has not yet been implemented")
-		}),
-		PolicySubscribePolicyHandler: policy.SubscribePolicyHandlerFunc(func(params policy.SubscribePolicyParams) middleware.Responder {
-			return middleware.NotImplemented("operation PolicySubscribePolicy has not yet been implemented")
-		}),
-		ReportSubscribeReportHandler: report.SubscribeReportHandlerFunc(func(params report.SubscribeReportParams) middleware.Responder {
-			return middleware.NotImplemented("operation ReportSubscribeReport has not yet been implemented")
 		}),
 	}
 }
@@ -92,16 +86,14 @@ type XappFrameworkAPI struct {
 	// XMLProducer registers a producer for a "application/xml" mime type
 	XMLProducer runtime.Producer
 
+	// CommonSubscribeHandler sets the operation handler for the subscribe operation
+	CommonSubscribeHandler common.SubscribeHandler
 	// CommonUnsubscribeHandler sets the operation handler for the unsubscribe operation
 	CommonUnsubscribeHandler common.UnsubscribeHandler
-	// QueryGetAllSubscriptionsHandler sets the operation handler for the get all subscriptions operation
-	QueryGetAllSubscriptionsHandler query.GetAllSubscriptionsHandler
+	// CommonGetAllSubscriptionsHandler sets the operation handler for the get all subscriptions operation
+	CommonGetAllSubscriptionsHandler common.GetAllSubscriptionsHandler
 	// XappGetXappConfigListHandler sets the operation handler for the get xapp config list operation
 	XappGetXappConfigListHandler xapp.GetXappConfigListHandler
-	// PolicySubscribePolicyHandler sets the operation handler for the subscribe policy operation
-	PolicySubscribePolicyHandler policy.SubscribePolicyHandler
-	// ReportSubscribeReportHandler sets the operation handler for the subscribe report operation
-	ReportSubscribeReportHandler report.SubscribeReportHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -169,24 +161,20 @@ func (o *XappFrameworkAPI) Validate() error {
 		unregistered = append(unregistered, "XMLProducer")
 	}
 
+	if o.CommonSubscribeHandler == nil {
+		unregistered = append(unregistered, "common.SubscribeHandler")
+	}
+
 	if o.CommonUnsubscribeHandler == nil {
 		unregistered = append(unregistered, "common.UnsubscribeHandler")
 	}
 
-	if o.QueryGetAllSubscriptionsHandler == nil {
-		unregistered = append(unregistered, "query.GetAllSubscriptionsHandler")
+	if o.CommonGetAllSubscriptionsHandler == nil {
+		unregistered = append(unregistered, "common.GetAllSubscriptionsHandler")
 	}
 
 	if o.XappGetXappConfigListHandler == nil {
 		unregistered = append(unregistered, "xapp.GetXappConfigListHandler")
-	}
-
-	if o.PolicySubscribePolicyHandler == nil {
-		unregistered = append(unregistered, "policy.SubscribePolicyHandler")
-	}
-
-	if o.ReportSubscribeReportHandler == nil {
-		unregistered = append(unregistered, "report.SubscribeReportHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -290,6 +278,11 @@ func (o *XappFrameworkAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/subscriptions"] = common.NewSubscribe(o.context, o.CommonSubscribeHandler)
+
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -298,22 +291,12 @@ func (o *XappFrameworkAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/subscriptions"] = query.NewGetAllSubscriptions(o.context, o.QueryGetAllSubscriptionsHandler)
+	o.handlers["GET"]["/subscriptions"] = common.NewGetAllSubscriptions(o.context, o.CommonGetAllSubscriptionsHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/config"] = xapp.NewGetXappConfigList(o.context, o.XappGetXappConfigListHandler)
-
-	if o.handlers["POST"] == nil {
-		o.handlers["POST"] = make(map[string]http.Handler)
-	}
-	o.handlers["POST"]["/subscriptions/policy"] = policy.NewSubscribePolicy(o.context, o.PolicySubscribePolicyHandler)
-
-	if o.handlers["POST"] == nil {
-		o.handlers["POST"] = make(map[string]http.Handler)
-	}
-	o.handlers["POST"]["/subscriptions/report"] = report.NewSubscribeReport(o.context, o.ReportSubscribeReportHandler)
 
 }
 

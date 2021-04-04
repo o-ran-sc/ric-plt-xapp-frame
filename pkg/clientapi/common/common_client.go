@@ -25,6 +25,34 @@ type Client struct {
 }
 
 /*
+Subscribe subscribes a list of x2 a p event triggers to receive messages sent by r a n
+*/
+func (a *Client) Subscribe(params *SubscribeParams) (*SubscribeCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewSubscribeParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "Subscribe",
+		Method:             "POST",
+		PathPattern:        "/subscriptions",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &SubscribeReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*SubscribeCreated), nil
+
+}
+
+/*
 Unsubscribe unsubscribes x2 a p events from subscription manager
 */
 func (a *Client) Unsubscribe(params *UnsubscribeParams) (*UnsubscribeNoContent, error) {
@@ -49,6 +77,34 @@ func (a *Client) Unsubscribe(params *UnsubscribeParams) (*UnsubscribeNoContent, 
 		return nil, err
 	}
 	return result.(*UnsubscribeNoContent), nil
+
+}
+
+/*
+GetAllSubscriptions returns list of subscriptions
+*/
+func (a *Client) GetAllSubscriptions(params *GetAllSubscriptionsParams) (*GetAllSubscriptionsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetAllSubscriptionsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getAllSubscriptions",
+		Method:             "GET",
+		PathPattern:        "/subscriptions",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{""},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAllSubscriptionsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*GetAllSubscriptionsOK), nil
 
 }
 

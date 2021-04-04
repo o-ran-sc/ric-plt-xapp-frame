@@ -63,7 +63,8 @@
     },
     "controls": {
         "logger": {
-            "level": 3
+            "level": 3,
+            "noFormat": true
         },
         "subscription": {
             "subscriptionActive": true,

@@ -120,12 +120,50 @@ func (r *Router) GetSymptomDataParams(w http.ResponseWriter, req *http.Request) 
 	return params
 }
 
+func (r *Router) CollectDefaultSymptomData(fileName string, data interface{}) string {
+	baseDir := Config.GetString("controls.symptomdata.baseDir")
+	if baseDir == "" {
+		baseDir = "/tmp/xapp/"
+	}
+
+	if err := Util.CreateDir(baseDir); err != nil {
+		Logger.Error("CreateDir failed: %v", err)
+		return ""
+	}
+
+	if metrics, err := r.GetLocalMetrics(GetPortData("http").Port); err == nil {
+		if err := Util.WriteToFile(baseDir+"metrics.json", metrics); err != nil {
+			Logger.Error("writeToFile failed for metrics.json: %v", err)
+		}
+	}
+
+	if data != nil {
+		if b, err := json.MarshalIndent(data, "", "  "); err == nil {
+			Util.WriteToFile(baseDir+fileName, string(b))
+		}
+	}
+
+	rtPath := os.Getenv("RMR_STASH_RT")
+	if rtPath == "" {
+		return baseDir
+	}
+
+	input, err := ioutil.ReadFile(rtPath)
+	if err != nil {
+		Logger.Error("ioutil.ReadFile failed: %v", err)
+		return baseDir
+	}
+
+	Util.WriteToFile(baseDir+"rttable.txt", string(input))
+	return baseDir
+}
+
 func (r *Router) SendSymptomDataJson(w http.ResponseWriter, req *http.Request, data interface{}, n string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", "attachment; filename="+n)
 	w.WriteHeader(http.StatusOK)
 	if data != nil {
-		response, _ := json.Marshal(data)
+		response, _ := json.MarshalIndent(data, "", " ")
 		w.Write(response)
 	}
 }
