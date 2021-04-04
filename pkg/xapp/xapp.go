@@ -95,7 +95,7 @@ func registerXapp() {
 			continue
 		}
 
-		Logger.Info("xApp is now up and ready, continue with registration ...")
+		Logger.Debug("xApp is now up and ready, continue with registration ...")
 		if err := doRegister(); err == nil {
 			Logger.Info("xApp registration done, proceeding with startup ...")
 			break
@@ -243,7 +243,10 @@ func init() {
 	} else {
 		Logger.SetLevel(viper.GetInt("logger.level"))
 	}
-	Logger.SetFormat(0)
+
+	if !viper.IsSet("controls.logger.noFormat") || !viper.GetBool("controls.logger.noFormat") {
+		Logger.SetFormat(0)
+	}
 
 	Resource = NewRouter()
 	Config = Configurator{}
