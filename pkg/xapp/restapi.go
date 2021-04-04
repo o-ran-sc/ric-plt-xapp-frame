@@ -125,7 +125,7 @@ func (r *Router) SendSymptomDataJson(w http.ResponseWriter, req *http.Request, d
 	w.Header().Set("Content-Disposition", "attachment; filename="+n)
 	w.WriteHeader(http.StatusOK)
 	if data != nil {
-		response, _ := json.Marshal(data)
+		response, _ := json.MarshalIndent(data, "", " ")
 		w.Write(response)
 	}
 }

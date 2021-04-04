@@ -12,9 +12,7 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/common"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/policy"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/query"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/report"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/xapp"
 )
 
 // Default r i c subscription HTTP client.
@@ -62,11 +60,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *RICSubscri
 
 	cli.Common = common.New(transport, formats)
 
-	cli.Policy = policy.New(transport, formats)
-
-	cli.Query = query.New(transport, formats)
-
-	cli.Report = report.New(transport, formats)
+	cli.Xapp = xapp.New(transport, formats)
 
 	return cli
 }
@@ -114,11 +108,7 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 type RICSubscription struct {
 	Common *common.Client
 
-	Policy *policy.Client
-
-	Query *query.Client
-
-	Report *report.Client
+	Xapp *xapp.Client
 
 	Transport runtime.ClientTransport
 }
@@ -129,10 +119,6 @@ func (c *RICSubscription) SetTransport(transport runtime.ClientTransport) {
 
 	c.Common.SetTransport(transport)
 
-	c.Policy.SetTransport(transport)
-
-	c.Query.SetTransport(transport)
-
-	c.Report.SetTransport(transport)
+	c.Xapp.SetTransport(transport)
 
 }
