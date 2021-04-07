@@ -26,12 +26,13 @@ var (
 	actionType = "report"
 	subsequestActioType = "continue"
 	timeToWait = "w10ms"
-	port = int64(4560)
-	clientEndpoint = clientmodel.SubscriptionParamsClientEndpoint{ServiceName: "localhost", Port: &port}
 	direction = int64(0)
 	procedureCode = int64(27)
 	typeOfMessage = int64(1)
 	subscriptionId = ""
+	hPort = int64(8080)
+	rPort = int64(4560)
+	clientEndpoint = clientmodel.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort}
 )
 
 // Test cases
@@ -57,11 +58,11 @@ func TestSubscriptionHandling(t *testing.T) {
 		Meid:           &meid,
 		RANFunctionID:  &funId,
 		ClientEndpoint: &clientEndpoint,
-		RequestorID: &reqId,
-		InstanceID: &seqId,
 		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
-			&clientmodel.SubscriptionDetails{
-				EventTriggerList: &clientmodel.EventTriggerDefinition{
+			&clientmodel.SubscriptionDetail{
+				RequestorID: &reqId,
+				InstanceID: &seqId,
+				EventTriggers: &clientmodel.EventTriggerDefinition{
 					OctetString: "1234",
 				},
 				ActionToBeSetupList: clientmodel.ActionsToBeSetup{
@@ -114,7 +115,7 @@ func processSubscriptions(subscriptionId string) {
 	}
 
 	// Notify the client: don't worry about errors ... Notify() will handle retries, etc.
-	Subscription.Notify(resp, models.SubscriptionParamsClientEndpoint{ServiceName: "localhost", Port: &port})
+	Subscription.Notify(resp, models.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort})
 }
 
 func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, error) {
@@ -122,12 +123,13 @@ func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, erro
 
 	assert.Equal(suite, meid, *p.Meid)
 	assert.Equal(suite, funId, *p.RANFunctionID)
-	assert.Equal(suite, clientEndpoint.ServiceName, p.ClientEndpoint.ServiceName)
-	assert.Equal(suite, clientEndpoint.Port, p.ClientEndpoint.Port)
-	assert.Equal(suite, reqId, *p.RequestorID)
-	assert.Equal(suite, seqId, *p.InstanceID)
+	assert.Equal(suite, clientEndpoint.Host, p.ClientEndpoint.Host)
+	assert.Equal(suite, clientEndpoint.HTTPPort, p.ClientEndpoint.HTTPPort)
+	assert.Equal(suite, clientEndpoint.RMRPort, p.ClientEndpoint.RMRPort)
 
-	assert.Equal(suite, "1234", p.SubscriptionDetails[0].EventTriggerList.OctetString)
+	assert.Equal(suite, reqId, *p.SubscriptionDetails[0].RequestorID)
+	assert.Equal(suite, seqId, *p.SubscriptionDetails[0].InstanceID)
+	assert.Equal(suite, "1234", p.SubscriptionDetails[0].EventTriggers.OctetString)
 	assert.Equal(suite, actionId, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionID)
 	assert.Equal(suite, actionType, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionType)
 
@@ -136,7 +138,7 @@ func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, erro
 	assert.Equal(suite, "5678", p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionDefinition.OctetString)
 
 	// Generate a unique subscriptionId
-	subscriptionId = fmt.Sprintf("%s-%s", meid, clientEndpoint.ServiceName)
+	subscriptionId = fmt.Sprintf("%s-%s", meid, clientEndpoint.Host)
 
 	// Process subscriptions on the background
 	go processSubscriptions(subscriptionId)

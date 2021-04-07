@@ -245,25 +245,35 @@ func init() {
         }
       }
     },
-    "SubscriptionDetails": {
+    "SubscriptionDetail": {
       "type": "object",
       "required": [
-        "EventTriggerList",
+        "RequestorId",
+        "InstanceId",
+        "EventTriggers",
         "ActionToBeSetupList"
       ],
       "properties": {
         "ActionToBeSetupList": {
           "$ref": "#/definitions/ActionsToBeSetup"
         },
-        "EventTriggerList": {
+        "EventTriggers": {
           "$ref": "#/definitions/EventTriggerDefinition"
+        },
+        "InstanceId": {
+          "type": "integer",
+          "maximum": 65535
+        },
+        "RequestorId": {
+          "type": "integer",
+          "maximum": 65535
         }
       }
     },
     "SubscriptionDetailsList": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SubscriptionDetails"
+        "$ref": "#/definitions/SubscriptionDetail"
       }
     },
     "SubscriptionInstance": {
@@ -300,8 +310,6 @@ func init() {
       "required": [
         "ClientEndpoint",
         "Meid",
-        "RequestorId",
-        "InstanceId",
         "RANFunctionID",
         "SubscriptionDetails"
       ],
@@ -310,20 +318,21 @@ func init() {
           "description": "xApp service address and port",
           "type": "object",
           "properties": {
-            "Port": {
-              "description": "xApp service address port",
+            "HTTPPort": {
+              "description": "xApp HTTP service address port",
               "type": "integer",
               "maximum": 65535
             },
-            "ServiceName": {
+            "Host": {
               "description": "xApp service address name like 'service-ricxapp-xappname-http.ricxapp'",
               "type": "string"
+            },
+            "RMRPort": {
+              "description": "xApp RMR service address port",
+              "type": "integer",
+              "maximum": 65535
             }
           }
-        },
-        "InstanceId": {
-          "type": "integer",
-          "maximum": 65535
         },
         "Meid": {
           "type": "string"
@@ -331,10 +340,6 @@ func init() {
         "RANFunctionID": {
           "type": "integer",
           "maximum": 4095
-        },
-        "RequestorId": {
-          "type": "integer",
-          "maximum": 65535
         },
         "SubscriptionDetails": {
           "$ref": "#/definitions/SubscriptionDetailsList"
@@ -652,25 +657,37 @@ func init() {
         }
       }
     },
-    "SubscriptionDetails": {
+    "SubscriptionDetail": {
       "type": "object",
       "required": [
-        "EventTriggerList",
+        "RequestorId",
+        "InstanceId",
+        "EventTriggers",
         "ActionToBeSetupList"
       ],
       "properties": {
         "ActionToBeSetupList": {
           "$ref": "#/definitions/ActionsToBeSetup"
         },
-        "EventTriggerList": {
+        "EventTriggers": {
           "$ref": "#/definitions/EventTriggerDefinition"
+        },
+        "InstanceId": {
+          "type": "integer",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "RequestorId": {
+          "type": "integer",
+          "maximum": 65535,
+          "minimum": 0
         }
       }
     },
     "SubscriptionDetailsList": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SubscriptionDetails"
+        "$ref": "#/definitions/SubscriptionDetail"
       }
     },
     "SubscriptionInstance": {
@@ -709,8 +726,6 @@ func init() {
       "required": [
         "ClientEndpoint",
         "Meid",
-        "RequestorId",
-        "InstanceId",
         "RANFunctionID",
         "SubscriptionDetails"
       ],
@@ -719,22 +734,23 @@ func init() {
           "description": "xApp service address and port",
           "type": "object",
           "properties": {
-            "Port": {
-              "description": "xApp service address port",
+            "HTTPPort": {
+              "description": "xApp HTTP service address port",
               "type": "integer",
               "maximum": 65535,
               "minimum": 0
             },
-            "ServiceName": {
+            "Host": {
               "description": "xApp service address name like 'service-ricxapp-xappname-http.ricxapp'",
               "type": "string"
+            },
+            "RMRPort": {
+              "description": "xApp RMR service address port",
+              "type": "integer",
+              "maximum": 65535,
+              "minimum": 0
             }
           }
-        },
-        "InstanceId": {
-          "type": "integer",
-          "maximum": 65535,
-          "minimum": 0
         },
         "Meid": {
           "type": "string"
@@ -742,11 +758,6 @@ func init() {
         "RANFunctionID": {
           "type": "integer",
           "maximum": 4095,
-          "minimum": 0
-        },
-        "RequestorId": {
-          "type": "integer",
-          "maximum": 65535,
           "minimum": 0
         },
         "SubscriptionDetails": {

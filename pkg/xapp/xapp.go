@@ -251,7 +251,7 @@ func init() {
 	Resource = NewRouter()
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
-	Subscription = NewSubscriber(viper.GetString("subscription.host"), viper.GetInt("subscription.timeout"))
+	Subscription = NewSubscriber(viper.GetString("controls.subscription.host"), viper.GetInt("controls.subscription.timeout"))
 	Sdl = NewSDLClient(viper.GetString("controls.db.namespace"))
 	Rnib = NewRNIBClient()
 	Util = NewUtils()

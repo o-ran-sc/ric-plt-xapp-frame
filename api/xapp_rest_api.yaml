@@ -191,46 +191,14 @@ definitions:
     properties:
       OctetString:
         type: string
-  SubscriptionDetails:
+  SubscriptionDetail:
     type: object
     required:
-      - EventTriggerList
-      - ActionToBeSetupList
-    properties:
-      EventTriggerList:
-        $ref: '#/definitions/EventTriggerDefinition'
-      ActionToBeSetupList:
-        $ref: '#/definitions/ActionsToBeSetup'
-  SubscriptionDetailsList:
-    type: array
-    items:
-      $ref: '#/definitions/SubscriptionDetails'
-  SubscriptionParams:
-    type: object
-    required:
-      - ClientEndpoint
-      - Meid
       - RequestorId
       - InstanceId
-      - RANFunctionID
-      - SubscriptionDetails
+      - EventTriggers
+      - ActionToBeSetupList
     properties:
-      ClientEndpoint:
-        type: object
-        description: xApp service address and port
-        properties:
-          ServiceName:
-            description: >-
-              xApp service address name like
-              'service-ricxapp-xappname-http.ricxapp'
-            type: string
-          Port:
-            description: xApp service address port
-            type: integer
-            minimum: 0
-            maximum: 65535
-      Meid:
-        type: string
       RequestorId:
         type: integer
         minimum: 0
@@ -239,6 +207,42 @@ definitions:
         type: integer
         minimum: 0
         maximum: 65535
+      EventTriggers:
+        $ref: '#/definitions/EventTriggerDefinition'
+      ActionToBeSetupList:
+        $ref: '#/definitions/ActionsToBeSetup'
+  SubscriptionDetailsList:
+    type: array
+    items:
+      $ref: '#/definitions/SubscriptionDetail'
+  SubscriptionParams:
+    type: object
+    required:
+      - ClientEndpoint
+      - Meid
+      - RANFunctionID
+      - SubscriptionDetails
+    properties:
+      ClientEndpoint:
+        type: object
+        description: xApp service address and port
+        properties:
+          Host:
+            description: >-
+              xApp service address name like 'service-ricxapp-xappname-http.ricxapp'
+            type: string
+          HTTPPort:
+            description: xApp HTTP service address port
+            type: integer
+            minimum: 0
+            maximum: 65535
+          RMRPort:
+            description: xApp RMR service address port
+            type: integer
+            minimum: 0
+            maximum: 65535
+      Meid:
+        type: string
       RANFunctionID:
         type: integer
         minimum: 0

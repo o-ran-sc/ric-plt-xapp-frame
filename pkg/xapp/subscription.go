@@ -154,7 +154,7 @@ func (r *Subscriber) Notify(resp *models.SubscriptionResponse, ep models.Subscri
 		return err
 	}
 
-	clientUrl := fmt.Sprintf("http://%s:%d%s", ep.ServiceName, ep.Port, r.clientUrl)
+	clientUrl := fmt.Sprintf("http://%s:%d%s", ep.Host, *ep.HTTPPort, r.clientUrl)
 
 	retries := viper.GetInt("subscription.retryCount")
 	if retries == 0 {

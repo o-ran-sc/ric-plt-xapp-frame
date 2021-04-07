@@ -16,7 +16,7 @@ import (
 
 // SubscriptionDetailsList subscription details list
 // swagger:model SubscriptionDetailsList
-type SubscriptionDetailsList []*SubscriptionDetails
+type SubscriptionDetailsList []*SubscriptionDetail
 
 // Validate validates this subscription details list
 func (m SubscriptionDetailsList) Validate(formats strfmt.Registry) error {
