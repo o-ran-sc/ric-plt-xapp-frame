@@ -6,8 +6,11 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -15,18 +18,55 @@ import (
 // swagger:model SubscriptionData
 type SubscriptionData struct {
 
-	// endpoint
-	Endpoint []string `json:"Endpoint"`
+	// client endpoint
+	ClientEndpoint []string `json:"ClientEndpoint"`
 
 	// meid
 	Meid string `json:"Meid,omitempty"`
 
 	// subscription Id
 	SubscriptionID int64 `json:"SubscriptionId,omitempty"`
+
+	// subscription instances
+	SubscriptionInstances []*SubscriptionInstance `json:"SubscriptionInstances"`
 }
 
 // Validate validates this subscription data
 func (m *SubscriptionData) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateSubscriptionInstances(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *SubscriptionData) validateSubscriptionInstances(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.SubscriptionInstances) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.SubscriptionInstances); i++ {
+		if swag.IsZero(m.SubscriptionInstances[i]) { // not required
+			continue
+		}
+
+		if m.SubscriptionInstances[i] != nil {
+			if err := m.SubscriptionInstances[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("SubscriptionInstances" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
