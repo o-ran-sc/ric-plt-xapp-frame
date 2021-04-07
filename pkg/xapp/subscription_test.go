@@ -57,11 +57,11 @@ func TestSubscriptionHandling(t *testing.T) {
 		Meid:           &meid,
 		RANFunctionID:  &funId,
 		ClientEndpoint: &clientEndpoint,
-		RequestorID: &reqId,
-		InstanceID: &seqId,
 		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
-			&clientmodel.SubscriptionDetails{
-				EventTriggerList: &clientmodel.EventTriggerDefinition{
+			&clientmodel.SubscriptionDetail{
+				RequestorID: &reqId,
+				InstanceID: &seqId,
+				EventTriggers: &clientmodel.EventTriggerDefinition{
 					OctetString: "1234",
 				},
 				ActionToBeSetupList: clientmodel.ActionsToBeSetup{
@@ -124,10 +124,10 @@ func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, erro
 	assert.Equal(suite, funId, *p.RANFunctionID)
 	assert.Equal(suite, clientEndpoint.ServiceName, p.ClientEndpoint.ServiceName)
 	assert.Equal(suite, clientEndpoint.Port, p.ClientEndpoint.Port)
-	assert.Equal(suite, reqId, *p.RequestorID)
-	assert.Equal(suite, seqId, *p.InstanceID)
 
-	assert.Equal(suite, "1234", p.SubscriptionDetails[0].EventTriggerList.OctetString)
+	assert.Equal(suite, reqId, *p.SubscriptionDetails[0].RequestorID)
+	assert.Equal(suite, seqId, *p.SubscriptionDetails[0].InstanceID)
+	assert.Equal(suite, "1234", p.SubscriptionDetails[0].EventTriggers.OctetString)
 	assert.Equal(suite, actionId, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionID)
 	assert.Equal(suite, actionType, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionType)
 

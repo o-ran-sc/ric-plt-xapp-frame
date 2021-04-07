@@ -191,27 +191,35 @@ definitions:
     properties:
       OctetString:
         type: string
-  SubscriptionDetails:
+  SubscriptionDetail:
     type: object
     required:
-      - EventTriggerList
+      - RequestorId
+      - InstanceId
+      - EventTriggers
       - ActionToBeSetupList
     properties:
-      EventTriggerList:
+      RequestorId:
+        type: integer
+        minimum: 0
+        maximum: 65535
+      InstanceId:
+        type: integer
+        minimum: 0
+        maximum: 65535
+      EventTriggers:
         $ref: '#/definitions/EventTriggerDefinition'
       ActionToBeSetupList:
         $ref: '#/definitions/ActionsToBeSetup'
   SubscriptionDetailsList:
     type: array
     items:
-      $ref: '#/definitions/SubscriptionDetails'
+      $ref: '#/definitions/SubscriptionDetail'
   SubscriptionParams:
     type: object
     required:
       - ClientEndpoint
       - Meid
-      - RequestorId
-      - InstanceId
       - RANFunctionID
       - SubscriptionDetails
     properties:
@@ -231,14 +239,6 @@ definitions:
             maximum: 65535
       Meid:
         type: string
-      RequestorId:
-        type: integer
-        minimum: 0
-        maximum: 65535
-      InstanceId:
-        type: integer
-        minimum: 0
-        maximum: 65535
       RANFunctionID:
         type: integer
         minimum: 0

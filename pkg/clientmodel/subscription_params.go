@@ -21,12 +21,6 @@ type SubscriptionParams struct {
 	// Required: true
 	ClientEndpoint *SubscriptionParamsClientEndpoint `json:"ClientEndpoint"`
 
-	// instance Id
-	// Required: true
-	// Maximum: 65535
-	// Minimum: 0
-	InstanceID *int64 `json:"InstanceId"`
-
 	// meid
 	// Required: true
 	Meid *string `json:"Meid"`
@@ -36,12 +30,6 @@ type SubscriptionParams struct {
 	// Maximum: 4095
 	// Minimum: 0
 	RANFunctionID *int64 `json:"RANFunctionID"`
-
-	// requestor Id
-	// Required: true
-	// Maximum: 65535
-	// Minimum: 0
-	RequestorID *int64 `json:"RequestorId"`
 
 	// subscription details
 	// Required: true
@@ -56,19 +44,11 @@ func (m *SubscriptionParams) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateInstanceID(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateMeid(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateRANFunctionID(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateRequestorID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -100,23 +80,6 @@ func (m *SubscriptionParams) validateClientEndpoint(formats strfmt.Registry) err
 	return nil
 }
 
-func (m *SubscriptionParams) validateInstanceID(formats strfmt.Registry) error {
-
-	if err := validate.Required("InstanceId", "body", m.InstanceID); err != nil {
-		return err
-	}
-
-	if err := validate.MinimumInt("InstanceId", "body", int64(*m.InstanceID), 0, false); err != nil {
-		return err
-	}
-
-	if err := validate.MaximumInt("InstanceId", "body", int64(*m.InstanceID), 65535, false); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *SubscriptionParams) validateMeid(formats strfmt.Registry) error {
 
 	if err := validate.Required("Meid", "body", m.Meid); err != nil {
@@ -137,23 +100,6 @@ func (m *SubscriptionParams) validateRANFunctionID(formats strfmt.Registry) erro
 	}
 
 	if err := validate.MaximumInt("RANFunctionID", "body", int64(*m.RANFunctionID), 4095, false); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *SubscriptionParams) validateRequestorID(formats strfmt.Registry) error {
-
-	if err := validate.Required("RequestorId", "body", m.RequestorID); err != nil {
-		return err
-	}
-
-	if err := validate.MinimumInt("RequestorId", "body", int64(*m.RequestorID), 0, false); err != nil {
-		return err
-	}
-
-	if err := validate.MaximumInt("RequestorId", "body", int64(*m.RequestorID), 65535, false); err != nil {
 		return err
 	}
 
