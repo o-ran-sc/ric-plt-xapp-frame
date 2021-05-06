@@ -119,6 +119,7 @@ func (r *Subscriber) Listen(createSubscription SubscriptionHandler, getSubscript
 	// Subscription: Subscribe
 	api.CommonSubscribeHandler = common.SubscribeHandlerFunc(
 		func(params common.SubscribeParams) middleware.Responder {
+			Logger.Error("Subscribe: Params=%+v", params.SubscriptionParams)
 			if resp, err := createSubscription(params.SubscriptionParams); err == nil {
 				return common.NewSubscribeCreated().WithPayload(resp)
 			}
@@ -128,6 +129,7 @@ func (r *Subscriber) Listen(createSubscription SubscriptionHandler, getSubscript
 	// Subscription: Unsubscribe
 	api.CommonUnsubscribeHandler = common.UnsubscribeHandlerFunc(
 		func(p common.UnsubscribeParams) middleware.Responder {
+			Logger.Error("Unsubscribe: SubscriptionID=%+v", p.SubscriptionID)
 			if err := delSubscription(p.SubscriptionID); err == nil {
 				return common.NewUnsubscribeNoContent()
 			}

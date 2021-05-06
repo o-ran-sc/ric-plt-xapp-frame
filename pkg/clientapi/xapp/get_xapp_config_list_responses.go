@@ -10,10 +10,9 @@ import (
 	"io"
 
 	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 
-	strfmt "github.com/go-openapi/strfmt"
-
-	clientmodel "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 )
 
 // GetXappConfigListReader is a Reader for the GetXappConfigList structure.
@@ -24,14 +23,12 @@ type GetXappConfigListReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *GetXappConfigListReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-
 	case 200:
 		result := NewGetXappConfigListOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
 		return result, nil
-
 	case 500:
 		result := NewGetXappConfigListInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -59,6 +56,10 @@ type GetXappConfigListOK struct {
 
 func (o *GetXappConfigListOK) Error() string {
 	return fmt.Sprintf("[GET /config][%d] getXappConfigListOK  %+v", 200, o.Payload)
+}
+
+func (o *GetXappConfigListOK) GetPayload() clientmodel.XappConfigList {
+	return o.Payload
 }
 
 func (o *GetXappConfigListOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

@@ -10,10 +10,9 @@ import (
 	"io"
 
 	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 
-	strfmt "github.com/go-openapi/strfmt"
-
-	clientmodel "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 )
 
 // GetAllSubscriptionsReader is a Reader for the GetAllSubscriptions structure.
@@ -24,14 +23,12 @@ type GetAllSubscriptionsReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *GetAllSubscriptionsReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-
 	case 200:
 		result := NewGetAllSubscriptionsOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
 		return result, nil
-
 	case 500:
 		result := NewGetAllSubscriptionsInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -59,6 +56,10 @@ type GetAllSubscriptionsOK struct {
 
 func (o *GetAllSubscriptionsOK) Error() string {
 	return fmt.Sprintf("[GET /subscriptions][%d] getAllSubscriptionsOK  %+v", 200, o.Payload)
+}
+
+func (o *GetAllSubscriptionsOK) GetPayload() clientmodel.SubscriptionList {
+	return o.Payload
 }
 
 func (o *GetAllSubscriptionsOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

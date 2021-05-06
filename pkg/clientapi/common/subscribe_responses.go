@@ -10,10 +10,9 @@ import (
 	"io"
 
 	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 
-	strfmt "github.com/go-openapi/strfmt"
-
-	clientmodel "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 )
 
 // SubscribeReader is a Reader for the Subscribe structure.
@@ -24,21 +23,18 @@ type SubscribeReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *SubscribeReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-
 	case 201:
 		result := NewSubscribeCreated()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
 		return result, nil
-
 	case 400:
 		result := NewSubscribeBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
 		return nil, result
-
 	case 500:
 		result := NewSubscribeInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -66,6 +62,10 @@ type SubscribeCreated struct {
 
 func (o *SubscribeCreated) Error() string {
 	return fmt.Sprintf("[POST /subscriptions][%d] subscribeCreated  %+v", 201, o.Payload)
+}
+
+func (o *SubscribeCreated) GetPayload() *clientmodel.SubscriptionResponse {
+	return o.Payload
 }
 
 func (o *SubscribeCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {

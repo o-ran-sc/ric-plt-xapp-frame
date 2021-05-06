@@ -8,8 +8,8 @@ package xapp
 
 import (
 	"fmt"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -18,21 +18,21 @@ import (
 var (
 	suite *testing.T
 
-	meid = "gnb123456"
-	reqId = int64(1)
-	seqId = int64(1)
-	funId = int64(1)
-	actionId = int64(1)
-	actionType = "report"
+	meid                = "gnb123456"
+	reqId               = int64(1)
+	seqId               = int64(1)
+	funId               = int64(1)
+	actionId            = int64(1)
+	actionType          = "report"
 	subsequestActioType = "continue"
-	timeToWait = "w10ms"
-	direction = int64(0)
-	procedureCode = int64(27)
-	typeOfMessage = int64(1)
-	subscriptionId = ""
-	hPort = int64(8080)
-	rPort = int64(4560)
-	clientEndpoint = clientmodel.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort}
+	timeToWait          = "w10ms"
+	direction           = int64(0)
+	procedureCode       = int64(27)
+	typeOfMessage       = int64(1)
+	subscriptionId      = ""
+	hPort               = int64(8080)
+	rPort               = int64(4560)
+	clientEndpoint      = clientmodel.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort}
 )
 
 // Test cases
@@ -61,20 +61,60 @@ func TestSubscriptionHandling(t *testing.T) {
 		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
 			&clientmodel.SubscriptionDetail{
 				RequestorID: &reqId,
-				InstanceID: &seqId,
+				InstanceID:  &seqId,
 				EventTriggers: &clientmodel.EventTriggerDefinition{
 					OctetString: "1234",
 				},
 				ActionToBeSetupList: clientmodel.ActionsToBeSetup{
 					&clientmodel.ActionToBeSetup{
-						ActionID: &actionId,
+						ActionID:   &actionId,
 						ActionType: &actionType,
 						ActionDefinition: &clientmodel.ActionDefinition{
 							OctetString: "5678",
 						},
 						SubsequentAction: &clientmodel.SubsequentAction{
 							SubsequentActionType: &subsequestActioType,
-							TimeToWait: &timeToWait,
+							TimeToWait:           &timeToWait,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
+		assert.Equal(t, len(resp.SubscriptionInstances), 1)
+		assert.Equal(t, *resp.SubscriptionInstances[0].RequestorID, int64(11))
+		assert.Equal(t, *resp.SubscriptionInstances[0].InstanceID, int64(22))
+	})
+
+	_, err := Subscription.Subscribe(&subscriptionParams)
+	assert.Equal(t, err, nil)
+}
+
+func TestSubscriptionWithClientProvidedIdHandling(t *testing.T) {
+	subscriptionParams := clientmodel.SubscriptionParams{
+		Meid:           &meid,
+		RANFunctionID:  &funId,
+		ClientEndpoint: &clientEndpoint,
+		SubscriptionID: "myxapp",
+		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
+			&clientmodel.SubscriptionDetail{
+				RequestorID: &reqId,
+				InstanceID:  &seqId,
+				EventTriggers: &clientmodel.EventTriggerDefinition{
+					OctetString: "1234",
+				},
+				ActionToBeSetupList: clientmodel.ActionsToBeSetup{
+					&clientmodel.ActionToBeSetup{
+						ActionID:   &actionId,
+						ActionType: &actionType,
+						ActionDefinition: &clientmodel.ActionDefinition{
+							OctetString: "5678",
+						},
+						SubsequentAction: &clientmodel.SubsequentAction{
+							SubsequentActionType: &subsequestActioType,
+							TimeToWait:           &timeToWait,
 						},
 					},
 				},
@@ -109,7 +149,7 @@ func processSubscriptions(subscriptionId string) {
 		SubscriptionInstances: []*models.SubscriptionInstance{
 			{
 				RequestorID: &reqId,
-				InstanceID: &instanceId,
+				InstanceID:  &instanceId,
 			},
 		},
 	}

@@ -349,6 +349,10 @@ func init() {
         },
         "SubscriptionDetails": {
           "$ref": "#/definitions/SubscriptionDetailsList"
+        },
+        "SubscriptionId": {
+          "description": "Optional subscription ID (Submgr allocates if not given)",
+          "type": "string"
         }
       }
     },
@@ -774,6 +778,32 @@ func init() {
         },
         "SubscriptionDetails": {
           "$ref": "#/definitions/SubscriptionDetailsList"
+        },
+        "SubscriptionId": {
+          "description": "Optional subscription ID (Submgr allocates if not given)",
+          "type": "string"
+        }
+      }
+    },
+    "SubscriptionParamsClientEndpoint": {
+      "description": "xApp service address and port",
+      "type": "object",
+      "properties": {
+        "HTTPPort": {
+          "description": "xApp HTTP service address port",
+          "type": "integer",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "Host": {
+          "description": "xApp service address name like 'service-ricxapp-xappname-http.ricxapp'",
+          "type": "string"
+        },
+        "RMRPort": {
+          "description": "xApp RMR service address port",
+          "type": "integer",
+          "maximum": 65535,
+          "minimum": 0
         }
       }
     },

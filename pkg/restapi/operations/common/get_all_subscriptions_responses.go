@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	models "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
 )
 
 // GetAllSubscriptionsOKCode is the HTTP code returned for type GetAllSubscriptionsOK

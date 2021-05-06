@@ -6,14 +6,14 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // SubscriptionParams subscription params
+//
 // swagger:model SubscriptionParams
 type SubscriptionParams struct {
 
@@ -34,6 +34,9 @@ type SubscriptionParams struct {
 	// subscription details
 	// Required: true
 	SubscriptionDetails SubscriptionDetailsList `json:"SubscriptionDetails"`
+
+	// Optional subscription ID (Submgr allocates if not given)
+	SubscriptionID string `json:"SubscriptionId,omitempty"`
 }
 
 // Validate validates this subscription params
@@ -141,6 +144,7 @@ func (m *SubscriptionParams) UnmarshalBinary(b []byte) error {
 }
 
 // SubscriptionParamsClientEndpoint xApp service address and port
+//
 // swagger:model SubscriptionParamsClientEndpoint
 type SubscriptionParamsClientEndpoint struct {
 

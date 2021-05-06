@@ -8,8 +8,7 @@ package clientapi
 import (
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
-
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/xapp"
@@ -57,11 +56,8 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *RICSubscri
 
 	cli := new(RICSubscription)
 	cli.Transport = transport
-
 	cli.Common = common.New(transport, formats)
-
 	cli.Xapp = xapp.New(transport, formats)
-
 	return cli
 }
 
@@ -106,9 +102,9 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // RICSubscription is a client for r i c subscription
 type RICSubscription struct {
-	Common *common.Client
+	Common common.ClientService
 
-	Xapp *xapp.Client
+	Xapp xapp.ClientService
 
 	Transport runtime.ClientTransport
 }
@@ -116,9 +112,6 @@ type RICSubscription struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *RICSubscription) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
-
 	c.Common.SetTransport(transport)
-
 	c.Xapp.SetTransport(transport)
-
 }

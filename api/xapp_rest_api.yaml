@@ -223,6 +223,9 @@ definitions:
       - RANFunctionID
       - SubscriptionDetails
     properties:
+      SubscriptionId:
+        type: string
+        description: Optional subscription ID (Submgr allocates if not given)
       ClientEndpoint:
         type: object
         description: xApp service address and port

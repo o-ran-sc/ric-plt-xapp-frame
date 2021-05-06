@@ -8,13 +8,13 @@ package clientmodel
 import (
 	"strconv"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
 // SubscriptionData subscription data
+//
 // swagger:model SubscriptionData
 type SubscriptionData struct {
 

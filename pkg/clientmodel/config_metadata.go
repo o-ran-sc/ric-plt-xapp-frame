@@ -8,14 +8,14 @@ package clientmodel
 import (
 	"encoding/json"
 
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // ConfigMetadata config metadata
+//
 // swagger:model ConfigMetadata
 type ConfigMetadata struct {
 

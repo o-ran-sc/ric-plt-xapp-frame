@@ -8,7 +8,7 @@ package common
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // GetAllSubscriptionsHandlerFunc turns a function with the right signature into a get all subscriptions handler
