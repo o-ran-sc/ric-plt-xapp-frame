@@ -29,7 +29,7 @@ func init() {
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "version": "0.0.1"
+    "version": "0.0.2"
   },
   "host": "hostname",
   "basePath": "/ric/v1",
@@ -254,8 +254,7 @@ func init() {
     "SubscriptionDetail": {
       "type": "object",
       "required": [
-        "RequestorId",
-        "InstanceId",
+        "XappEventInstanceId",
         "EventTriggers",
         "ActionToBeSetupList"
       ],
@@ -266,11 +265,7 @@ func init() {
         "EventTriggers": {
           "$ref": "#/definitions/EventTriggerDefinition"
         },
-        "InstanceId": {
-          "type": "integer",
-          "maximum": 65535
-        },
-        "RequestorId": {
+        "XappEventInstanceId": {
           "type": "integer",
           "maximum": 65535
         }
@@ -285,20 +280,20 @@ func init() {
     "SubscriptionInstance": {
       "type": "object",
       "required": [
-        "RequestorId",
-        "InstanceId",
+        "XappEventInstanceId",
+        "E2EventInstanceId",
         "ErrorCause"
       ],
       "properties": {
+        "E2EventInstanceId": {
+          "type": "integer",
+          "maximum": 65535
+        },
         "ErrorCause": {
           "description": "Empty string when no error.",
           "type": "string"
         },
-        "InstanceId": {
-          "type": "integer",
-          "maximum": 65535
-        },
-        "RequestorId": {
+        "XappEventInstanceId": {
           "type": "integer",
           "maximum": 65535
         }
@@ -450,7 +445,7 @@ func init() {
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "version": "0.0.1"
+    "version": "0.0.2"
   },
   "host": "hostname",
   "basePath": "/ric/v1",
@@ -676,8 +671,7 @@ func init() {
     "SubscriptionDetail": {
       "type": "object",
       "required": [
-        "RequestorId",
-        "InstanceId",
+        "XappEventInstanceId",
         "EventTriggers",
         "ActionToBeSetupList"
       ],
@@ -688,12 +682,7 @@ func init() {
         "EventTriggers": {
           "$ref": "#/definitions/EventTriggerDefinition"
         },
-        "InstanceId": {
-          "type": "integer",
-          "maximum": 65535,
-          "minimum": 0
-        },
-        "RequestorId": {
+        "XappEventInstanceId": {
           "type": "integer",
           "maximum": 65535,
           "minimum": 0
@@ -709,21 +698,21 @@ func init() {
     "SubscriptionInstance": {
       "type": "object",
       "required": [
-        "RequestorId",
-        "InstanceId",
+        "XappEventInstanceId",
+        "E2EventInstanceId",
         "ErrorCause"
       ],
       "properties": {
-        "ErrorCause": {
-          "description": "Empty string when no error.",
-          "type": "string"
-        },
-        "InstanceId": {
+        "E2EventInstanceId": {
           "type": "integer",
           "maximum": 65535,
           "minimum": 0
         },
-        "RequestorId": {
+        "ErrorCause": {
+          "description": "Empty string when no error.",
+          "type": "string"
+        },
+        "XappEventInstanceId": {
           "type": "integer",
           "maximum": 65535,
           "minimum": 0

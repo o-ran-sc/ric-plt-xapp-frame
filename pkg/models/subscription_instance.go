@@ -17,42 +17,59 @@ import (
 // swagger:model SubscriptionInstance
 type SubscriptionInstance struct {
 
+	// e2 event instance Id
+	// Required: true
+	// Maximum: 65535
+	// Minimum: 0
+	E2EventInstanceID *int64 `json:"E2EventInstanceId"`
+
 	// Empty string when no error.
 	// Required: true
 	ErrorCause *string `json:"ErrorCause"`
 
-	// instance Id
+	// xapp event instance Id
 	// Required: true
 	// Maximum: 65535
 	// Minimum: 0
-	InstanceID *int64 `json:"InstanceId"`
-
-	// requestor Id
-	// Required: true
-	// Maximum: 65535
-	// Minimum: 0
-	RequestorID *int64 `json:"RequestorId"`
+	XappEventInstanceID *int64 `json:"XappEventInstanceId"`
 }
 
 // Validate validates this subscription instance
 func (m *SubscriptionInstance) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateE2EventInstanceID(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateErrorCause(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateInstanceID(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateRequestorID(formats); err != nil {
+	if err := m.validateXappEventInstanceID(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *SubscriptionInstance) validateE2EventInstanceID(formats strfmt.Registry) error {
+
+	if err := validate.Required("E2EventInstanceId", "body", m.E2EventInstanceID); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("E2EventInstanceId", "body", int64(*m.E2EventInstanceID), 0, false); err != nil {
+		return err
+	}
+
+	if err := validate.MaximumInt("E2EventInstanceId", "body", int64(*m.E2EventInstanceID), 65535, false); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -65,34 +82,17 @@ func (m *SubscriptionInstance) validateErrorCause(formats strfmt.Registry) error
 	return nil
 }
 
-func (m *SubscriptionInstance) validateInstanceID(formats strfmt.Registry) error {
+func (m *SubscriptionInstance) validateXappEventInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.Required("InstanceId", "body", m.InstanceID); err != nil {
+	if err := validate.Required("XappEventInstanceId", "body", m.XappEventInstanceID); err != nil {
 		return err
 	}
 
-	if err := validate.MinimumInt("InstanceId", "body", int64(*m.InstanceID), 0, false); err != nil {
+	if err := validate.MinimumInt("XappEventInstanceId", "body", int64(*m.XappEventInstanceID), 0, false); err != nil {
 		return err
 	}
 
-	if err := validate.MaximumInt("InstanceId", "body", int64(*m.InstanceID), 65535, false); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *SubscriptionInstance) validateRequestorID(formats strfmt.Registry) error {
-
-	if err := validate.Required("RequestorId", "body", m.RequestorID); err != nil {
-		return err
-	}
-
-	if err := validate.MinimumInt("RequestorId", "body", int64(*m.RequestorID), 0, false); err != nil {
-		return err
-	}
-
-	if err := validate.MaximumInt("RequestorId", "body", int64(*m.RequestorID), 65535, false); err != nil {
+	if err := validate.MaximumInt("XappEventInstanceId", "body", int64(*m.XappEventInstanceID), 65535, false); err != nil {
 		return err
 	}
 

@@ -25,17 +25,11 @@ type SubscriptionDetail struct {
 	// Required: true
 	EventTriggers *EventTriggerDefinition `json:"EventTriggers"`
 
-	// instance Id
+	// xapp event instance Id
 	// Required: true
 	// Maximum: 65535
 	// Minimum: 0
-	InstanceID *int64 `json:"InstanceId"`
-
-	// requestor Id
-	// Required: true
-	// Maximum: 65535
-	// Minimum: 0
-	RequestorID *int64 `json:"RequestorId"`
+	XappEventInstanceID *int64 `json:"XappEventInstanceId"`
 }
 
 // Validate validates this subscription detail
@@ -50,11 +44,7 @@ func (m *SubscriptionDetail) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateInstanceID(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateRequestorID(formats); err != nil {
+	if err := m.validateXappEventInstanceID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -98,34 +88,17 @@ func (m *SubscriptionDetail) validateEventTriggers(formats strfmt.Registry) erro
 	return nil
 }
 
-func (m *SubscriptionDetail) validateInstanceID(formats strfmt.Registry) error {
+func (m *SubscriptionDetail) validateXappEventInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.Required("InstanceId", "body", m.InstanceID); err != nil {
+	if err := validate.Required("XappEventInstanceId", "body", m.XappEventInstanceID); err != nil {
 		return err
 	}
 
-	if err := validate.MinimumInt("InstanceId", "body", int64(*m.InstanceID), 0, false); err != nil {
+	if err := validate.MinimumInt("XappEventInstanceId", "body", int64(*m.XappEventInstanceID), 0, false); err != nil {
 		return err
 	}
 
-	if err := validate.MaximumInt("InstanceId", "body", int64(*m.InstanceID), 65535, false); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *SubscriptionDetail) validateRequestorID(formats strfmt.Registry) error {
-
-	if err := validate.Required("RequestorId", "body", m.RequestorID); err != nil {
-		return err
-	}
-
-	if err := validate.MinimumInt("RequestorId", "body", int64(*m.RequestorID), 0, false); err != nil {
-		return err
-	}
-
-	if err := validate.MaximumInt("RequestorId", "body", int64(*m.RequestorID), 65535, false); err != nil {
+	if err := validate.MaximumInt("XappEventInstanceId", "body", int64(*m.XappEventInstanceID), 65535, false); err != nil {
 		return err
 	}
 

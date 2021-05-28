@@ -8,19 +8,20 @@ package xapp
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 var (
 	suite *testing.T
 
 	meid                = "gnb123456"
-	reqId               = int64(1)
-	seqId               = int64(1)
+	xappEventInstanceId = int64(1)
+	eventInstanceId     = int64(1)
 	funId               = int64(1)
 	actionId            = int64(1)
 	actionType          = "report"
@@ -55,13 +56,13 @@ func TestSubscriptionQueryHandling(t *testing.T) {
 
 func TestSubscriptionHandling(t *testing.T) {
 	subscriptionParams := clientmodel.SubscriptionParams{
+		SubscriptionID: "",
 		Meid:           &meid,
 		RANFunctionID:  &funId,
 		ClientEndpoint: &clientEndpoint,
 		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
 			&clientmodel.SubscriptionDetail{
-				RequestorID: &reqId,
-				InstanceID:  &seqId,
+				XappEventInstanceID: &eventInstanceId,
 				EventTriggers: &clientmodel.EventTriggerDefinition{
 					OctetString: "1234",
 				},
@@ -84,8 +85,8 @@ func TestSubscriptionHandling(t *testing.T) {
 
 	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
 		assert.Equal(t, len(resp.SubscriptionInstances), 1)
-		assert.Equal(t, *resp.SubscriptionInstances[0].RequestorID, int64(11))
-		assert.Equal(t, *resp.SubscriptionInstances[0].InstanceID, int64(22))
+		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
+		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(22))
 	})
 
 	_, err := Subscription.Subscribe(&subscriptionParams)
@@ -94,14 +95,13 @@ func TestSubscriptionHandling(t *testing.T) {
 
 func TestSubscriptionWithClientProvidedIdHandling(t *testing.T) {
 	subscriptionParams := clientmodel.SubscriptionParams{
+		SubscriptionID: "myxapp",
 		Meid:           &meid,
 		RANFunctionID:  &funId,
 		ClientEndpoint: &clientEndpoint,
-		SubscriptionID: "myxapp",
 		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
 			&clientmodel.SubscriptionDetail{
-				RequestorID: &reqId,
-				InstanceID:  &seqId,
+				XappEventInstanceID: &eventInstanceId,
 				EventTriggers: &clientmodel.EventTriggerDefinition{
 					OctetString: "1234",
 				},
@@ -124,8 +124,8 @@ func TestSubscriptionWithClientProvidedIdHandling(t *testing.T) {
 
 	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
 		assert.Equal(t, len(resp.SubscriptionInstances), 1)
-		assert.Equal(t, *resp.SubscriptionInstances[0].RequestorID, int64(11))
-		assert.Equal(t, *resp.SubscriptionInstances[0].InstanceID, int64(22))
+		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
+		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(22))
 	})
 
 	_, err := Subscription.Subscribe(&subscriptionParams)
@@ -141,15 +141,15 @@ func TestSubscriptionDeleteHandling(t *testing.T) {
 // Helper functions
 func processSubscriptions(subscriptionId string) {
 	// Generate requestorId, instanceId
-	reqId := int64(11)
-	instanceId := int64(22)
+	xappInstanceId := int64(11)
+	e2InstanceId := int64(22)
 
 	resp := &models.SubscriptionResponse{
 		SubscriptionID: &subscriptionId,
 		SubscriptionInstances: []*models.SubscriptionInstance{
 			{
-				RequestorID: &reqId,
-				InstanceID:  &instanceId,
+				XappEventInstanceID: &xappInstanceId,
+				E2EventInstanceID:   &e2InstanceId,
 			},
 		},
 	}
@@ -167,8 +167,7 @@ func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, erro
 	assert.Equal(suite, clientEndpoint.HTTPPort, p.ClientEndpoint.HTTPPort)
 	assert.Equal(suite, clientEndpoint.RMRPort, p.ClientEndpoint.RMRPort)
 
-	assert.Equal(suite, reqId, *p.SubscriptionDetails[0].RequestorID)
-	assert.Equal(suite, seqId, *p.SubscriptionDetails[0].InstanceID)
+	assert.Equal(suite, xappEventInstanceId, *p.SubscriptionDetails[0].XappEventInstanceID)
 	assert.Equal(suite, "1234", p.SubscriptionDetails[0].EventTriggers.OctetString)
 	assert.Equal(suite, actionId, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionID)
 	assert.Equal(suite, actionType, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionType)

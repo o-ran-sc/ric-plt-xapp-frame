@@ -1,7 +1,7 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
   description: This is the initial REST API for RIC subscription
-  version: 0.0.1
+  version: 0.0.2
   title: RIC subscription
   license:
     name: Apache 2.0
@@ -31,7 +31,7 @@ paths:
     get:
       summary: Returns list of subscriptions
       tags:
-        - "common"
+        - common
       operationId: getAllSubscriptions
       produces:
         - application/json
@@ -44,7 +44,7 @@ paths:
           description: Internal error
     post:
       tags:
-        - "common"
+        - common
       operationId: Subscribe
       summary: Subscribe a list of X2AP event triggers to receive messages sent by RAN
       consumes:
@@ -69,7 +69,7 @@ paths:
   '/subscriptions/{subscriptionId}':
     delete:
       tags:
-        - "common"
+        - common
       summary: Unsubscribe X2AP events from Subscription Manager
       operationId: Unsubscribe
       consumes:
@@ -103,9 +103,9 @@ definitions:
         type: string
         description: The type of the content
         enum:
-        - json
-        - xml
-        - other
+          - json
+          - xml
+          - other
   XAppConfig:
     type: object
     required:
@@ -121,7 +121,6 @@ definitions:
     type: array
     items:
       $ref: '#/definitions/XAppConfig'
-
   ActionDefinition:
     type: object
     description: E2SM Octet string. ActionDefinition is an OPTIONAL IE
@@ -194,16 +193,11 @@ definitions:
   SubscriptionDetail:
     type: object
     required:
-      - RequestorId
-      - InstanceId
+      - XappEventInstanceId
       - EventTriggers
       - ActionToBeSetupList
     properties:
-      RequestorId:
-        type: integer
-        minimum: 0
-        maximum: 65535
-      InstanceId:
+      XappEventInstanceId:
         type: integer
         minimum: 0
         maximum: 65535
@@ -224,15 +218,16 @@ definitions:
       - SubscriptionDetails
     properties:
       SubscriptionId:
-        type: string
-        description: Optional subscription ID (Submgr allocates if not given)
+       type: string
+       description: Optional subscription ID (Submgr allocates if not given)
       ClientEndpoint:
         type: object
         description: xApp service address and port
         properties:
           Host:
             description: >-
-              xApp service address name like 'service-ricxapp-xappname-http.ricxapp'
+              xApp service address name like
+              'service-ricxapp-xappname-http.ricxapp'
             type: string
           HTTPPort:
             description: xApp HTTP service address port
@@ -267,15 +262,15 @@ definitions:
   SubscriptionInstance:
     type: object
     required:
-      - RequestorId
-      - InstanceId
+      - XappEventInstanceId
+      - E2EventInstanceId
       - ErrorCause
     properties:
-      RequestorId:
+      XappEventInstanceId:
         type: integer
         minimum: 0
         maximum: 65535
-      InstanceId:
+      E2EventInstanceId:
         type: integer
         minimum: 0
         maximum: 65535
@@ -301,4 +296,4 @@ definitions:
     type: array
     description: A list of subscriptions
     items:
-       $ref: '#/definitions/SubscriptionData'
+      $ref: '#/definitions/SubscriptionData'
