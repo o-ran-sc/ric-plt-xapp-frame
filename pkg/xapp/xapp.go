@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,6 +30,8 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 type ReadyCB func(interface{})
@@ -46,7 +47,6 @@ var (
 	Logger        *Log
 	Config        Configurator
 	Subscription  *Subscriber
-	Alarm         *AlarmClient
 	Util          *Utils
 	readyCb       ReadyCB
 	readyCbParams interface{}
@@ -65,7 +65,6 @@ func SetReadyCB(cb ReadyCB, params interface{}) {
 }
 
 func XappReadyCb(params interface{}) {
-	Alarm = NewAlarmClient(viper.GetString("moId"), viper.GetString("name"))
 	if readyCb != nil {
 		readyCb(readyCbParams)
 	}
