@@ -20,7 +20,7 @@ import (
 type ActionToBeSetup struct {
 
 	// action definition
-	ActionDefinition *ActionDefinition `json:"ActionDefinition,omitempty"`
+	ActionDefinition ActionDefinition `json:"ActionDefinition,omitempty"`
 
 	// action ID
 	// Required: true
@@ -69,13 +69,11 @@ func (m *ActionToBeSetup) validateActionDefinition(formats strfmt.Registry) erro
 		return nil
 	}
 
-	if m.ActionDefinition != nil {
-		if err := m.ActionDefinition.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("ActionDefinition")
-			}
-			return err
+	if err := m.ActionDefinition.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("ActionDefinition")
 		}
+		return err
 	}
 
 	return nil

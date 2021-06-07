@@ -7,37 +7,14 @@ package clientmodel
 
 import (
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 )
 
-// EventTriggerDefinition E2SM Octet string
+// EventTriggerDefinition E2SM byte array
 //
 // swagger:model EventTriggerDefinition
-type EventTriggerDefinition struct {
-
-	// octet string
-	OctetString string `json:"OctetString,omitempty"`
-}
+type EventTriggerDefinition []int64
 
 // Validate validates this event trigger definition
-func (m *EventTriggerDefinition) Validate(formats strfmt.Registry) error {
-	return nil
-}
-
-// MarshalBinary interface implementation
-func (m *EventTriggerDefinition) MarshalBinary() ([]byte, error) {
-	if m == nil {
-		return nil, nil
-	}
-	return swag.WriteJSON(m)
-}
-
-// UnmarshalBinary interface implementation
-func (m *EventTriggerDefinition) UnmarshalBinary(b []byte) error {
-	var res EventTriggerDefinition
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
-	}
-	*m = res
+func (m EventTriggerDefinition) Validate(formats strfmt.Registry) error {
 	return nil
 }

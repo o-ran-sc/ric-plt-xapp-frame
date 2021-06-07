@@ -122,11 +122,10 @@ definitions:
     items:
       $ref: '#/definitions/XAppConfig'
   ActionDefinition:
-    type: object
-    description: E2SM Octet string. ActionDefinition is an OPTIONAL IE
-    properties:
-      OctetString:
-        type: string
+    type: array
+    description: E2SM byte array. ActionDefinition is an OPTIONAL IE
+    items:
+      type: integer
   SubsequentAction:
     description: SubsequentAction is an OPTIONAL IE
     type: object
@@ -185,11 +184,10 @@ definitions:
     items:
       $ref: '#/definitions/ActionToBeSetup'
   EventTriggerDefinition:
-    type: object
-    description: E2SM Octet string
-    properties:
-      OctetString:
-        type: string
+    type: array
+    description: E2SM byte array
+    items:
+      type: integer
   SubscriptionDetail:
     type: object
     required:

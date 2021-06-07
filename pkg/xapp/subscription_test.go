@@ -63,16 +63,12 @@ func TestSubscriptionHandling(t *testing.T) {
 		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
 			&clientmodel.SubscriptionDetail{
 				XappEventInstanceID: &eventInstanceId,
-				EventTriggers: &clientmodel.EventTriggerDefinition{
-					OctetString: "1234",
-				},
+				EventTriggers:       clientmodel.EventTriggerDefinition{00, 0x11, 0x12, 0x13, 0x00, 0x21, 0x22, 0x24, 0x1B, 0x80},
 				ActionToBeSetupList: clientmodel.ActionsToBeSetup{
 					&clientmodel.ActionToBeSetup{
-						ActionID:   &actionId,
-						ActionType: &actionType,
-						ActionDefinition: &clientmodel.ActionDefinition{
-							OctetString: "5678",
-						},
+						ActionID:         &actionId,
+						ActionType:       &actionType,
+						ActionDefinition: clientmodel.ActionDefinition{5, 6, 7, 8},
 						SubsequentAction: &clientmodel.SubsequentAction{
 							SubsequentActionType: &subsequestActioType,
 							TimeToWait:           &timeToWait,
@@ -102,16 +98,12 @@ func TestSubscriptionWithClientProvidedIdHandling(t *testing.T) {
 		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
 			&clientmodel.SubscriptionDetail{
 				XappEventInstanceID: &eventInstanceId,
-				EventTriggers: &clientmodel.EventTriggerDefinition{
-					OctetString: "1234",
-				},
+				EventTriggers:       clientmodel.EventTriggerDefinition{00, 0x11, 0x12, 0x13, 0x00, 0x21, 0x22, 0x24, 0x1B, 0x80},
 				ActionToBeSetupList: clientmodel.ActionsToBeSetup{
 					&clientmodel.ActionToBeSetup{
-						ActionID:   &actionId,
-						ActionType: &actionType,
-						ActionDefinition: &clientmodel.ActionDefinition{
-							OctetString: "5678",
-						},
+						ActionID:         &actionId,
+						ActionType:       &actionType,
+						ActionDefinition: clientmodel.ActionDefinition{5, 6, 7, 8},
 						SubsequentAction: &clientmodel.SubsequentAction{
 							SubsequentActionType: &subsequestActioType,
 							TimeToWait:           &timeToWait,
@@ -168,13 +160,14 @@ func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, erro
 	assert.Equal(suite, clientEndpoint.RMRPort, p.ClientEndpoint.RMRPort)
 
 	assert.Equal(suite, xappEventInstanceId, *p.SubscriptionDetails[0].XappEventInstanceID)
-	assert.Equal(suite, "1234", p.SubscriptionDetails[0].EventTriggers.OctetString)
+	et := []int64{00, 0x11, 0x12, 0x13, 0x00, 0x21, 0x22, 0x24, 0x1B, 0x80}
+	assert.ElementsMatch(suite, et, p.SubscriptionDetails[0].EventTriggers)
 	assert.Equal(suite, actionId, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionID)
 	assert.Equal(suite, actionType, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionType)
 
 	assert.Equal(suite, subsequestActioType, *p.SubscriptionDetails[0].ActionToBeSetupList[0].SubsequentAction.SubsequentActionType)
 	assert.Equal(suite, timeToWait, *p.SubscriptionDetails[0].ActionToBeSetupList[0].SubsequentAction.TimeToWait)
-	assert.Equal(suite, "5678", p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionDefinition.OctetString)
+	assert.ElementsMatch(suite, []int64{5, 6, 7, 8}, p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionDefinition)
 
 	// Generate a unique subscriptionId
 	subscriptionId = fmt.Sprintf("%s-%s", meid, clientEndpoint.Host)

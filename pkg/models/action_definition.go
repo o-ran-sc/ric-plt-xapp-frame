@@ -7,37 +7,14 @@ package models
 
 import (
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 )
 
-// ActionDefinition E2SM Octet string. ActionDefinition is an OPTIONAL IE
+// ActionDefinition E2SM byte array. ActionDefinition is an OPTIONAL IE
 //
 // swagger:model ActionDefinition
-type ActionDefinition struct {
-
-	// octet string
-	OctetString string `json:"OctetString,omitempty"`
-}
+type ActionDefinition []int64
 
 // Validate validates this action definition
-func (m *ActionDefinition) Validate(formats strfmt.Registry) error {
-	return nil
-}
-
-// MarshalBinary interface implementation
-func (m *ActionDefinition) MarshalBinary() ([]byte, error) {
-	if m == nil {
-		return nil, nil
-	}
-	return swag.WriteJSON(m)
-}
-
-// UnmarshalBinary interface implementation
-func (m *ActionDefinition) UnmarshalBinary(b []byte) error {
-	var res ActionDefinition
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
-	}
-	*m = res
+func (m ActionDefinition) Validate(formats strfmt.Registry) error {
 	return nil
 }

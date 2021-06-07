@@ -156,12 +156,10 @@ func init() {
   },
   "definitions": {
     "ActionDefinition": {
-      "description": "E2SM Octet string. ActionDefinition is an OPTIONAL IE",
-      "type": "object",
-      "properties": {
-        "OctetString": {
-          "type": "string"
-        }
+      "description": "E2SM byte array. ActionDefinition is an OPTIONAL IE",
+      "type": "array",
+      "items": {
+        "type": "integer"
       }
     },
     "ActionToBeSetup": {
@@ -220,12 +218,10 @@ func init() {
       }
     },
     "EventTriggerDefinition": {
-      "description": "E2SM Octet string",
-      "type": "object",
-      "properties": {
-        "OctetString": {
-          "type": "string"
-        }
+      "description": "E2SM byte array",
+      "type": "array",
+      "items": {
+        "type": "integer"
       }
     },
     "SubscriptionData": {
@@ -572,12 +568,10 @@ func init() {
   },
   "definitions": {
     "ActionDefinition": {
-      "description": "E2SM Octet string. ActionDefinition is an OPTIONAL IE",
-      "type": "object",
-      "properties": {
-        "OctetString": {
-          "type": "string"
-        }
+      "description": "E2SM byte array. ActionDefinition is an OPTIONAL IE",
+      "type": "array",
+      "items": {
+        "type": "integer"
       }
     },
     "ActionToBeSetup": {
@@ -637,12 +631,10 @@ func init() {
       }
     },
     "EventTriggerDefinition": {
-      "description": "E2SM Octet string",
-      "type": "object",
-      "properties": {
-        "OctetString": {
-          "type": "string"
-        }
+      "description": "E2SM byte array",
+      "type": "array",
+      "items": {
+        "type": "integer"
       }
     },
     "SubscriptionData": {

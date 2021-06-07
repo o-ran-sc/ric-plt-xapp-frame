@@ -23,7 +23,7 @@ type SubscriptionDetail struct {
 
 	// event triggers
 	// Required: true
-	EventTriggers *EventTriggerDefinition `json:"EventTriggers"`
+	EventTriggers EventTriggerDefinition `json:"EventTriggers"`
 
 	// xapp event instance Id
 	// Required: true
@@ -76,13 +76,11 @@ func (m *SubscriptionDetail) validateEventTriggers(formats strfmt.Registry) erro
 		return err
 	}
 
-	if m.EventTriggers != nil {
-		if err := m.EventTriggers.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("EventTriggers")
-			}
-			return err
+	if err := m.EventTriggers.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("EventTriggers")
 		}
+		return err
 	}
 
 	return nil
