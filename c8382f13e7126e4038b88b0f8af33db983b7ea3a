@@ -16,6 +16,23 @@
       "message": "recheck",
       "revId": "c8382f13e7126e4038b88b0f8af33db983b7ea3a",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "77f4b1f7_42a55bd8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000002
+      },
+      "writtenOn": "2021-06-10T07:00:34Z",
+      "side": 1,
+      "message": "For review: SDL version bump to v0.7.0 and \"go mod tidy\" command made updates for the go.mod and go.sum files.",
+      "revId": "c8382f13e7126e4038b88b0f8af33db983b7ea3a",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
