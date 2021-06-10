@@ -12,9 +12,7 @@ import (
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/common"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/policy"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/query"
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/report"
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/xapp"
 )
 
 //go:generate swagger generate server --target ../../pkg --name XappFramework --spec ../../api/xapp_rest_api.yaml --exclude-main
@@ -37,24 +35,26 @@ func configureAPI(api *operations.XappFrameworkAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
+	api.XMLProducer = runtime.XMLProducer()
+
+	if api.CommonSubscribeHandler == nil {
+		api.CommonSubscribeHandler = common.SubscribeHandlerFunc(func(params common.SubscribeParams) middleware.Responder {
+			return middleware.NotImplemented("operation common.Subscribe has not yet been implemented")
+		})
+	}
 	if api.CommonUnsubscribeHandler == nil {
 		api.CommonUnsubscribeHandler = common.UnsubscribeHandlerFunc(func(params common.UnsubscribeParams) middleware.Responder {
 			return middleware.NotImplemented("operation common.Unsubscribe has not yet been implemented")
 		})
 	}
-	if api.QueryGetAllSubscriptionsHandler == nil {
-		api.QueryGetAllSubscriptionsHandler = query.GetAllSubscriptionsHandlerFunc(func(params query.GetAllSubscriptionsParams) middleware.Responder {
-			return middleware.NotImplemented("operation query.GetAllSubscriptions has not yet been implemented")
+	if api.CommonGetAllSubscriptionsHandler == nil {
+		api.CommonGetAllSubscriptionsHandler = common.GetAllSubscriptionsHandlerFunc(func(params common.GetAllSubscriptionsParams) middleware.Responder {
+			return middleware.NotImplemented("operation common.GetAllSubscriptions has not yet been implemented")
 		})
 	}
-	if api.PolicySubscribePolicyHandler == nil {
-		api.PolicySubscribePolicyHandler = policy.SubscribePolicyHandlerFunc(func(params policy.SubscribePolicyParams) middleware.Responder {
-			return middleware.NotImplemented("operation policy.SubscribePolicy has not yet been implemented")
-		})
-	}
-	if api.ReportSubscribeReportHandler == nil {
-		api.ReportSubscribeReportHandler = report.SubscribeReportHandlerFunc(func(params report.SubscribeReportParams) middleware.Responder {
-			return middleware.NotImplemented("operation report.SubscribeReport has not yet been implemented")
+	if api.XappGetXappConfigListHandler == nil {
+		api.XappGetXappConfigListHandler = xapp.GetXappConfigListHandlerFunc(func(params xapp.GetXappConfigListParams) middleware.Responder {
+			return middleware.NotImplemented("operation xapp.GetXappConfigList has not yet been implemented")
 		})
 	}
 

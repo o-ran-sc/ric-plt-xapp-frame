@@ -8,82 +8,169 @@ package xapp
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientmodel"
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
-var suite *testing.T
+var (
+	suite *testing.T
 
-var meid = "gnb123456"
-var funId = int64(1)
-var clientEndpoint = "localhost:4560"
-var direction = int64(0)
-var procedureCode = int64(27)
-var typeOfMessage = int64(1)
+	meid                = "gnb123456"
+	xappEventInstanceId = int64(1)
+	eventInstanceId     = int64(1)
+	funId               = int64(1)
+	actionId            = int64(1)
+	actionType          = "report"
+	subsequestActioType = "continue"
+	timeToWait          = "w10ms"
+	direction           = int64(0)
+	procedureCode       = int64(27)
+	typeOfMessage       = int64(1)
+	subscriptionId      = ""
+	hPort               = int64(8080)
+	rPort               = int64(4560)
+	clientEndpoint      = clientmodel.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort}
+)
 
-var reportParams = clientmodel.ReportParams{
-	Meid:           meid,
-	RANFunctionID:  &funId,
-	ClientEndpoint: &clientEndpoint,
-	EventTriggers: clientmodel.EventTriggerList{
-		&clientmodel.EventTrigger{
-			InterfaceDirection: direction,
-			ProcedureCode:      procedureCode,
-			TypeOfMessage:      typeOfMessage,
-		},
-	},
+// Test cases
+func TestSetup(t *testing.T) {
+	suite = t
+
+	// Start the server to simulate SubManager
+	go Subscription.Listen(subscriptionHandler, queryHandler, deleteHandler)
+	time.Sleep(time.Duration(2) * time.Second)
 }
 
-var policyParams = clientmodel.PolicyParams{
-	Meid:           &meid,
-	RANFunctionID:  &funId,
-	ClientEndpoint: &clientEndpoint,
-	EventTriggers: clientmodel.EventTriggerList{
-		&clientmodel.EventTrigger{
-			InterfaceDirection: direction,
-			ProcedureCode:      procedureCode,
-			TypeOfMessage:      typeOfMessage,
-		},
-	},
-	PolicyActionDefinitions: &clientmodel.PolicyActionDefinition{},
+func TestSubscriptionQueryHandling(t *testing.T) {
+	resp, err := Subscription.QuerySubscriptions()
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, resp[0].SubscriptionID, int64(11))
+	assert.Equal(t, resp[0].Meid, "Test-Gnb")
+	assert.Equal(t, resp[0].ClientEndpoint, []string{"127.0.0.1:4056"})
 }
 
+func TestSubscriptionHandling(t *testing.T) {
+	subscriptionParams := clientmodel.SubscriptionParams{
+		SubscriptionID: "",
+		Meid:           &meid,
+		RANFunctionID:  &funId,
+		ClientEndpoint: &clientEndpoint,
+		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
+			&clientmodel.SubscriptionDetail{
+				XappEventInstanceID: &eventInstanceId,
+				EventTriggers:       clientmodel.EventTriggerDefinition{00, 0x11, 0x12, 0x13, 0x00, 0x21, 0x22, 0x24, 0x1B, 0x80},
+				ActionToBeSetupList: clientmodel.ActionsToBeSetup{
+					&clientmodel.ActionToBeSetup{
+						ActionID:         &actionId,
+						ActionType:       &actionType,
+						ActionDefinition: clientmodel.ActionDefinition{5, 6, 7, 8},
+						SubsequentAction: &clientmodel.SubsequentAction{
+							SubsequentActionType: &subsequestActioType,
+							TimeToWait:           &timeToWait,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
+		assert.Equal(t, len(resp.SubscriptionInstances), 1)
+		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
+		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(22))
+	})
+
+	_, err := Subscription.Subscribe(&subscriptionParams)
+	assert.Equal(t, err, nil)
+}
+
+func TestSubscriptionWithClientProvidedIdHandling(t *testing.T) {
+	subscriptionParams := clientmodel.SubscriptionParams{
+		SubscriptionID: "myxapp",
+		Meid:           &meid,
+		RANFunctionID:  &funId,
+		ClientEndpoint: &clientEndpoint,
+		SubscriptionDetails: clientmodel.SubscriptionDetailsList{
+			&clientmodel.SubscriptionDetail{
+				XappEventInstanceID: &eventInstanceId,
+				EventTriggers:       clientmodel.EventTriggerDefinition{00, 0x11, 0x12, 0x13, 0x00, 0x21, 0x22, 0x24, 0x1B, 0x80},
+				ActionToBeSetupList: clientmodel.ActionsToBeSetup{
+					&clientmodel.ActionToBeSetup{
+						ActionID:         &actionId,
+						ActionType:       &actionType,
+						ActionDefinition: clientmodel.ActionDefinition{5, 6, 7, 8},
+						SubsequentAction: &clientmodel.SubsequentAction{
+							SubsequentActionType: &subsequestActioType,
+							TimeToWait:           &timeToWait,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
+		assert.Equal(t, len(resp.SubscriptionInstances), 1)
+		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
+		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(22))
+	})
+
+	_, err := Subscription.Subscribe(&subscriptionParams)
+	assert.Equal(t, err, nil)
+}
+
+func TestSubscriptionDeleteHandling(t *testing.T) {
+	err := Subscription.Unsubscribe(subscriptionId)
+	fmt.Println(err)
+	assert.Equal(t, err, nil)
+}
+
+// Helper functions
 func processSubscriptions(subscriptionId string) {
 	// Generate requestorId, instanceId
-	reqId := int64(11)
-	instanceId := int64(22)
+	xappInstanceId := int64(11)
+	e2InstanceId := int64(22)
 
 	resp := &models.SubscriptionResponse{
 		SubscriptionID: &subscriptionId,
 		SubscriptionInstances: []*models.SubscriptionInstance{
-			{RequestorID: &reqId, InstanceID: &instanceId},
+			{
+				XappEventInstanceID: &xappInstanceId,
+				E2EventInstanceID:   &e2InstanceId,
+			},
 		},
 	}
 
 	// Notify the client: don't worry about errors ... Notify() will handle retries, etc.
-	Subscription.Notify(resp, clientEndpoint)
+	Subscription.Notify(resp, models.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort})
 }
 
-func subscriptionHandler(stype models.SubscriptionType, params interface{}) (*models.SubscriptionResponse, error) {
-	switch stype {
-	case models.SubscriptionTypeReport:
-		p := params.(*models.ReportParams)
-		assert.Equal(suite, meid, p.Meid)
-		assert.Equal(suite, funId, *p.RANFunctionID)
-		assert.Equal(suite, clientEndpoint, *p.ClientEndpoint)
-		assert.Equal(suite, direction, p.EventTriggers[0].InterfaceDirection)
-		assert.Equal(suite, procedureCode, p.EventTriggers[0].ProcedureCode)
-		assert.Equal(suite, typeOfMessage, p.EventTriggers[0].TypeOfMessage)
-	case models.SubscriptionTypePolicy:
-		p := params.(*models.PolicyParams)
-		assert.Equal(suite, clientEndpoint, *p.ClientEndpoint)
-	}
+func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, error) {
+	p := params.(*models.SubscriptionParams)
+
+	assert.Equal(suite, meid, *p.Meid)
+	assert.Equal(suite, funId, *p.RANFunctionID)
+	assert.Equal(suite, clientEndpoint.Host, p.ClientEndpoint.Host)
+	assert.Equal(suite, clientEndpoint.HTTPPort, p.ClientEndpoint.HTTPPort)
+	assert.Equal(suite, clientEndpoint.RMRPort, p.ClientEndpoint.RMRPort)
+
+	assert.Equal(suite, xappEventInstanceId, *p.SubscriptionDetails[0].XappEventInstanceID)
+	et := []int64{00, 0x11, 0x12, 0x13, 0x00, 0x21, 0x22, 0x24, 0x1B, 0x80}
+	assert.ElementsMatch(suite, et, p.SubscriptionDetails[0].EventTriggers)
+	assert.Equal(suite, actionId, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionID)
+	assert.Equal(suite, actionType, *p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionType)
+
+	assert.Equal(suite, subsequestActioType, *p.SubscriptionDetails[0].ActionToBeSetupList[0].SubsequentAction.SubsequentActionType)
+	assert.Equal(suite, timeToWait, *p.SubscriptionDetails[0].ActionToBeSetupList[0].SubsequentAction.TimeToWait)
+	assert.ElementsMatch(suite, []int64{5, 6, 7, 8}, p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionDefinition)
 
 	// Generate a unique subscriptionId
-	subscriptionId := fmt.Sprintf("%s-%s", meid, clientEndpoint)
+	subscriptionId = fmt.Sprintf("%s-%s", meid, clientEndpoint.Host)
 
 	// Process subscriptions on the background
 	go processSubscriptions(subscriptionId)
@@ -99,60 +186,13 @@ func queryHandler() (models.SubscriptionList, error) {
 		&models.SubscriptionData{
 			SubscriptionID: 11,
 			Meid:           "Test-Gnb",
-			Endpoint:       []string{"127.0.0.1:4056"},
+			ClientEndpoint: []string{"127.0.0.1:4056"},
 		},
 	}
-
 	return resp, nil
 }
 
 func deleteHandler(ep string) error {
-	assert.Equal(suite, clientEndpoint, ep)
-
+	assert.Equal(suite, subscriptionId, ep)
 	return nil
-}
-
-func TestSetup(t *testing.T) {
-	suite = t
-
-	// Start the server to simulate SubManager
-	go Subscription.Listen(subscriptionHandler, queryHandler, deleteHandler)
-	time.Sleep(time.Duration(2) * time.Second)
-}
-
-func TestSubscriptionQueryHandling(t *testing.T) {
-	resp, err := Subscription.QuerySubscriptions()
-
-	assert.Equal(t, err, nil)
-	assert.Equal(t, resp[0].SubscriptionID, int64(11))
-	assert.Equal(t, resp[0].Meid, "Test-Gnb")
-	assert.Equal(t, resp[0].Endpoint, []string{"127.0.0.1:4056"})
-}
-
-func TestSubscriptionReportHandling(t *testing.T) {
-	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
-		assert.Equal(t, len(resp.SubscriptionInstances), 1)
-		assert.Equal(t, *resp.SubscriptionInstances[0].RequestorID, int64(11))
-		assert.Equal(t, *resp.SubscriptionInstances[0].InstanceID, int64(22))
-	})
-
-	_, err := Subscription.SubscribeReport(&reportParams)
-	assert.Equal(t, err, nil)
-}
-
-func TestSubscriptionPolicytHandling(t *testing.T) {
-	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
-		assert.Equal(t, len(resp.SubscriptionInstances), 1)
-		assert.Equal(t, *resp.SubscriptionInstances[0].RequestorID, int64(11))
-		assert.Equal(t, *resp.SubscriptionInstances[0].InstanceID, int64(22))
-	})
-
-	_, err := Subscription.SubscribePolicy(&policyParams)
-	assert.Equal(t, err, nil)
-}
-
-func TestSubscriptionDeleteHandling(t *testing.T) {
-	err := Subscription.UnSubscribe(clientEndpoint)
-
-	assert.Equal(t, err, nil)
 }

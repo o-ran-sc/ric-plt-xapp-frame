@@ -6,13 +6,14 @@ package common
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/runtime"
+	"fmt"
 
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 )
 
 // New creates a new common API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
+func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -24,8 +25,53 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
+// ClientService is the interface for Client methods
+type ClientService interface {
+	Subscribe(params *SubscribeParams) (*SubscribeCreated, error)
+
+	Unsubscribe(params *UnsubscribeParams) (*UnsubscribeNoContent, error)
+
+	GetAllSubscriptions(params *GetAllSubscriptionsParams) (*GetAllSubscriptionsOK, error)
+
+	SetTransport(transport runtime.ClientTransport)
+}
+
 /*
-Unsubscribe unsubscribes x2 a p events from subscription manager
+  Subscribe subscribes a list of x2 a p event triggers to receive messages sent by r a n
+*/
+func (a *Client) Subscribe(params *SubscribeParams) (*SubscribeCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewSubscribeParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "Subscribe",
+		Method:             "POST",
+		PathPattern:        "/subscriptions",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &SubscribeReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*SubscribeCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for Subscribe: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  Unsubscribe unsubscribes x2 a p events from subscription manager
 */
 func (a *Client) Unsubscribe(params *UnsubscribeParams) (*UnsubscribeNoContent, error) {
 	// TODO: Validate the params before sending
@@ -48,8 +94,48 @@ func (a *Client) Unsubscribe(params *UnsubscribeParams) (*UnsubscribeNoContent, 
 	if err != nil {
 		return nil, err
 	}
-	return result.(*UnsubscribeNoContent), nil
+	success, ok := result.(*UnsubscribeNoContent)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for Unsubscribe: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
 
+/*
+  GetAllSubscriptions returns list of subscriptions
+*/
+func (a *Client) GetAllSubscriptions(params *GetAllSubscriptionsParams) (*GetAllSubscriptionsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetAllSubscriptionsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getAllSubscriptions",
+		Method:             "GET",
+		PathPattern:        "/subscriptions",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAllSubscriptionsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetAllSubscriptionsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getAllSubscriptions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client
