@@ -22,11 +22,12 @@ package xapp
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
 )
