@@ -21,15 +21,16 @@ package xapp
 
 import (
 	"bytes"
-	"github.com/gorilla/mux"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 //var _ = func() bool {
@@ -46,6 +47,8 @@ func (m Consumer) Consume(params *RMRParams) (err error) {
 
 // Test cases
 func TestMain(m *testing.M) {
+	os.Setenv("SERVICE_RICXAPP_UEEC_HTTP_PORT", "tcp://localhost:8080")
+	os.Setenv("SERVICE_RICXAPP_UEEC_RMR_PORT", "tcp://localhost:4561")
 	go RunWithParams(Consumer{}, viper.GetBool("controls.waitForSdl"))
 	time.Sleep(time.Duration(5) * time.Second)
 	code := m.Run()
@@ -377,6 +380,7 @@ func TestInjectStatusCb(t *testing.T) {
 		return true
 	}
 	Resource.InjectStatusCb(f)
+	Resource.CheckStatus()
 }
 
 func TestSdlInterfaces(t *testing.T) {
@@ -442,11 +446,24 @@ func TestDeregisterXapp(t *testing.T) {
 
 func TestMisc(t *testing.T) {
 	Logger.Info("CASE: TestMisc")
-
+	var cb = func() {}
 	IsReady()
 	SetReadyCB(func(interface{}) {}, "")
 	XappReadyCb("")
-	SetShutdownCB(func() {})
+	SetShutdownCB(cb)
+	XappShutdownCb()
+	getService("ueec", SERVICE_HTTP)
+
+	Logger.SetFormat(1)
+	Logger.SetLevel(0)
+	Logger.Error("...")
+	Logger.Warn("...")
+	Logger.Info("...")
+
+	mb := Rmr.Allocate(100)
+	Rmr.ReAllocate(mb, 200)
+
+	NewMetrics("", "", Resource.router)
 }
 
 func TestTeardown(t *testing.T) {
@@ -455,6 +472,10 @@ func TestTeardown(t *testing.T) {
 	Sdl.Clear()
 	Sdl.IsReady()
 	Sdl.GetStat()
+	Rnib.GetNodebByGlobalNbId(1, &RNIBGlobalNbId{})
+	Rnib.SaveNodeb(&RNIBNbIdentity{}, &RNIBNodebInfo{})
+	go Sdl.TestConnection()
+	time.Sleep(time.Duration(2) * time.Second)
 }
 
 // Helper functions

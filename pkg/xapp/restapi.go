@@ -104,8 +104,12 @@ func (r *Router) CheckStatus() (status bool) {
 }
 
 func (r *Router) GetSymptomDataParams(w http.ResponseWriter, req *http.Request) SymptomDataParams {
+	Logger.Info("GetSymptomDataParams ...")
+
 	params := SymptomDataParams{}
 	queryParams := req.URL.Query()
+
+	Logger.Info("GetSymptomDataParams: %+v", queryParams)
 
 	for p := range queryParams {
 		if p == "timeout" {

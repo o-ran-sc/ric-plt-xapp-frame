@@ -67,10 +67,11 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"github.com/spf13/viper"
 	"strings"
 	"time"
 	"unsafe"
+
+	"github.com/spf13/viper"
 )
 
 var RMRCounterOpts = []CounterOpts{
@@ -279,19 +280,21 @@ func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
 		return
 	}
 
-	// Special case for multiple consumers
-	for _, c := range m.consumers {
-		cptr := unsafe.Pointer(rxBuffer.payload)
-		params.Payload = C.GoBytes(cptr, C.int(rxBuffer.len))
-		params.PayloadLen = int(rxBuffer.len)
-		params.Mtype = int(rxBuffer.mtype)
-		params.SubId = int(rxBuffer.sub_id)
+	/*
+		// Special case for multiple consumers
+		for _, c := range m.consumers {
+			cptr := unsafe.Pointer(rxBuffer.payload)
+			params.Payload = C.GoBytes(cptr, C.int(rxBuffer.len))
+			params.PayloadLen = int(rxBuffer.len)
+			params.Mtype = int(rxBuffer.mtype)
+			params.SubId = int(rxBuffer.sub_id)
 
-		err := c.Consume(params)
-		if err != nil {
-			Logger.Warn("rmrClient: Consumer returned error: %v", err)
+			err := c.Consume(params)
+			if err != nil {
+				Logger.Warn("rmrClient: Consumer returned error: %v", err)
+			}
 		}
-	}
+	*/
 }
 
 func (m *RMRClient) Allocate(size int) *C.rmr_mbuf_t {

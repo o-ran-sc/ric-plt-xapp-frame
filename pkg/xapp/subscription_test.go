@@ -7,7 +7,10 @@
 package xapp
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -130,7 +133,29 @@ func TestSubscriptionDeleteHandling(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 
+func TestResponseHandler(t *testing.T) {
+	Subscription.SetResponseCB(SubscriptionRespHandler)
+
+	payload := []byte(`{"SubscriptionInstances":[{"tXappEventInstanceID": 1}]`)
+	req, err := http.NewRequest("POST", "/ric/v1/subscriptions/response", bytes.NewBuffer(payload))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(Subscription.ResponseHandler)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+	time.Sleep(time.Duration(2) * time.Second)
+}
+
 // Helper functions
+func SubscriptionRespHandler(resp *clientmodel.SubscriptionResponse) {
+}
+
 func processSubscriptions(subscriptionId string) {
 	// Generate requestorId, instanceId
 	xappInstanceId := int64(11)

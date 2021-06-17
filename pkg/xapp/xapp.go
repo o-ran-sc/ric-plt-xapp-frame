@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,6 +30,8 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 type ReadyCB func(interface{})
@@ -111,6 +112,8 @@ func getService(host, service string) string {
 
 	svc := fmt.Sprintf(service, strings.ToUpper(appnamespace), strings.ToUpper(host))
 	url := strings.Split(os.Getenv(strings.Replace(svc, "-", "_", -1)), "//")
+
+	Logger.Info("getService: %+v %+v", svc, url)
 	if len(url) > 1 {
 		return url[1]
 	}

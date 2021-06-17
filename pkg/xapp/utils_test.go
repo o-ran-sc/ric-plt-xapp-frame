@@ -20,7 +20,9 @@
 package xapp
 
 import (
+	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,58 +38,66 @@ func TestNewUtils(t *testing.T) {
 	utils.FetchFiles("./", []string{"go.mod"})
 	utils.FetchFiles("./", []string{"go.mod"})
 
+	tmpFile, err := ioutil.TempFile("", "symptom")
+	assert.Equal(t, err, nil)
+	defer os.Remove(tmpFile.Name())
+
+	err = utils.ZipFiles(tmpFile, "/tmp/abcd", []string{"/tmp/abcd/file.txt"})
+	assert.Equal(t, err, nil)
+
 	utils.DeleteFile("/tmp/abcd")
 }
 
 func TestSymptomdata(t *testing.T) {
+	os.Setenv("RMR_STASH_RT", "config/uta_rtg.rt.stash.inc")
 	assert.Equal(t, Resource.CollectDefaultSymptomData("abcd.tgz", "data"), "/tmp/xapp/")
 }
 
 func TestSymptomdataCollection(t *testing.T) {
-	var handler = func(w http.ResponseWriter, r *http.Request) {
+	var handler1 = func(w http.ResponseWriter, r *http.Request) {
 		Resource.SendSymptomDataJson(w, r, "data", "aaaa")
 		Resource.SendSymptomDataFile(w, r, "./config", "symptomdata.gz")
 	}
 
-	Resource.InjectQueryRoute("/ric/v1/user", handler, "GET", "foo", "bar", "id", "mykey")
+	Resource.InjectQueryRoute("/ric/v1/user1", handler1, "GET", "foo", "bar", "id", "mykey")
 
-	req, _ := http.NewRequest("GET", "/ric/v1/user?foo=bar&id=mykey", nil)
+	req, _ := http.NewRequest("GET", "/ric/v1/user1?foo=bar&id=mykey", nil)
 	resp := executeRequest(req, nil)
 	checkResponseCode(t, http.StatusOK, resp.Code)
 }
 
 func TestSymptomdataCollectionError(t *testing.T) {
-	var handler = func(w http.ResponseWriter, r *http.Request) {
+	var handler2 = func(w http.ResponseWriter, r *http.Request) {
 		Resource.SendSymptomDataError(w, r, "Error text")
 	}
 
-	Resource.InjectQueryRoute("/ric/v1/user", handler, "GET", "foo", "bar", "id", "mykey")
+	Resource.InjectQueryRoute("/ric/v1/user2", handler2, "GET", "foo", "bar", "id", "mykey")
 
-	req, _ := http.NewRequest("GET", "/ric/v1/user?foo=bar&id=mykey", nil)
+	req, _ := http.NewRequest("GET", "/ric/v1/user2?foo=bar&id=mykey", nil)
 	resp := executeRequest(req, nil)
-	checkResponseCode(t, http.StatusOK, resp.Code)
+	checkResponseCode(t, http.StatusInternalServerError, resp.Code)
 }
 
 func TestGetSymptomDataParams(t *testing.T) {
-	var handler = func(w http.ResponseWriter, r *http.Request) {
+	var handler3 = func(w http.ResponseWriter, r *http.Request) {
 		Resource.GetSymptomDataParams(w, r)
 	}
 
-	Resource.InjectQueryRoute("/ric/v1/user", handler, "GET", "foo", "bar", "id", "mykey")
+	Resource.InjectQueryRoute("/ric/v1/user3", handler3, "GET", "timeout", "10", "fromtime", "1", "totime", "2")
 
-	req, _ := http.NewRequest("GET", "/ric/v1/user?foo=bar&id=mykey", nil)
+	req, _ := http.NewRequest("GET", "/ric/v1/user3?timeout=10&fromtime=1&totime=2", nil)
 	resp := executeRequest(req, nil)
 	checkResponseCode(t, http.StatusOK, resp.Code)
 }
 
 func TestAppconfigHandler(t *testing.T) {
-	var handler = func(w http.ResponseWriter, r *http.Request) {
+	var handler4 = func(w http.ResponseWriter, r *http.Request) {
 		appconfigHandler(w, r)
 	}
 
-	Resource.InjectQueryRoute("/ric/v1/user", handler, "GET", "foo", "bar", "id", "mykey")
+	Resource.InjectQueryRoute("/ric/v1/user4", handler4, "GET", "foo", "bar", "id", "mykey")
 
-	req, _ := http.NewRequest("GET", "/ric/v1/user?foo=bar&id=mykey", nil)
+	req, _ := http.NewRequest("GET", "/ric/v1/user4?foo=bar&id=mykey", nil)
 	resp := executeRequest(req, nil)
-	checkResponseCode(t, http.StatusOK, resp.Code)
+	checkResponseCode(t, http.StatusInternalServerError, resp.Code)
 }

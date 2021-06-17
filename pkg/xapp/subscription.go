@@ -23,15 +23,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/go-openapi/loads"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/spf13/viper"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"time"
 
 	apiclient "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi"
 	apicommon "gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/clientapi/common"
@@ -236,32 +237,3 @@ func (r *Subscriber) QuerySubscriptions() (models.SubscriptionList, error) {
 func (r *Subscriber) CreateTransport() *apiclient.RICSubscription {
 	return apiclient.New(httptransport.New(r.remoteHost, r.remoteUrl, r.remoteProt), strfmt.Default)
 }
-
-/*func (r *Subscriber) getXappConfig() (appconfig models.XappConfigList, err error) {
-
-    Logger.Error("Inside getXappConfig")
-
-		var metadata models.ConfigMetadata
-        var xappconfig models.XAppConfig
-        name := viper.GetString("name")
-        configtype := "json"
-		metadata.XappName = &name
-		metadata.ConfigType = &configtype
-
-        configFile, err := os.Open("/opt/ric/config/config-file.json")
-        if err != nil {
-                Logger.Error("Cannot open config file: %v", err)
-                return nil,errors.New("Could Not parse the config file")
-        }
-
-        body, err := ioutil.ReadAll(configFile)
-
-        defer configFile.Close()
-
-		xappconfig.Metadata = &metadata
-		xappconfig.Config = body
-
-        appconfig = append(appconfig,&xappconfig)
-
-		return appconfig,nil
-}*/
