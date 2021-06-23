@@ -89,6 +89,12 @@ func (met *MetricGroupsCache) GSet(metric string, val float64) {
 	met.gauges[metric].Set(val)
 }
 
+func (met *MetricGroupsCache) GAdd(metric string, val float64) {
+	met.RLock()
+	defer met.RUnlock()
+	met.gauges[metric].Add(val)
+}
+
 func (met *MetricGroupsCache) GInc(metric string) {
 	met.RLock()
 	defer met.RUnlock()
