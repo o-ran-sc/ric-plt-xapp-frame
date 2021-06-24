@@ -21,6 +21,7 @@ package xapp
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -432,6 +433,16 @@ func TestappconfigHandler(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/ric/v1/config", bytes.NewBuffer([]byte{}))
 	handleFunc := http.HandlerFunc(appconfigHandler)
 	executeRequest(req, handleFunc)
+}
+
+func TestConfigChange(t *testing.T) {
+	Logger.Error("CASE: TestConfigChange: %s", os.Getenv("CFG_FILE"))
+
+	input, err := ioutil.ReadFile(os.Getenv("CFG_FILE"))
+	assert.Equal(t, err, nil)
+
+	err = ioutil.WriteFile(os.Getenv("CFG_FILE"), input, 0644)
+	assert.Equal(t, err, nil)
 }
 
 func TestRegisterXapp(t *testing.T) {
