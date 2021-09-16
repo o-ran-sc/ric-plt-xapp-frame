@@ -21,6 +21,9 @@ type SubscriptionParams struct {
 	// Required: true
 	ClientEndpoint *SubscriptionParamsClientEndpoint `json:"ClientEndpoint"`
 
+	// e2 subscription directives
+	E2SubscriptionDirectives *SubscriptionParamsE2SubscriptionDirectives `json:"E2SubscriptionDirectives,omitempty"`
+
 	// meid
 	// Required: true
 	Meid *string `json:"Meid"`
@@ -44,6 +47,10 @@ func (m *SubscriptionParams) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateClientEndpoint(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateE2SubscriptionDirectives(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -75,6 +82,24 @@ func (m *SubscriptionParams) validateClientEndpoint(formats strfmt.Registry) err
 		if err := m.ClientEndpoint.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("ClientEndpoint")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *SubscriptionParams) validateE2SubscriptionDirectives(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.E2SubscriptionDirectives) { // not required
+		return nil
+	}
+
+	if m.E2SubscriptionDirectives != nil {
+		if err := m.E2SubscriptionDirectives.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("E2SubscriptionDirectives")
 			}
 			return err
 		}
@@ -225,6 +250,95 @@ func (m *SubscriptionParamsClientEndpoint) MarshalBinary() ([]byte, error) {
 // UnmarshalBinary interface implementation
 func (m *SubscriptionParamsClientEndpoint) UnmarshalBinary(b []byte) error {
 	var res SubscriptionParamsClientEndpoint
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*m = res
+	return nil
+}
+
+// SubscriptionParamsE2SubscriptionDirectives subscription params e2 subscription directives
+//
+// swagger:model SubscriptionParamsE2SubscriptionDirectives
+type SubscriptionParamsE2SubscriptionDirectives struct {
+
+	// How many times E2 subscription request is retried
+	// Maximum: 10
+	// Minimum: 0
+	E2RetryCount *int64 `json:"E2RetryCount,omitempty"`
+
+	// How long time response is waited from E2 node
+	// Maximum: 10
+	// Minimum: 1
+	E2TimeoutTimerValue int64 `json:"E2TimeoutTimerValue,omitempty"`
+
+	// Subscription needs RMR route from E2Term to xApp
+	RMRRoutingNeeded *bool `json:"RMRRoutingNeeded,omitempty"`
+}
+
+// Validate validates this subscription params e2 subscription directives
+func (m *SubscriptionParamsE2SubscriptionDirectives) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateE2RetryCount(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateE2TimeoutTimerValue(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *SubscriptionParamsE2SubscriptionDirectives) validateE2RetryCount(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.E2RetryCount) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("E2SubscriptionDirectives"+"."+"E2RetryCount", "body", int64(*m.E2RetryCount), 0, false); err != nil {
+		return err
+	}
+
+	if err := validate.MaximumInt("E2SubscriptionDirectives"+"."+"E2RetryCount", "body", int64(*m.E2RetryCount), 10, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *SubscriptionParamsE2SubscriptionDirectives) validateE2TimeoutTimerValue(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.E2TimeoutTimerValue) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("E2SubscriptionDirectives"+"."+"E2TimeoutTimerValue", "body", int64(m.E2TimeoutTimerValue), 1, false); err != nil {
+		return err
+	}
+
+	if err := validate.MaximumInt("E2SubscriptionDirectives"+"."+"E2TimeoutTimerValue", "body", int64(m.E2TimeoutTimerValue), 10, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (m *SubscriptionParamsE2SubscriptionDirectives) MarshalBinary() ([]byte, error) {
+	if m == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(m)
+}
+
+// UnmarshalBinary interface implementation
+func (m *SubscriptionParamsE2SubscriptionDirectives) UnmarshalBinary(b []byte) error {
+	var res SubscriptionParamsE2SubscriptionDirectives
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

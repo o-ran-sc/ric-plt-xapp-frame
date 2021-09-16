@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"encoding/json"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -23,9 +25,23 @@ type SubscriptionInstance struct {
 	// Minimum: 0
 	E2EventInstanceID *int64 `json:"E2EventInstanceId"`
 
-	// Empty string when no error.
+	// Descriptive error cause. Empty string when no error.
 	// Required: true
 	ErrorCause *string `json:"ErrorCause"`
+
+	// Source of error cause.
+	// Required: true
+	// Enum: [None SUBMGR RTMGR DBAAS ASN1 E2Node]
+	ErrorSource *string `json:"ErrorSource"`
+
+	// Reason for REST subscription rejection.
+	// Enum: [None REST-subscription-ongoing REST-subscription-delete-ongoing Invalid-REST-request-message REST-subscription-with-given-id-does-not-exist E2-interface-down Other]
+	RejectCause *string `json:"RejectCause,omitempty"`
+
+	// Type timeout. xApp should retry if timeout occours.
+	// Required: true
+	// Enum: [None E2-Timeout RTMGR-Timeout DBAAS-Timeout]
+	TimeoutType *string `json:"TimeoutType"`
 
 	// xapp event instance Id
 	// Required: true
@@ -43,6 +59,18 @@ func (m *SubscriptionInstance) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateErrorCause(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateErrorSource(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRejectCause(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTimeoutType(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -76,6 +104,168 @@ func (m *SubscriptionInstance) validateE2EventInstanceID(formats strfmt.Registry
 func (m *SubscriptionInstance) validateErrorCause(formats strfmt.Registry) error {
 
 	if err := validate.Required("ErrorCause", "body", m.ErrorCause); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var subscriptionInstanceTypeErrorSourcePropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["None","SUBMGR","RTMGR","DBAAS","ASN1","E2Node"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		subscriptionInstanceTypeErrorSourcePropEnum = append(subscriptionInstanceTypeErrorSourcePropEnum, v)
+	}
+}
+
+const (
+
+	// SubscriptionInstanceErrorSourceNone captures enum value "None"
+	SubscriptionInstanceErrorSourceNone string = "None"
+
+	// SubscriptionInstanceErrorSourceSUBMGR captures enum value "SUBMGR"
+	SubscriptionInstanceErrorSourceSUBMGR string = "SUBMGR"
+
+	// SubscriptionInstanceErrorSourceRTMGR captures enum value "RTMGR"
+	SubscriptionInstanceErrorSourceRTMGR string = "RTMGR"
+
+	// SubscriptionInstanceErrorSourceDBAAS captures enum value "DBAAS"
+	SubscriptionInstanceErrorSourceDBAAS string = "DBAAS"
+
+	// SubscriptionInstanceErrorSourceASN1 captures enum value "ASN1"
+	SubscriptionInstanceErrorSourceASN1 string = "ASN1"
+
+	// SubscriptionInstanceErrorSourceE2Node captures enum value "E2Node"
+	SubscriptionInstanceErrorSourceE2Node string = "E2Node"
+)
+
+// prop value enum
+func (m *SubscriptionInstance) validateErrorSourceEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, subscriptionInstanceTypeErrorSourcePropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *SubscriptionInstance) validateErrorSource(formats strfmt.Registry) error {
+
+	if err := validate.Required("ErrorSource", "body", m.ErrorSource); err != nil {
+		return err
+	}
+
+	// value enum
+	if err := m.validateErrorSourceEnum("ErrorSource", "body", *m.ErrorSource); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var subscriptionInstanceTypeRejectCausePropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["None","REST-subscription-ongoing","REST-subscription-delete-ongoing","Invalid-REST-request-message","REST-subscription-with-given-id-does-not-exist","E2-interface-down","Other"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		subscriptionInstanceTypeRejectCausePropEnum = append(subscriptionInstanceTypeRejectCausePropEnum, v)
+	}
+}
+
+const (
+
+	// SubscriptionInstanceRejectCauseNone captures enum value "None"
+	SubscriptionInstanceRejectCauseNone string = "None"
+
+	// SubscriptionInstanceRejectCauseRESTSubscriptionOngoing captures enum value "REST-subscription-ongoing"
+	SubscriptionInstanceRejectCauseRESTSubscriptionOngoing string = "REST-subscription-ongoing"
+
+	// SubscriptionInstanceRejectCauseRESTSubscriptionDeleteOngoing captures enum value "REST-subscription-delete-ongoing"
+	SubscriptionInstanceRejectCauseRESTSubscriptionDeleteOngoing string = "REST-subscription-delete-ongoing"
+
+	// SubscriptionInstanceRejectCauseInvalidRESTRequestMessage captures enum value "Invalid-REST-request-message"
+	SubscriptionInstanceRejectCauseInvalidRESTRequestMessage string = "Invalid-REST-request-message"
+
+	// SubscriptionInstanceRejectCauseRESTSubscriptionWithGivenIDDoesNotExist captures enum value "REST-subscription-with-given-id-does-not-exist"
+	SubscriptionInstanceRejectCauseRESTSubscriptionWithGivenIDDoesNotExist string = "REST-subscription-with-given-id-does-not-exist"
+
+	// SubscriptionInstanceRejectCauseE2InterfaceDown captures enum value "E2-interface-down"
+	SubscriptionInstanceRejectCauseE2InterfaceDown string = "E2-interface-down"
+
+	// SubscriptionInstanceRejectCauseOther captures enum value "Other"
+	SubscriptionInstanceRejectCauseOther string = "Other"
+)
+
+// prop value enum
+func (m *SubscriptionInstance) validateRejectCauseEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, subscriptionInstanceTypeRejectCausePropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *SubscriptionInstance) validateRejectCause(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.RejectCause) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateRejectCauseEnum("RejectCause", "body", *m.RejectCause); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var subscriptionInstanceTypeTimeoutTypePropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["None","E2-Timeout","RTMGR-Timeout","DBAAS-Timeout"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		subscriptionInstanceTypeTimeoutTypePropEnum = append(subscriptionInstanceTypeTimeoutTypePropEnum, v)
+	}
+}
+
+const (
+
+	// SubscriptionInstanceTimeoutTypeNone captures enum value "None"
+	SubscriptionInstanceTimeoutTypeNone string = "None"
+
+	// SubscriptionInstanceTimeoutTypeE2Timeout captures enum value "E2-Timeout"
+	SubscriptionInstanceTimeoutTypeE2Timeout string = "E2-Timeout"
+
+	// SubscriptionInstanceTimeoutTypeRTMGRTimeout captures enum value "RTMGR-Timeout"
+	SubscriptionInstanceTimeoutTypeRTMGRTimeout string = "RTMGR-Timeout"
+
+	// SubscriptionInstanceTimeoutTypeDBAASTimeout captures enum value "DBAAS-Timeout"
+	SubscriptionInstanceTimeoutTypeDBAASTimeout string = "DBAAS-Timeout"
+)
+
+// prop value enum
+func (m *SubscriptionInstance) validateTimeoutTypeEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, subscriptionInstanceTypeTimeoutTypePropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *SubscriptionInstance) validateTimeoutType(formats strfmt.Registry) error {
+
+	if err := validate.Required("TimeoutType", "body", m.TimeoutType); err != nil {
+		return err
+	}
+
+	// value enum
+	if err := m.validateTimeoutTypeEnum("TimeoutType", "body", *m.TimeoutType); err != nil {
 		return err
 	}
 

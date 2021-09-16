@@ -44,9 +44,9 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/restapi/operations/common"
 )
 
-type SubscriptionHandler func(interface{}) (*models.SubscriptionResponse, error)
+type SubscriptionHandler func(interface{}) (*models.SubscriptionResponse, int)
 type SubscriptionQueryHandler func() (models.SubscriptionList, error)
-type SubscriptionDeleteHandler func(string) error
+type SubscriptionDeleteHandler func(string) int
 type SubscriptionResponseCallback func(*apimodel.SubscriptionResponse)
 
 type Subscriber struct {
@@ -121,20 +121,30 @@ func (r *Subscriber) Listen(createSubscription SubscriptionHandler, getSubscript
 	api.CommonSubscribeHandler = common.SubscribeHandlerFunc(
 		func(params common.SubscribeParams) middleware.Responder {
 			Logger.Error("Subscribe: Params=%+v", params.SubscriptionParams)
-			if resp, err := createSubscription(params.SubscriptionParams); err == nil {
-				return common.NewSubscribeCreated().WithPayload(resp)
+			resp, retCode := createSubscription(params.SubscriptionParams)
+			if retCode != common.SubscribeCreatedCode {
+				if retCode == common.SubscribeBadRequestCode {
+					return common.NewSubscribeBadRequest()
+				} else {
+					return common.NewSubscribeInternalServerError()
+				}
 			}
-			return common.NewSubscribeInternalServerError()
+			return common.NewSubscribeCreated().WithPayload(resp)
 		})
 
 	// Subscription: Unsubscribe
 	api.CommonUnsubscribeHandler = common.UnsubscribeHandlerFunc(
 		func(p common.UnsubscribeParams) middleware.Responder {
 			Logger.Error("Unsubscribe: SubscriptionID=%+v", p.SubscriptionID)
-			if err := delSubscription(p.SubscriptionID); err == nil {
-				return common.NewUnsubscribeNoContent()
+			retCode := delSubscription(p.SubscriptionID)
+			if retCode != common.UnsubscribeNoContentCode {
+				if retCode == common.UnsubscribeBadRequestCode {
+					return common.NewUnsubscribeBadRequest()
+				} else {
+					return common.NewUnsubscribeInternalServerError()
+				}
 			}
-			return common.NewUnsubscribeInternalServerError()
+			return common.NewUnsubscribeNoContent()
 		})
 
 	server := restapi.NewServer(api)
