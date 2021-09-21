@@ -29,10 +29,17 @@ import (
 	"strings"
 	"sync/atomic"
 	"syscall"
+	"testing"
 	"time"
 
 	"github.com/spf13/viper"
 )
+
+// For testing purpose go version 1.13 ->
+var _ = func() bool {
+	testing.Init()
+	return true
+}()
 
 type ReadyCB func(interface{})
 type ShutdownCB func()
