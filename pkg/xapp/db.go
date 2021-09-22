@@ -36,11 +36,17 @@ var SDLCounterOpts = []CounterOpts{
 	{Name: "StoreError", Help: "The total number of SDL store errors"},
 }
 
-type SDLClient struct {
-	db    *sdl.SdlInstance
+type SDLStorage struct {
+	db    *sdl.SyncStorage
 	stat  map[string]Counter
 	mux   sync.Mutex
 	ready bool
+}
+
+//Deprecated: Will be removed in a future release, please use SDLStorage type
+type SDLClient struct {
+	db        *SDLStorage
+	nameSpace string
 }
 
 // Alias
@@ -71,22 +77,19 @@ type RNIBClient struct {
 	writer rnibwriter.RNibWriter
 }
 
-// NewSDLClient returns a new SDLClient.
-func NewSDLClient(ns string) *SDLClient {
-	if ns == "" {
-		ns = "sdl"
-	}
-	return &SDLClient{
-		db:    sdl.NewSdlInstance(ns, sdl.NewDatabase()),
+// NewSdlStorage returns a new instance of SDLStorage type.
+func NewSdlStorage() *SDLStorage {
+	return &SDLStorage{
+		db:    sdl.NewSyncStorage(),
 		stat:  Metric.RegisterCounterGroup(SDLCounterOpts, "SDL"),
 		ready: false,
 	}
 }
 
-func (s *SDLClient) TestConnection() {
+func (s *SDLStorage) TestConnection(namespace string) {
 	// Test DB connection, and wait until ready!
 	for {
-		if _, err := s.db.GetAll(); err == nil {
+		if _, err := s.db.GetAll(namespace); err == nil {
 			break
 		}
 		Logger.Warn("Database connection not ready, waiting ...")
@@ -96,12 +99,12 @@ func (s *SDLClient) TestConnection() {
 	Logger.Info("Connection to database established!")
 }
 
-func (s *SDLClient) IsReady() bool {
+func (s *SDLStorage) IsReady() bool {
 	return s.ready
 }
 
-func (s *SDLClient) doSet(pairs ...interface{}) (err error) {
-	err = s.db.Set(pairs)
+func (s *SDLStorage) doSet(namespace string, pairs ...interface{}) (err error) {
+	err = s.db.Set(namespace, pairs)
 	if err != nil {
 		s.UpdateStatCounter("StoreError")
 	} else {
@@ -110,62 +113,153 @@ func (s *SDLClient) doSet(pairs ...interface{}) (err error) {
 	return
 }
 
-func (s *SDLClient) Store(key string, value interface{}) (err error) {
-	return s.doSet(key, value)
+func (s *SDLStorage) Store(namespace string, key string, value interface{}) (err error) {
+	return s.doSet(namespace, key, value)
 }
 
-func (s *SDLClient) MStore(pairs ...interface{}) (err error) {
-	return s.doSet(pairs)
+func (s *SDLStorage) MStore(namespace string, pairs ...interface{}) (err error) {
+	return s.doSet(namespace, pairs)
 }
 
-func (s *SDLClient) Read(key string) (value map[string]interface{}, err error) {
-	return s.db.Get([]string{key})
+func (s *SDLStorage) Read(namespace string, key string) (value map[string]interface{}, err error) {
+	return s.db.Get(namespace, []string{key})
 }
 
-func (s *SDLClient) MRead(key []string) (value map[string]interface{}, err error) {
-	return s.db.Get(key)
+func (s *SDLStorage) MRead(namespace string, key []string) (value map[string]interface{}, err error) {
+	return s.db.Get(namespace, key)
 }
 
-func (s *SDLClient) ReadAllKeys(key string) (value []string, err error) {
-	return s.db.GetAll()
+func (s *SDLStorage) ReadAllKeys(namespace string) (value []string, err error) {
+	return s.db.GetAll(namespace)
 }
 
-func (s *SDLClient) Subscribe(cb func(string, ...string), channel string) error {
-	return s.db.SubscribeChannel(cb, channel)
+func (s *SDLStorage) Subscribe(namespace string, cb func(string, ...string), channel string) error {
+	return s.db.SubscribeChannel(namespace, cb, channel)
 }
 
-func (s *SDLClient) MSubscribe(cb func(string, ...string), channels ...string) error {
-	return s.db.SubscribeChannel(cb, channels...)
+func (s *SDLStorage) MSubscribe(namespace string, cb func(string, ...string), channels ...string) error {
+	return s.db.SubscribeChannel(namespace, cb, channels...)
 }
 
-func (s *SDLClient) StoreAndPublish(channel string, event string, pairs ...interface{}) error {
-	return s.db.SetAndPublish([]string{channel, event}, pairs...)
+func (s *SDLStorage) StoreAndPublish(namespace string, channel string, event string, pairs ...interface{}) error {
+	return s.db.SetAndPublish(namespace, []string{channel, event}, pairs...)
 }
 
-func (s *SDLClient) MStoreAndPublish(channelsAndEvents []string, pairs ...interface{}) error {
-	return s.db.SetAndPublish(channelsAndEvents, pairs...)
+func (s *SDLStorage) MStoreAndPublish(namespace string, channelsAndEvents []string, pairs ...interface{}) error {
+	return s.db.SetAndPublish(namespace, channelsAndEvents, pairs...)
 }
 
-func (s *SDLClient) Delete(keys []string) (err error) {
-	return s.db.Remove(keys)
+func (s *SDLStorage) Delete(namespace string, keys []string) (err error) {
+	return s.db.Remove(namespace, keys)
 }
 
-func (s *SDLClient) Clear() {
-	s.db.RemoveAll()
+func (s *SDLStorage) Clear(namespace string) {
+	s.db.RemoveAll(namespace)
 }
 
-func (s *SDLClient) RegisterMetrics() {
+func (s *SDLStorage) RegisterMetrics() {
 	s.stat = Metric.RegisterCounterGroup(SDLCounterOpts, "SDL")
 }
 
-func (s *SDLClient) UpdateStatCounter(name string) {
+func (s *SDLStorage) UpdateStatCounter(name string) {
 	s.mux.Lock()
 	s.stat[name].Inc()
 	s.mux.Unlock()
 }
 
-func (c *SDLClient) GetStat() (t SDLStatistics) {
+func (s *SDLStorage) GetStat() (t SDLStatistics) {
 	return
+}
+
+//NewSDLClient returns a new SDLClient.
+//Deprecated: Will be removed in a future release, please use NewSdlStorage
+func NewSDLClient(ns string) *SDLClient {
+	if ns == "" {
+		ns = "sdl"
+	}
+	return &SDLClient{
+		db:        NewSdlStorage(),
+		nameSpace: ns,
+	}
+}
+
+//Deprecated: Will be removed in a future release, please use the TestConnection Receiver function of the SDLStorage type.
+func (s *SDLClient) TestConnection() {
+	s.db.TestConnection(s.nameSpace)
+}
+
+func (s *SDLClient) IsReady() bool {
+	return s.db.ready
+}
+
+//Deprecated: Will be removed in a future release, please use the Store Receiver function of the SDLStorage type.
+func (s *SDLClient) Store(key string, value interface{}) (err error) {
+	return s.db.Store(s.nameSpace, key, value)
+}
+
+//Deprecated: Will be removed in a future release, please use the MStore Receiver function of the SDLStorage type.
+func (s *SDLClient) MStore(pairs ...interface{}) (err error) {
+	return s.db.MStore(s.nameSpace, pairs)
+}
+
+//Deprecated: Will be removed in a future release, please use the Read Receiver function of the SDLStorage type.
+func (s *SDLClient) Read(key string) (value map[string]interface{}, err error) {
+	return s.db.Read(s.nameSpace, key)
+}
+
+//Deprecated: Will be removed in a future release, please use the MRead Receiver function of the SDLStorage type.
+func (s *SDLClient) MRead(key []string) (value map[string]interface{}, err error) {
+	return s.db.MRead(s.nameSpace, key)
+}
+
+//Deprecated: Will be removed in a future release, please use the ReadAllKeys Receiver function of the SDLStorage type.
+func (s *SDLClient) ReadAllKeys(key string) (value []string, err error) {
+	return s.db.ReadAllKeys(s.nameSpace)
+}
+
+//Deprecated: Will be removed in a future release, please use the Subscribe Receiver function of the SDLStorage type.
+func (s *SDLClient) Subscribe(cb func(string, ...string), channel string) error {
+	return s.db.Subscribe(s.nameSpace, cb, channel)
+}
+
+//Deprecated: Will be removed in a future release, please use the MSubscribe Receiver function of the SDLStorage type.
+func (s *SDLClient) MSubscribe(cb func(string, ...string), channels ...string) error {
+	return s.db.MSubscribe(s.nameSpace, cb, channels...)
+}
+
+//Deprecated: Will be removed in a future release, please use the StoreAndPublish Receiver function of the SDLStorage type.
+func (s *SDLClient) StoreAndPublish(channel string, event string, pairs ...interface{}) error {
+	return s.db.StoreAndPublish(s.nameSpace, channel, event, pairs...)
+}
+
+//Deprecated: Will be removed in a future release, please use the MStoreAndPublish Receiver function of the SDLStorage type.
+func (s *SDLClient) MStoreAndPublish(channelsAndEvents []string, pairs ...interface{}) error {
+	return s.db.MStoreAndPublish(s.nameSpace, channelsAndEvents, pairs...)
+}
+
+//Deprecated: Will be removed in a future release, please use the Delete Receiver function of the SDLStorage type.
+func (s *SDLClient) Delete(keys []string) (err error) {
+	return s.db.Delete(s.nameSpace, keys)
+}
+
+//Deprecated: Will be removed in a future release, please use the Clear Receiver function of the SDLStorage type.
+func (s *SDLClient) Clear() {
+	s.db.Clear(s.nameSpace)
+}
+
+//Deprecated: Will be removed in a future release, please use the RegisterMetrics Receiver function of the SDLStorage type.
+func (s *SDLClient) RegisterMetrics() {
+	s.db.RegisterMetrics()
+}
+
+//Deprecated: Will be removed in a future release, please use the UpdateStatCounter Receiver function of the SDLStorage type.
+func (s *SDLClient) UpdateStatCounter(name string) {
+	s.db.UpdateStatCounter(name)
+}
+
+//Deprecated: Will be removed in a future release, please use the GetStat Receiver function of the SDLStorage type.
+func (c *SDLClient) GetStat() (t SDLStatistics) {
+	return c.db.GetStat()
 }
 
 func NewRNIBClient() *RNIBClient {

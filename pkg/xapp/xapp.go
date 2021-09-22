@@ -48,6 +48,7 @@ var (
 	// XApp is an application instance
 	Rmr           *RMRClient
 	Sdl           *SDLClient
+	SdlStorage    *SDLStorage
 	Rnib          *RNIBClient
 	Resource      *Router
 	Metric        *Metrics
@@ -64,7 +65,7 @@ var (
 )
 
 func IsReady() bool {
-	return Rmr != nil && Rmr.IsReady() && Sdl != nil && Sdl.IsReady()
+	return Rmr != nil && Rmr.IsReady() && SdlStorage != nil && SdlStorage.IsReady()
 }
 
 func SetReadyCB(cb ReadyCB, params interface{}) {
@@ -262,6 +263,7 @@ func init() {
 	Config = Configurator{}
 	Metric = NewMetrics(viper.GetString("metrics.url"), viper.GetString("metrics.namespace"), Resource.router)
 	Subscription = NewSubscriber(viper.GetString("controls.subscription.host"), viper.GetInt("controls.subscription.timeout"))
+	SdlStorage = NewSdlStorage()
 	Sdl = NewSDLClient(viper.GetString("controls.db.namespace"))
 	Rnib = NewRNIBClient()
 	Util = NewUtils()
@@ -279,7 +281,7 @@ func RunWithParams(c MessageConsumer, sdlcheck bool) {
 	Logger.Info(fmt.Sprintf("Xapp started, listening on: %s", host))
 
 	if sdlcheck {
-		Sdl.TestConnection()
+		SdlStorage.TestConnection(viper.GetString("controls.db.namespace"))
 	}
 	go registerXapp()
 

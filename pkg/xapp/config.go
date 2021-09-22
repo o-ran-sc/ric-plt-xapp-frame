@@ -124,11 +124,15 @@ func AddConfigChangeListener(f ConfigChangeCB) {
 
 func PublishConfigChange(appName, eventJson string) error {
 	channel := fmt.Sprintf("CM_UPDATE:%s", appName)
-	if err := Sdl.StoreAndPublish(channel, eventJson, appName, eventJson); err != nil {
+	if err := SdlStorage.StoreAndPublish(getCmSdlNs(), channel, eventJson, appName, eventJson); err != nil {
 		Logger.Error("Sdl.Store failed: %v", err)
 		return err
 	}
 	return nil
+}
+
+func ReadConfig(appName string) (map[string]interface{}, error) {
+	return SdlStorage.Read(getCmSdlNs(), appName)
 }
 
 func GetPortData(pname string) (d PortData) {
@@ -178,8 +182,12 @@ func GetPortData(pname string) (d PortData) {
 	return
 }
 
+func getCmSdlNs() string {
+	return fmt.Sprintf("cm/%s", viper.GetString("name"))
+}
+
 func (*Configurator) SetSDLNotificationCB(appName string, sdlNotificationCb SDLNotificationCB) error {
-	return Sdl.Subscribe(sdlNotificationCb, fmt.Sprintf("CM_UPDATE:%s", appName))
+	return SdlStorage.Subscribe(getCmSdlNs(), sdlNotificationCb, fmt.Sprintf("CM_UPDATE:%s", appName))
 }
 
 func (*Configurator) GetString(key string) string {

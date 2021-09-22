@@ -335,7 +335,7 @@ func TestAddConfigChangeListener(t *testing.T) {
 }
 
 func TestConfigAccess(t *testing.T) {
-	Logger.Info("CASE: AddConfigChangeListener")
+	Logger.Info("CASE: TestConfigAccess")
 
 	assert.Equal(t, Config.GetString("name"), "xapp")
 	assert.Equal(t, Config.GetInt("controls.logger.level"), 3)
@@ -348,8 +348,9 @@ func TestConfigAccess(t *testing.T) {
 }
 
 func TestPublishConfigChange(t *testing.T) {
-	Logger.Info("CASE: AddConfigChangeListener")
+	Logger.Info("CASE: TestPublishConfigChange")
 	PublishConfigChange("testApp", "values")
+	ReadConfig("testApp")
 }
 
 func TestNewSubscriber(t *testing.T) {
@@ -391,11 +392,13 @@ func TestSdlInterfaces(t *testing.T) {
 	Sdl.Store("myKey", "Values")
 	Sdl.MStore("myKey", "Values")
 	Sdl.RegisterMetrics()
+	Sdl.UpdateStatCounter("Stored")
 
 	// Misc.
 	var NotificationCb = func(ch string, events ...string) {}
 	Sdl.Subscribe(NotificationCb, "channel1")
 	Sdl.MSubscribe(NotificationCb, "channel1", "channel2")
+	Sdl.StoreAndPublish("channel1", "event", "key1", "data1")
 	Sdl.MStoreAndPublish([]string{"channel1"}, "event", "key1", "data1")
 }
 
