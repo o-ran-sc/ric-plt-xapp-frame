@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -269,12 +270,41 @@ func init() {
 	InstallSignalHandler()
 }
 
+var ip net.IP
+
+func getIpAdress() string {
+	itf, err := net.InterfaceByName(os.Getenv("INTERFACE_NAME"))
+	if err != nil {
+		Logger.Info("Interface name is not able to resolve " + err.Error())
+		return ip.String()
+	}
+	item, err := itf.Addrs()
+	if err != nil {
+		Logger.Info("IP address is not able to resolve " + err.Error())
+		return ip.String()
+	}
+	for _, addr := range item {
+		switch v := addr.(type) {
+		case *net.IPNet:
+			if !v.IP.IsLinkLocalUnicast() {
+				ip = v.IP
+			}
+		}
+	}
+	return ip.String()
+}
+
 func RunWithParams(c MessageConsumer, sdlcheck bool) {
 	Rmr = NewRMRClient()
 
 	Rmr.SetReadyCB(XappReadyCb, nil)
-
-	host := fmt.Sprintf(":%d", GetPortData("http").Port)
+	ipString := getIpAdress()
+	var host string
+	if ipString == "<nil>" {
+		host = fmt.Sprintf(":%d", GetPortData("http").Port)
+	} else {
+		host = fmt.Sprintf("%s:%d", ipString, GetPortData("http").Port)
+	}
 	go http.ListenAndServe(host, Resource.router)
 	Logger.Info(fmt.Sprintf("Xapp started, listening on: %s", host))
 
