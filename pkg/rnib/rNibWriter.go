@@ -25,7 +25,9 @@ import (
 )
 
 type rNibWriterInstance struct {
-	sdl rnibcommon.ISdlInstance
+	sdl        rnibcommon.ISdlInstance //Deprecated: Will be removed in a future release and replaced by sdlStorage
+	sdlStorage rnibcommon.ISdlSyncStorage
+	ns         string
 }
 
 /*
@@ -36,11 +38,24 @@ type RNibWriter interface {
 }
 
 /*
-GetRNibWriter returns reference to RNibWriter
+GetNewRNibWriter returns reference to RNibWriter
 */
+func GetNewRNibWriter(sdlStorage rnibcommon.ISdlSyncStorage) RNibWriter {
+	return &rNibWriterInstance{
+		sdl:        nil,
+		sdlStorage: sdlStorage,
+		ns:         rnibcommon.GetRNibNamespace(),
+	}
+}
 
+//GetRNibWriter returns reference to RNibWriter
+//Deprecated: Will be removed in a future release, please use GetNewRNibWriter instead.
 func GetRNibWriter(sdl rnibcommon.ISdlInstance) RNibWriter {
-	return &rNibWriterInstance{sdl: sdl}
+	return &rNibWriterInstance{
+		sdl:        sdl,
+		sdlStorage: nil,
+		ns:         "",
+	}
 }
 
 /*
@@ -83,7 +98,11 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *rnibentities.NbIdentity, enti
 			return rNibErr
 		}
 	}
-	err = w.sdl.Set(pairs)
+	if w.sdlStorage != nil {
+		err = w.sdlStorage.Set(w.ns, pairs)
+	} else {
+		err = w.sdl.Set(pairs)
+	}
 	if err != nil {
 		return rnibcommon.NewInternalError(err)
 	}
@@ -95,7 +114,11 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *rnibentities.NbIdentity, enti
 		if err != nil {
 			return rnibcommon.NewInternalError(err)
 		}
-		err = w.sdl.RemoveMember(rnibentities.Node_UNKNOWN.String(), nbIdData)
+		if w.sdlStorage != nil {
+			err = w.sdlStorage.RemoveMember(w.ns, rnibentities.Node_UNKNOWN.String(), nbIdData)
+		} else {
+			err = w.sdl.RemoveMember(rnibentities.Node_UNKNOWN.String(), nbIdData)
+		}
 		if err != nil {
 			return rnibcommon.NewInternalError(err)
 		}
@@ -107,7 +130,11 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *rnibentities.NbIdentity, enti
 	if err != nil {
 		return rnibcommon.NewInternalError(err)
 	}
-	err = w.sdl.AddMember(entity.GetNodeType().String(), nbIdData)
+	if w.sdlStorage != nil {
+		err = w.sdlStorage.AddMember(w.ns, entity.GetNodeType().String(), nbIdData)
+	} else {
+		err = w.sdl.AddMember(entity.GetNodeType().String(), nbIdData)
+	}
 	if err != nil {
 		return rnibcommon.NewInternalError(err)
 	}

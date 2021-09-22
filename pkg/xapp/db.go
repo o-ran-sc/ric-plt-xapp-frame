@@ -20,6 +20,7 @@
 package xapp
 
 import (
+	rnibcommon "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	rnibentities "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	rnibreader "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	sdl "gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
@@ -72,7 +73,7 @@ type RNIBServedNRCellInformation = rnibentities.ServedNRCellInformation
 type RNIBNrNeighbourInformation = rnibentities.NrNeighbourInformation
 
 type RNIBClient struct {
-	db     *sdl.SdlInstance
+	db     rnibcommon.ISdlSyncStorage
 	reader rnibreader.RNibReader
 	writer rnibwriter.RNibWriter
 }
@@ -262,55 +263,64 @@ func (c *SDLClient) GetStat() (t SDLStatistics) {
 	return c.db.GetStat()
 }
 
+func GetNewRnibClient(sdlStorage rnibcommon.ISdlSyncStorage) *RNIBClient {
+	return &RNIBClient{
+		db:     sdlStorage,
+		reader: rnibreader.GetNewRNibReader(sdlStorage),
+		writer: rnibwriter.GetNewRNibWriter(sdlStorage),
+	}
+}
+
+//Deprecated: Will be removed in a future release, please use GetNewRnibClient instead.
 func NewRNIBClient() *RNIBClient {
-	s := sdl.NewSdlInstance("e2Manager", sdl.NewDatabase())
+	s := sdl.NewSyncStorage()
 	return &RNIBClient{
 		db:     s,
-		reader: nil,
-		writer: nil,
+		reader: rnibreader.GetNewRNibReader(s),
+		writer: rnibwriter.GetNewRNibWriter(s),
 	}
 }
 
 func (r *RNIBClient) Subscribe(cb func(string, ...string), channel string) error {
-	return r.db.SubscribeChannel(cb, channel)
+	return r.db.SubscribeChannel(rnibcommon.GetRNibNamespace(), cb, channel)
 }
 
 func (r *RNIBClient) StoreAndPublish(channel string, event string, pairs ...interface{}) error {
-	return r.db.SetAndPublish([]string{channel, event}, pairs...)
+	return r.db.SetAndPublish(rnibcommon.GetRNibNamespace(), []string{channel, event}, pairs...)
 }
 
 func (r *RNIBClient) GetNodeb(invName string) (*RNIBNodebInfo, RNIBIRNibError) {
-	return rnibreader.GetRNibReader(r.db).GetNodeb(invName)
+	return r.reader.GetNodeb(invName)
 }
 
 func (r *RNIBClient) GetNodebByGlobalNbId(t RNIBNodeType, gid *RNIBGlobalNbId) (*RNIBNodebInfo, RNIBIRNibError) {
-	return rnibreader.GetRNibReader(r.db).GetNodebByGlobalNbId(t, gid)
+	return r.reader.GetNodebByGlobalNbId(t, gid)
 }
 
 func (r *RNIBClient) GetCellList(invName string) (*RNIBCells, RNIBIRNibError) {
-	return rnibreader.GetRNibReader(r.db).GetCellList(invName)
+	return r.reader.GetCellList(invName)
 }
 
 func (r *RNIBClient) GetListGnbIds() ([]*RNIBNbIdentity, RNIBIRNibError) {
-	return rnibreader.GetRNibReader(r.db).GetListGnbIds()
+	return r.reader.GetListGnbIds()
 }
 
 func (r *RNIBClient) GetListEnbIds() ([]*RNIBNbIdentity, RNIBIRNibError) {
-	return rnibreader.GetRNibReader(r.db).GetListEnbIds()
+	return r.reader.GetListEnbIds()
 }
 
 func (r *RNIBClient) GetCountGnbList() (int, RNIBIRNibError) {
-	return rnibreader.GetRNibReader(r.db).GetCountGnbList()
+	return r.reader.GetCountGnbList()
 }
 
 func (r *RNIBClient) GetCell(invName string, pci uint32) (*RNIBCell, RNIBIRNibError) {
-	return rnibreader.GetRNibReader(r.db).GetCell(invName, pci)
+	return r.reader.GetCell(invName, pci)
 }
 
 func (r *RNIBClient) GetCellById(cellType RNIBCellType, cellId string) (*RNIBCell, RNIBIRNibError) {
-	return rnibreader.GetRNibReader(r.db).GetCellById(cellType, cellId)
+	return r.reader.GetCellById(cellType, cellId)
 }
 
 func (r *RNIBClient) SaveNodeb(nbIdentity *RNIBNbIdentity, entity *RNIBNodebInfo) RNIBIRNibError {
-	return rnibwriter.GetRNibWriter(r.db).SaveNodeb(nbIdentity, entity)
+	return r.writer.SaveNodeb(nbIdentity, entity)
 }

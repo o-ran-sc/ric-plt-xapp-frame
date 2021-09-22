@@ -265,7 +265,7 @@ func init() {
 	Subscription = NewSubscriber(viper.GetString("controls.subscription.host"), viper.GetInt("controls.subscription.timeout"))
 	SdlStorage = NewSdlStorage()
 	Sdl = NewSDLClient(viper.GetString("controls.db.namespace"))
-	Rnib = NewRNIBClient()
+	Rnib = GetNewRnibClient(SdlStorage.db)
 	Util = NewUtils()
 
 	InstallSignalHandler()
