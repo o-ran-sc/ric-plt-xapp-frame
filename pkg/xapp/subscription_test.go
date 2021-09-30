@@ -35,7 +35,7 @@ var (
 	procedureCode       = int64(27)
 	typeOfMessage       = int64(1)
 	subscriptionId      = ""
-	hPort               = int64(8080)
+	hPort               = int64(8086) // See log: "Xapp started, listening on: :8086"
 	rPort               = int64(4560)
 	clientEndpoint      = clientmodel.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort}
 )
@@ -56,12 +56,14 @@ func TestSubscriptionQueryHandling(t *testing.T) {
 	assert.Equal(t, resp[0].SubscriptionID, int64(11))
 	assert.Equal(t, resp[0].Meid, "Test-Gnb")
 	assert.Equal(t, resp[0].ClientEndpoint, []string{"127.0.0.1:4056"})
+	<-time.After(1 * time.Second)
 }
 
 func TestSubscriptionHandling(t *testing.T) {
 	subscriptionParams := GetSubscriptionparams()
 
 	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
+		fmt.Println("TestSubscriptionHandling: notification received")
 		assert.Equal(t, len(resp.SubscriptionInstances), 1)
 		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
 		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(22))
@@ -69,13 +71,15 @@ func TestSubscriptionHandling(t *testing.T) {
 
 	_, err := Subscription.Subscribe(subscriptionParams)
 	assert.Equal(t, err, nil)
+	<-time.After(1 * time.Second)
 }
 
 func TestSubscriptionWithClientProvidedIdHandling(t *testing.T) {
 	subscriptionParams := GetSubscriptionparams()
 	subscriptionParams.SubscriptionID = "myxapp"
-    
+
 	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
+		fmt.Println("TestSubscriptionWithClientProvidedIdHandling: notification received")
 		assert.Equal(t, len(resp.SubscriptionInstances), 1)
 		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
 		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(22))
@@ -83,36 +87,69 @@ func TestSubscriptionWithClientProvidedIdHandling(t *testing.T) {
 
 	_, err := Subscription.Subscribe(subscriptionParams)
 	assert.Equal(t, err, nil)
+	<-time.After(1 * time.Second)
+}
+
+func TestFailureNotificationHandling(t *testing.T) {
+	subscriptionParams := GetSubscriptionparams()
+	subscriptionParams.SubscriptionID = "send_failure_notification"
+
+	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
+		assert.Equal(t, len(resp.SubscriptionInstances), 1)
+		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
+		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(0))
+		assert.Equal(t, resp.SubscriptionInstances[0].ErrorCause, "Some error")
+		assert.Equal(t, resp.SubscriptionInstances[0].ErrorSource, "SUBMGR")
+		assert.Equal(t, resp.SubscriptionInstances[0].TimeoutType, "E2-Timeout")
+	})
+
+	_, err := Subscription.Subscribe(subscriptionParams)
+	assert.Equal(t, err, nil)
+	<-time.After(1 * time.Second)
 }
 
 func TestBadRequestSubscriptionHandling(t *testing.T) {
 	subscriptionParams := GetSubscriptionparams()
-	subscriptionParams.SubscriptionID = "123_send_bad_request_response"
+	subscriptionParams.SubscriptionID = "send_400_bad_request_response"
 
-	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
-		assert.Equal(t, len(resp.SubscriptionInstances), 1)
-		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
-		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(22))
-	})
+	// Notification is not coming
 
 	_, err := Subscription.Subscribe(subscriptionParams)
 	assert.Equal(t, err.Error(), "[POST /subscriptions][400] subscribeBadRequest ")
-	fmt.Println("Error:",err)
+	fmt.Println("Error:", err)
+}
+
+func TestNotFoundRequestSubscriptionHandling(t *testing.T) {
+	subscriptionParams := GetSubscriptionparams()
+	subscriptionParams.SubscriptionID = "send_404_not_found_response"
+
+	// Notification is not coming
+
+	_, err := Subscription.Subscribe(subscriptionParams)
+	assert.Equal(t, err.Error(), "[POST /subscriptions][404] subscribeNotFound ")
+	fmt.Println("Error:", err)
 }
 
 func TestInternalServerErrorSubscriptionHandling(t *testing.T) {
 	subscriptionParams := GetSubscriptionparams()
-	subscriptionParams.SubscriptionID = "123_send_internal_server_error_response"
+	subscriptionParams.SubscriptionID = "send_500_internal_server_error_response"
 
-	Subscription.SetResponseCB(func(resp *clientmodel.SubscriptionResponse) {
-		assert.Equal(t, len(resp.SubscriptionInstances), 1)
-		assert.Equal(t, *resp.SubscriptionInstances[0].XappEventInstanceID, int64(11))
-		assert.Equal(t, *resp.SubscriptionInstances[0].E2EventInstanceID, int64(22))
-	})
+	// Notification is not coming
 
 	_, err := Subscription.Subscribe(subscriptionParams)
 	assert.Equal(t, err.Error(), "[POST /subscriptions][500] subscribeInternalServerError ")
-	fmt.Println("Error:",err)
+	fmt.Println("Error:", err)
+}
+
+func TestServiceUnavailableSubscriptionHandling(t *testing.T) {
+	subscriptionParams := GetSubscriptionparams()
+	subscriptionParams.SubscriptionID = "send_503_Service_Unavailable_response"
+
+	// Notification is not coming
+
+	_, err := Subscription.Subscribe(subscriptionParams)
+	assert.Equal(t, err.Error(), "[POST /subscriptions][503] subscribeServiceUnavailable ")
+	fmt.Println("Error:", err)
 }
 
 func GetSubscriptionparams() *clientmodel.SubscriptionParams {
@@ -142,25 +179,25 @@ func GetSubscriptionparams() *clientmodel.SubscriptionParams {
 }
 
 func TestSuccessfulSubscriptionDeleteHandling(t *testing.T) {
-	subscriptionId = "123_send_successful_response"
+	subscriptionId = "send_201_successful_response"
 	err := Subscription.Unsubscribe(subscriptionId)
 	assert.Equal(t, err, nil)
-	fmt.Println("Error:",err)
+	fmt.Println("Error:", err)
 }
 
 func TestBadRequestSubscriptionDeleteHandling(t *testing.T) {
-	subscriptionId = "123_send_bad_request_response"
+	subscriptionId = "send_400_bad_request_response"
 	err := Subscription.Unsubscribe(subscriptionId)
 	assert.NotEqual(t, err, nil)
-	fmt.Println("Error:",err.Error())
+	fmt.Println("Error:", err.Error())
 	assert.Equal(t, err.Error(), "[DELETE /subscriptions/{subscriptionId}][400] unsubscribeBadRequest ")
 }
 
 func TestInternalServerErrorSubscriptionDeleteHandling(t *testing.T) {
-	subscriptionId = "123_send_internal_server_error_response"
+	subscriptionId = "send_500_internal_server_error_response"
 	err := Subscription.Unsubscribe(subscriptionId)
 	assert.NotEqual(t, err, nil)
-	fmt.Println("Error:",err.Error())
+	fmt.Println("Error:", err.Error())
 	assert.Equal(t, err.Error(), "[DELETE /subscriptions/{subscriptionId}][500] unsubscribeInternalServerError ")
 }
 
@@ -188,22 +225,51 @@ func SubscriptionRespHandler(resp *clientmodel.SubscriptionResponse) {
 }
 
 func processSubscriptions(subscriptionId string) {
-	// Generate requestorId, instanceId
+
+	// Generate xappInstanceId
 	xappInstanceId := int64(11)
-	e2InstanceId := int64(22)
 
-	resp := &models.SubscriptionResponse{
-		SubscriptionID: &subscriptionId,
-		SubscriptionInstances: []*models.SubscriptionInstance{
-			{
-				XappEventInstanceID: &xappInstanceId,
-				E2EventInstanceID:   &e2InstanceId,
+	if subscriptionId == "send_failure_notification" {
+		fmt.Println("Sending error notification")
+
+		// Generate e2InstanceId
+		e2InstanceId := int64(0)
+		resp := &models.SubscriptionResponse{
+			SubscriptionID: &subscriptionId,
+			SubscriptionInstances: []*models.SubscriptionInstance{
+				{
+					XappEventInstanceID: &xappInstanceId,
+					E2EventInstanceID:   &e2InstanceId,
+					ErrorCause:          "Some error",
+					ErrorSource:         "SUBMGR",
+					TimeoutType:         "E2-Timeout",
+				},
 			},
-		},
-	}
+		}
 
-	// Notify the client: don't worry about errors ... Notify() will handle retries, etc.
-	Subscription.Notify(resp, models.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort})
+		Subscription.Notify(resp, models.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort})
+		return
+	} else {
+
+		fmt.Println("Sending successful notification")
+
+		// Generate e2InstanceId
+		e2InstanceId := int64(22)
+
+		resp := &models.SubscriptionResponse{
+			SubscriptionID: &subscriptionId,
+			SubscriptionInstances: []*models.SubscriptionInstance{
+				{
+					XappEventInstanceID: &xappInstanceId,
+					E2EventInstanceID:   &e2InstanceId,
+				},
+			},
+		}
+
+		// Notify the client: don't worry about errors ... Notify() will handle retries, etc.
+		Subscription.Notify(resp, models.SubscriptionParamsClientEndpoint{Host: "localhost", HTTPPort: &hPort, RMRPort: &rPort})
+		return
+	}
 }
 
 func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, int) {
@@ -225,21 +291,29 @@ func subscriptionHandler(params interface{}) (*models.SubscriptionResponse, int)
 	assert.Equal(suite, timeToWait, *p.SubscriptionDetails[0].ActionToBeSetupList[0].SubsequentAction.TimeToWait)
 	assert.ElementsMatch(suite, []int64{5, 6, 7, 8}, p.SubscriptionDetails[0].ActionToBeSetupList[0].ActionDefinition)
 
-	// Generate a unique subscriptionId
-	subscriptionId = fmt.Sprintf("%s-%s", meid, clientEndpoint.Host)
-
-	if p.SubscriptionID == "123_send_bad_request_response" {
-		// Simulate bad request case
-		return &models.SubscriptionResponse{
-		}, common.UnsubscribeBadRequestCode
-
+	if p.SubscriptionID != "send_failure_notification" {
+		// Generate a unique subscriptionId
+		subscriptionId = fmt.Sprintf("%s-%s", meid, clientEndpoint.Host)
+	} else {
+		subscriptionId = "send_failure_notification"
+	}
+	if p.SubscriptionID == "send_400_bad_request_response" {
+		fmt.Println("send_400_bad_request_response")
+		return &models.SubscriptionResponse{}, common.SubscribeBadRequestCode
+	}
+	if p.SubscriptionID == "send_404_not_found_response" {
+		fmt.Println("send_404_not_found_response")
+		return &models.SubscriptionResponse{}, common.SubscribeNotFoundCode
+	}
+	if p.SubscriptionID == "send_500_internal_server_error_response" {
+		fmt.Println("send_500_internal_server_error_response")
+		return &models.SubscriptionResponse{}, common.SubscribeInternalServerErrorCode
+	}
+	if p.SubscriptionID == "send_503_Service_Unavailable_response" {
+		fmt.Println("send_503_Service_Unavailable_response")
+		return &models.SubscriptionResponse{}, common.SubscribeServiceUnavailableCode
 	}
 
-	if p.SubscriptionID == "123_send_internal_server_error_response" {
-		// Simulate bad internal server error case
-		return &models.SubscriptionResponse{
-			}, common.UnsubscribeInternalServerErrorCode
-	}
 	// Process subscriptions on the background
 	go processSubscriptions(subscriptionId)
 
@@ -262,11 +336,14 @@ func queryHandler() (models.SubscriptionList, error) {
 
 func deleteHandler(ep string) int {
 	assert.Equal(suite, subscriptionId, ep)
-	if subscriptionId == "123_send_successful_response" {
+	if subscriptionId == "send_201_successful_response" {
 		return common.UnsubscribeNoContentCode
-	} else if subscriptionId == "123_send_bad_request_response" {
+	} else if subscriptionId == "send_400_bad_request_response" {
 		return common.UnsubscribeBadRequestCode
-	} else {
+	} else if subscriptionId == "send_500_internal_server_error_response" {
 		return common.UnsubscribeInternalServerErrorCode
+	} else {
+		fmt.Println("Unknown subscriptionId:", subscriptionId)
+		return 0
 	}
 }

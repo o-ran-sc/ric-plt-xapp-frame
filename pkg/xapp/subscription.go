@@ -120,11 +120,14 @@ func (r *Subscriber) Listen(createSubscription SubscriptionHandler, getSubscript
 	// Subscription: Subscribe
 	api.CommonSubscribeHandler = common.SubscribeHandlerFunc(
 		func(params common.SubscribeParams) middleware.Responder {
-			Logger.Error("Subscribe: Params=%+v", params.SubscriptionParams)
 			resp, retCode := createSubscription(params.SubscriptionParams)
 			if retCode != common.SubscribeCreatedCode {
 				if retCode == common.SubscribeBadRequestCode {
 					return common.NewSubscribeBadRequest()
+				} else if retCode == common.SubscribeNotFoundCode {
+					return common.NewSubscribeNotFound()
+				} else if retCode == common.SubscribeServiceUnavailableCode {
+					return common.NewSubscribeServiceUnavailable()
 				} else {
 					return common.NewSubscribeInternalServerError()
 				}
@@ -135,7 +138,6 @@ func (r *Subscriber) Listen(createSubscription SubscriptionHandler, getSubscript
 	// Subscription: Unsubscribe
 	api.CommonUnsubscribeHandler = common.UnsubscribeHandlerFunc(
 		func(p common.UnsubscribeParams) middleware.Responder {
-			Logger.Error("Unsubscribe: SubscriptionID=%+v", p.SubscriptionID)
 			retCode := delSubscription(p.SubscriptionID)
 			if retCode != common.UnsubscribeNoContentCode {
 				if retCode == common.UnsubscribeBadRequestCode {
@@ -209,7 +211,6 @@ func (r *Subscriber) Subscribe(p *apimodel.SubscriptionParams) (*apimodel.Subscr
 	if err != nil {
 		return &apimodel.SubscriptionResponse{}, err
 	}
-
 	return result.Payload, err
 }
 
