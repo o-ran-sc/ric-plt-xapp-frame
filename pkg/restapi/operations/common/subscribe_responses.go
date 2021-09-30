@@ -10,8 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
-)
+	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models")
 
 // SubscribeCreatedCode is the HTTP code returned for type SubscribeCreated
 const SubscribeCreatedCode int = 201
@@ -60,7 +59,7 @@ func (o *SubscribeCreated) WriteResponse(rw http.ResponseWriter, producer runtim
 // SubscribeBadRequestCode is the HTTP code returned for type SubscribeBadRequest
 const SubscribeBadRequestCode int = 400
 
-/*SubscribeBadRequest Invalid input
+/*SubscribeBadRequest Not Found
 
 swagger:response subscribeBadRequest
 */
@@ -79,6 +78,30 @@ func (o *SubscribeBadRequest) WriteResponse(rw http.ResponseWriter, producer run
 	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
 
 	rw.WriteHeader(400)
+}
+
+// SubscribeNotFoundCode is the HTTP code returned for type SubscribeNotFound
+const SubscribeNotFoundCode int = 404
+
+/*SubscribeNotFound Invalid input
+
+swagger:response subscribeNotFound
+*/
+type SubscribeNotFound struct {
+}
+
+// NewSubscribeNotFound creates SubscribeNotFound with default headers values
+func NewSubscribeNotFound() *SubscribeNotFound {
+
+	return &SubscribeNotFound{}
+}
+
+// WriteResponse to the client
+func (o *SubscribeNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
+	rw.WriteHeader(404)
 }
 
 // SubscribeInternalServerErrorCode is the HTTP code returned for type SubscribeInternalServerError
@@ -103,4 +126,28 @@ func (o *SubscribeInternalServerError) WriteResponse(rw http.ResponseWriter, pro
 	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
 
 	rw.WriteHeader(500)
+}
+
+// SubscribeServiceUnavailableCode is the HTTP code returned for type SubscribeServiceUnavailable
+const SubscribeServiceUnavailableCode int = 503
+
+/*SubscribeServiceUnavailable Service Unavailable
+
+swagger:response subscribeServiceUnavailable
+*/
+type SubscribeServiceUnavailable struct {
+}
+
+// NewSubscribeServiceUnavailable creates SubscribeServiceUnavailable with default headers values
+func NewSubscribeServiceUnavailable() *SubscribeServiceUnavailable {
+
+	return &SubscribeServiceUnavailable{}
+}
+
+// WriteResponse to the client
+func (o *SubscribeServiceUnavailable) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
+	rw.WriteHeader(503)
 }

@@ -257,7 +257,7 @@ func (m *SubscriptionParamsClientEndpoint) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-// SubscriptionParamsE2SubscriptionDirectives subscription params e2 subscription directives
+// SubscriptionParamsE2SubscriptionDirectives Optional. If not set Submgr uses its default values
 //
 // swagger:model SubscriptionParamsE2SubscriptionDirectives
 type SubscriptionParamsE2SubscriptionDirectives struct {
@@ -273,7 +273,7 @@ type SubscriptionParamsE2SubscriptionDirectives struct {
 	E2TimeoutTimerValue int64 `json:"E2TimeoutTimerValue,omitempty"`
 
 	// Subscription needs RMR route from E2Term to xApp
-	RMRRoutingNeeded *bool `json:"RMRRoutingNeeded,omitempty"`
+	RMRRoutingNeeded bool `json:"RMRRoutingNeeded,omitempty"`
 }
 
 // Validate validates this subscription params e2 subscription directives
