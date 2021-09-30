@@ -35,8 +35,20 @@ func (o *SubscribeReader) ReadResponse(response runtime.ClientResponse, consumer
 			return nil, err
 		}
 		return nil, result
+	case 404:
+		result := NewSubscribeNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewSubscribeInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 503:
+		result := NewSubscribeServiceUnavailable()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -87,7 +99,7 @@ func NewSubscribeBadRequest() *SubscribeBadRequest {
 
 /*SubscribeBadRequest handles this case with default header values.
 
-Invalid input
+Not Found
 */
 type SubscribeBadRequest struct {
 }
@@ -97,6 +109,27 @@ func (o *SubscribeBadRequest) Error() string {
 }
 
 func (o *SubscribeBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewSubscribeNotFound creates a SubscribeNotFound with default headers values
+func NewSubscribeNotFound() *SubscribeNotFound {
+	return &SubscribeNotFound{}
+}
+
+/*SubscribeNotFound handles this case with default header values.
+
+Invalid input
+*/
+type SubscribeNotFound struct {
+}
+
+func (o *SubscribeNotFound) Error() string {
+	return fmt.Sprintf("[POST /subscriptions][%d] subscribeNotFound ", 404)
+}
+
+func (o *SubscribeNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }
@@ -118,6 +151,27 @@ func (o *SubscribeInternalServerError) Error() string {
 }
 
 func (o *SubscribeInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewSubscribeServiceUnavailable creates a SubscribeServiceUnavailable with default headers values
+func NewSubscribeServiceUnavailable() *SubscribeServiceUnavailable {
+	return &SubscribeServiceUnavailable{}
+}
+
+/*SubscribeServiceUnavailable handles this case with default header values.
+
+Service Unavailable
+*/
+type SubscribeServiceUnavailable struct {
+}
+
+func (o *SubscribeServiceUnavailable) Error() string {
+	return fmt.Sprintf("[POST /subscriptions][%d] subscribeServiceUnavailable ", 503)
+}
+
+func (o *SubscribeServiceUnavailable) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }
