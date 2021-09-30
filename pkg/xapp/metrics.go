@@ -233,9 +233,9 @@ func (m *Metrics) getFullName(opts prometheus.Opts, labels []string) string {
 	return fmt.Sprintf("%s_%s_%s_%s", opts.Namespace, opts.Subsystem, opts.Name, labelname)
 }
 
-/*
- * Handling counters
- */
+//
+//
+//
 func (m *Metrics) RegisterCounter(opts CounterOpts, subsytem string) Counter {
 	globalLock.Lock()
 	defer globalLock.Unlock()
@@ -249,6 +249,9 @@ func (m *Metrics) RegisterCounter(opts CounterOpts, subsytem string) Counter {
 	return cache_allcounters[id]
 }
 
+//
+//
+//
 func (m *Metrics) RegisterCounterGroup(optsgroup []CounterOpts, subsytem string) map[string]Counter {
 	c := make(map[string]Counter)
 	for _, opts := range optsgroup {
@@ -257,9 +260,51 @@ func (m *Metrics) RegisterCounterGroup(optsgroup []CounterOpts, subsytem string)
 	return c
 }
 
-/*
- * Handling gauges
- */
+//
+//
+//
+func (m *Metrics) RegisterLabeledCounter(opts CounterOpts, labelNames []string, labelValues []string, subsytem string) Counter {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+	opts.Namespace = m.Namespace
+	opts.Subsystem = subsytem
+	vecid := m.getFullName(prometheus.Opts(opts), []string{})
+	if _, ok := cache_allcountervects[vecid]; !ok {
+		Logger.Info("Register new counter vector with opts: %v labelNames: %v", opts, labelNames)
+		entry := CounterVec{}
+		entry.Opts = opts
+		entry.Labels = labelNames
+		entry.Vec = promauto.NewCounterVec(prometheus.CounterOpts(entry.Opts), entry.Labels)
+		cache_allcountervects[vecid] = entry
+	}
+	entry := cache_allcountervects[vecid]
+	if strSliceCompare(entry.Labels, labelNames) == false {
+		Logger.Warn("id:%s cached counter vec labels dont match %v != %v", vecid, entry.Labels, labelNames)
+	}
+
+	valid := m.getFullName(prometheus.Opts(entry.Opts), labelValues)
+	if _, ok := cache_allcounters[valid]; !ok {
+		Logger.Info("Register new counter from vector with opts: %v labelValues: %v", entry.Opts, labelValues)
+		cache_allcounters[valid] = entry.Vec.WithLabelValues(labelValues...)
+	}
+	return cache_allcounters[valid]
+
+}
+
+//
+//
+//
+func (m *Metrics) RegisterLabeledCounterGroup(optsgroup []CounterOpts, labelNames []string, labelValues []string, subsytem string) map[string]Counter {
+	c := make(map[string]Counter)
+	for _, opts := range optsgroup {
+		c[opts.Name] = m.RegisterLabeledCounter(opts, labelNames, labelValues, subsytem)
+	}
+	return c
+}
+
+//
+//
+//
 func (m *Metrics) RegisterGauge(opts CounterOpts, subsytem string) Gauge {
 	globalLock.Lock()
 	defer globalLock.Unlock()
@@ -273,10 +318,54 @@ func (m *Metrics) RegisterGauge(opts CounterOpts, subsytem string) Gauge {
 	return cache_allgauges[id]
 }
 
+//
+//
+//
 func (m *Metrics) RegisterGaugeGroup(optsgroup []CounterOpts, subsytem string) map[string]Gauge {
 	c := make(map[string]Gauge)
 	for _, opts := range optsgroup {
 		c[opts.Name] = m.RegisterGauge(opts, subsytem)
+	}
+	return c
+}
+
+//
+//
+//
+func (m *Metrics) RegisterLabeledGauge(opt CounterOpts, labelNames []string, labelValues []string, subsytem string) Gauge {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+	opt.Namespace = m.Namespace
+	opt.Subsystem = subsytem
+	vecid := m.getFullName(prometheus.Opts(opt), []string{})
+	if _, ok := cache_allgaugevects[vecid]; !ok {
+		Logger.Info("Register new gauge vector with opt: %v labelNames: %v", opt, labelNames)
+		entry := GaugeVec{}
+		entry.Opts = opt
+		entry.Labels = labelNames
+		entry.Vec = promauto.NewGaugeVec(prometheus.GaugeOpts(entry.Opts), entry.Labels)
+		cache_allgaugevects[vecid] = entry
+	}
+	entry := cache_allgaugevects[vecid]
+	if strSliceCompare(entry.Labels, labelNames) == false {
+		Logger.Warn("id:%s cached gauge vec labels dont match %v != %v", vecid, entry.Labels, labelNames)
+	}
+	valid := m.getFullName(prometheus.Opts(entry.Opts), labelValues)
+	if _, ok := cache_allgauges[valid]; !ok {
+		Logger.Info("Register new gauge from vector with opts: %v labelValues: %v", entry.Opts, labelValues)
+		cache_allgauges[valid] = entry.Vec.WithLabelValues(labelValues...)
+	}
+	return cache_allgauges[valid]
+
+}
+
+//
+//
+//
+func (m *Metrics) RegisterLabeledGaugeGroup(opts []CounterOpts, labelNames []string, labelValues []string, subsytem string) map[string]Gauge {
+	c := make(map[string]Gauge)
+	for _, opt := range opts {
+		c[opt.Name] = m.RegisterLabeledGauge(opt, labelNames, labelValues, subsytem)
 	}
 	return c
 }
@@ -308,6 +397,7 @@ func (m *Metrics) RegisterGaugeGroup(optsgroup []CounterOpts, subsytem string) m
 	stats["counter1"].Inc()
 */
 
+// Deprecated: Use RegisterLabeledCounter
 func (m *Metrics) RegisterCounterVec(opts CounterOpts, labelNames []string, subsytem string) CounterVec {
 	globalLock.Lock()
 	defer globalLock.Unlock()
@@ -329,6 +419,7 @@ func (m *Metrics) RegisterCounterVec(opts CounterOpts, labelNames []string, subs
 	return entry
 }
 
+// Deprecated: Use RegisterLabeledCounterGroup
 func (m *Metrics) RegisterCounterVecGroup(optsgroup []CounterOpts, labelNames []string, subsytem string) map[string]CounterVec {
 	c := make(map[string]CounterVec)
 	for _, opts := range optsgroup {
@@ -337,6 +428,7 @@ func (m *Metrics) RegisterCounterVecGroup(optsgroup []CounterOpts, labelNames []
 	return c
 }
 
+// Deprecated: Use RegisterLabeledCounter
 func (m *Metrics) GetCounterFromVect(labelValues []string, vec CounterVec) (c Counter) {
 	globalLock.Lock()
 	defer globalLock.Unlock()
@@ -348,6 +440,7 @@ func (m *Metrics) GetCounterFromVect(labelValues []string, vec CounterVec) (c Co
 	return cache_allcounters[id]
 }
 
+// Deprecated: Use RegisterLabeledCounterGroup
 func (m *Metrics) GetCounterGroupFromVects(labelValues []string, vects ...map[string]CounterVec) map[string]Counter {
 	c := make(map[string]Counter)
 	for _, vect := range vects {
@@ -358,6 +451,7 @@ func (m *Metrics) GetCounterGroupFromVects(labelValues []string, vects ...map[st
 	return c
 }
 
+// Deprecated: Use RegisterLabeledCounterGroup
 func (m *Metrics) GetCounterGroupFromVectsWithPrefix(prefix string, labelValues []string, vects ...map[string]CounterVec) map[string]Counter {
 	c := make(map[string]Counter)
 	for _, vect := range vects {
@@ -395,6 +489,7 @@ func (m *Metrics) GetCounterGroupFromVectsWithPrefix(prefix string, labelValues 
 	stats["gauge1"].Inc()
 */
 
+// Deprecated: Use RegisterLabeledGauge
 func (m *Metrics) RegisterGaugeVec(opt CounterOpts, labelNames []string, subsytem string) GaugeVec {
 	globalLock.Lock()
 	defer globalLock.Unlock()
@@ -416,6 +511,7 @@ func (m *Metrics) RegisterGaugeVec(opt CounterOpts, labelNames []string, subsyte
 	return entry
 }
 
+// Deprecated: Use RegisterLabeledGaugeGroup
 func (m *Metrics) RegisterGaugeVecGroup(opts []CounterOpts, labelNames []string, subsytem string) map[string]GaugeVec {
 	c := make(map[string]GaugeVec)
 	for _, opt := range opts {
@@ -424,6 +520,7 @@ func (m *Metrics) RegisterGaugeVecGroup(opts []CounterOpts, labelNames []string,
 	return c
 }
 
+// Deprecated: Use RegisterLabeledGauge
 func (m *Metrics) GetGaugeFromVect(labelValues []string, vec GaugeVec) Gauge {
 	globalLock.Lock()
 	defer globalLock.Unlock()
@@ -435,6 +532,7 @@ func (m *Metrics) GetGaugeFromVect(labelValues []string, vec GaugeVec) Gauge {
 	return cache_allgauges[id]
 }
 
+// Deprecated: Use RegisterLabeledGaugeGroup
 func (m *Metrics) GetGaugeGroupFromVects(labelValues []string, vects ...map[string]GaugeVec) map[string]Gauge {
 	c := make(map[string]Gauge)
 	for _, vect := range vects {
@@ -445,6 +543,7 @@ func (m *Metrics) GetGaugeGroupFromVects(labelValues []string, vects ...map[stri
 	return c
 }
 
+// Deprecated: Use RegisterLabeledGaugeGroup
 func (m *Metrics) GetGaugeGroupFromVectsWithPrefix(prefix string, labelValues []string, vects ...map[string]GaugeVec) map[string]Gauge {
 	c := make(map[string]Gauge)
 	for _, vect := range vects {
