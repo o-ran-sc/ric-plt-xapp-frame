@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   description: This is the initial REST API for RIC subscription
-  version: 0.0.3
+  version: 0.0.4
   title: RIC subscription
   license:
     name: Apache 2.0
@@ -63,9 +63,13 @@ paths:
           schema:
             $ref: '#/definitions/SubscriptionResponse'
         '400':
+          description: Not Found
+        '404':
           description: Invalid input
         '500':
           description: Internal error
+        '503':
+          description: Service Unavailable
   '/subscriptions/{subscriptionId}':
     delete:
       tags:
@@ -244,24 +248,22 @@ definitions:
         minimum: 0
         maximum: 4095
       E2SubscriptionDirectives:
+        description: Optional. If not set Submgr uses its default values
         type: object
         properties:
           E2TimeoutTimerValue:
             description: How long time response is waited from E2 node
             type: integer
-            default: 2
             minimum: 1
             maximum: 10
           E2RetryCount:
             description: How many times E2 subscription request is retried
             type: integer
-            default: 2
             minimum: 0
             maximum: 10
           RMRRoutingNeeded:
             description: Subscription needs RMR route from E2Term to xApp 
             type: boolean
-            default: True
       SubscriptionDetails:
         $ref: '#/definitions/SubscriptionDetailsList'
   SubscriptionResponse:
@@ -281,9 +283,6 @@ definitions:
     required:
       - XappEventInstanceId
       - E2EventInstanceId
-      - ErrorCause
-      - ErrorSource
-      - TimeoutType
     properties:
       XappEventInstanceId:
         type: integer
@@ -293,32 +292,17 @@ definitions:
         type: integer
         minimum: 0
         maximum: 65535
-      RejectCause:
-        description: Reason for REST subscription rejection.
-        type: string
-        default: None
-        enum:
-        - None
-        - REST-subscription-ongoing         # xApp should retry after delay
-        - REST-subscription-delete-ongoing  # xApp should retry after delay
-        - Invalid-REST-request-message
-        - REST-subscription-with-given-id-does-not-exist
-        - E2-interface-down
-        - Other
       ErrorCause:
         description: Descriptive error cause. Empty string when no error.
         type: string
-        default: ''
       ErrorSource:
         description: Source of error cause.
         type: string
-        default: None
-        enum: [None, SUBMGR, RTMGR, DBAAS, ASN1, E2Node]
+        enum: [SUBMGR, RTMGR, DBAAS, ASN1, E2Node]
       TimeoutType:
-        description: Type timeout. xApp should retry if timeout occours.
+        description: Type timeout. xApp should retry if timeout occurs.
         type: string
-        default: None
-        enum: [None, E2-Timeout, RTMGR-Timeout, DBAAS-Timeout]
+        enum: [E2-Timeout, RTMGR-Timeout, DBAAS-Timeout]
   SubscriptionData:
     type: object
     properties:
