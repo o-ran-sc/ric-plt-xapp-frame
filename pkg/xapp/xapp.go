@@ -56,7 +56,7 @@ var (
 	Logger        *Log
 	Config        Configurator
 	Subscription  *Subscriber
-	Alarm         *AlarmClient
+	//Alarm         *AlarmClient
 	Util          *Utils
 	readyCb       ReadyCB
 	readyCbParams interface{}
@@ -75,7 +75,7 @@ func SetReadyCB(cb ReadyCB, params interface{}) {
 }
 
 func XappReadyCb(params interface{}) {
-	Alarm = NewAlarmClient(viper.GetString("moId"), viper.GetString("name"))
+	//Alarm = NewAlarmClient(viper.GetString("moId"), viper.GetString("name"))
 	if readyCb != nil {
 		readyCb(readyCbParams)
 	}
