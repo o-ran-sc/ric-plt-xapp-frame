@@ -119,19 +119,33 @@ func TestMetricLabeledCounter(t *testing.T) {
 
 }
 
-func TestMetricLabeledCounterMismatch(t *testing.T) {
-	Metric.RegisterLabeledCounter(
-		CounterOpts{Name: "counter1", Help: "counter1"},
-		[]string{"name", "event"},
-		[]string{"name1", "event1"},
-		"SUBSYSTEMLERR")
+//func TestMetricLabeledCounterMissmatch(t *testing.T) {
+//	Metric.RegisterLabeledCounter(
+//		CounterOpts{Name: "counter1", Help: "counter1"},
+//		[]string{"name", "event"},
+//		[]string{"name1", "event1"},
+//		"SUBSYSTEMLERR")
+//
+//	Metric.RegisterLabeledCounter(
+//		CounterOpts{Name: "counter1", Help: "counter1"},
+//		[]string{"name", "eventmiss"},
+//		[]string{"name1", "event1"},
+//		"SUBSYSTEMLERR")
+//}
 
-	Metric.RegisterLabeledCounter(
-		CounterOpts{Name: "counter1", Help: "counter1"},
-		[]string{"name", "eventmismatch"},
-		[]string{"name1", "event1"},
-		"SUBSYSTEMLERR")
-}
+//func TestMetricLabeledCounterWrongOrder(t *testing.T) {
+//	Metric.RegisterLabeledCounter(
+//		CounterOpts{Name: "counter1", Help: "counter1"},
+//		[]string{"name", "event"},
+//		[]string{"name1", "event1"},
+//		"SUBSYSTEMLERR")
+//
+//	Metric.RegisterLabeledCounter(
+//		CounterOpts{Name: "counter1", Help: "counter1"},
+//		[]string{"event", "name"},
+//		[]string{"name1", "event1"},
+//		"SUBSYSTEMLERR")
+//}
 
 func TestMetricLabeledCounterGroup(t *testing.T) {
 	//
@@ -257,19 +271,33 @@ func TestMetricLabeledGauge(t *testing.T) {
 
 }
 
-func TestMetricLabeledGaugeMismatch(t *testing.T) {
-	Metric.RegisterLabeledGauge(
-		CounterOpts{Name: "gauge1", Help: "gauge1"},
-		[]string{"name", "event"},
-		[]string{"name1", "event1"},
-		"SUBSYSTEMLERR")
+//func TestMetricLabeledGaugeMissmatch(t *testing.T) {
+//	Metric.RegisterLabeledGauge(
+//		CounterOpts{Name: "gauge1", Help: "gauge1"},
+//		[]string{"name", "event"},
+//		[]string{"name1", "event1"},
+//		"SUBSYSTEMLERR")
+//
+//	Metric.RegisterLabeledGauge(
+//		CounterOpts{Name: "gauge1", Help: "gauge1"},
+//		[]string{"name", "eventmiss"},
+//		[]string{"name1", "event1"},
+//		"SUBSYSTEMLERR")
+//}
 
-	Metric.RegisterLabeledGauge(
-		CounterOpts{Name: "gauge1", Help: "gauge1"},
-		[]string{"name", "eventmismatch"},
-		[]string{"name1", "event1"},
-		"SUBSYSTEMLERR")
-}
+//func TestMetricLabeledGaugeWrongOrder(t *testing.T) {
+//	Metric.RegisterLabeledGauge(
+//		CounterOpts{Name: "gauge1", Help: "gauge1"},
+//		[]string{"name", "event"},
+//		[]string{"name1", "event1"},
+//		"SUBSYSTEMLERR")
+//
+//	Metric.RegisterLabeledGauge(
+//		CounterOpts{Name: "gauge1", Help: "gauge1"},
+//		[]string{"event", "name"},
+//		[]string{"name1", "event1"},
+//		"SUBSYSTEMLERR")
+//}
 
 func TestMetricLabeledGaugeGroup(t *testing.T) {
 	//
@@ -387,6 +415,96 @@ func TestMetricGroupCache(t *testing.T) {
 	m_grp.GSet("event2_gauge1", 1)
 }
 
+type registerer struct{}
+
+func (met *registerer) RegisterCounters(optsgroup []CounterOpts) map[string]Counter {
+	return Metric.RegisterLabeledCounterGroup(
+		optsgroup,
+		[]string{"host", "interface"},
+		[]string{"testhost", "testinterface"},
+		"SUBSYSTEMAUTO")
+}
+
+func (met *registerer) RegisterGauges(optsgroup []CounterOpts) map[string]Gauge {
+	return Metric.RegisterLabeledGaugeGroup(
+		optsgroup,
+		[]string{"host", "interface"},
+		[]string{"testhost", "testinterface"},
+		"SUBSYSTEMAUTO")
+}
+
+func TestMetricCounterAutoCGetNoReg(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.CGet("cautotest1")
+}
+
+func TestMetricCounterAutoCGetFunc(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_reg := &registerer{}
+	m_grp.Registerer(MetricGroupsCacheCounterRegistererFunc(m_reg.RegisterCounters), nil)
+	m_grp.CGet("cautotest1")
+}
+
+func TestMetricCounterAutoCGet(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.Registerer(&registerer{}, nil)
+	m_grp.CGet("cautotest1")
+}
+
+func TestMetricCounterAutoCInc(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.Registerer(&registerer{}, nil)
+	m_grp.CInc("cautotest1")
+}
+
+func TestMetricCounterAutoCAdd(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.Registerer(&registerer{}, nil)
+	m_grp.CAdd("cautotest1", float64(10))
+}
+
+func TestMetricCounterAutoGGetNoReg(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.GGet("gautotest1")
+}
+
+func TestMetricCounterAutoGGetFunc(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_reg := &registerer{}
+	m_grp.Registerer(nil, MetricGroupsCacheGaugeRegistererFunc(m_reg.RegisterGauges))
+	m_grp.GGet("gautotest1")
+}
+
+func TestMetricCounterAutoGGet(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.Registerer(nil, &registerer{})
+	m_grp.GGet("gautotest1")
+}
+
+func TestMetricCounterAutoGInc(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.Registerer(nil, &registerer{})
+	m_grp.GInc("gautotest1")
+}
+
+func TestMetricCounterAutoGSet(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.Registerer(nil, &registerer{})
+	m_grp.GSet("gautotest1", float64(10))
+}
+
+func TestMetricCounterAutoGAdd(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.Registerer(nil, &registerer{})
+	m_grp.GAdd("gautotest1", float64(10))
+}
+
+func TestMetricCounterAutoGDec(t *testing.T) {
+	m_grp := NewMetricGroupsCache()
+	m_grp.Registerer(nil, &registerer{})
+	m_grp.GDec("gautotest1")
+}
+
 // ----
 // VECTORS ARE OLD WAY
 // *Labeled* will do all work under the hood
@@ -428,9 +546,6 @@ func TestMetricSetup(t *testing.T) {
 	if tmpGVect.Vec != mGVect.Vec {
 		t.Errorf("tmpGVect not same than mGVect. cache not working?")
 	}
-
-	Metric.RegisterCounterVec(CounterOpts{Name: "counter1", Help: "counter1"}, []string{"name", "eventMismatch"}, "SUBSYSTEM0")
-	Metric.RegisterGaugeVec(CounterOpts{Name: "gauge1", Help: "gauge1"}, []string{"name", "eventMismatch"}, "SUBSYSTEM0")
 
 }
 

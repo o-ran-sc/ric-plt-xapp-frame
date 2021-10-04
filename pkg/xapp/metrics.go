@@ -47,16 +47,31 @@ type GaugeVec struct {
 	Labels []string
 }
 
-func strSliceCompare(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, v := range a {
-		if v != b[i] {
-			return false
-		}
-	}
-	return true
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+
+type MetricGroupsCacheCounterRegisterer interface {
+	RegisterCounters([]CounterOpts) map[string]Counter
+}
+
+type MetricGroupsCacheCounterRegistererFunc func([]CounterOpts) map[string]Counter
+
+func (fn MetricGroupsCacheCounterRegistererFunc) RegisterCounters(copts []CounterOpts) map[string]Counter {
+	return fn(copts)
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+type MetricGroupsCacheGaugeRegisterer interface {
+	RegisterGauges([]CounterOpts) map[string]Gauge
+}
+
+type MetricGroupsCacheGaugeRegistererFunc func([]CounterOpts) map[string]Gauge
+
+func (fn MetricGroupsCacheGaugeRegistererFunc) RegisterGauges(copts []CounterOpts) map[string]Gauge {
+	return fn(copts)
 }
 
 //-----------------------------------------------------------------------------
@@ -67,6 +82,30 @@ type MetricGroupsCache struct {
 	sync.RWMutex //This is for map locking
 	counters     map[string]Counter
 	gauges       map[string]Gauge
+	regcnt       MetricGroupsCacheCounterRegisterer
+	reggau       MetricGroupsCacheGaugeRegisterer
+}
+
+func (met *MetricGroupsCache) Registerer(regcnt MetricGroupsCacheCounterRegisterer, reggau MetricGroupsCacheGaugeRegisterer) {
+	met.regcnt = regcnt
+	met.reggau = reggau
+}
+
+func (met *MetricGroupsCache) cReg(metric string) Counter {
+	if met.regcnt != nil {
+		met.combineCounterGroupsWithPrefix("", met.regcnt.RegisterCounters([]CounterOpts{CounterOpts{Name: metric, Help: "Amount of " + metric + "(auto)"}}))
+		cntr, _ := met.counters[metric]
+		return cntr
+	}
+	return nil
+}
+func (met *MetricGroupsCache) gReg(metric string) Gauge {
+	if met.reggau != nil {
+		met.combineGaugeGroupsWithPrefix("", met.reggau.RegisterGauges([]CounterOpts{CounterOpts{Name: metric, Help: "Amount of " + metric + "(auto)"}}))
+		gaug, _ := met.gauges[metric]
+		return gaug
+	}
+	return nil
 }
 
 func (met *MetricGroupsCache) CIs(metric string) bool {
@@ -79,19 +118,31 @@ func (met *MetricGroupsCache) CIs(metric string) bool {
 func (met *MetricGroupsCache) CGet(metric string) Counter {
 	met.RLock()
 	defer met.RUnlock()
-	return met.counters[metric]
+	cntr, ok := met.counters[metric]
+	if !ok {
+		cntr = met.cReg(metric)
+	}
+	return cntr
 }
 
 func (met *MetricGroupsCache) CInc(metric string) {
 	met.RLock()
 	defer met.RUnlock()
-	met.counters[metric].Inc()
+	cntr, ok := met.counters[metric]
+	if !ok {
+		cntr = met.cReg(metric)
+	}
+	cntr.Inc()
 }
 
 func (met *MetricGroupsCache) CAdd(metric string, val float64) {
 	met.RLock()
 	defer met.RUnlock()
-	met.counters[metric].Add(val)
+	cntr, ok := met.counters[metric]
+	if !ok {
+		cntr = met.cReg(metric)
+	}
+	cntr.Add(val)
 }
 
 func (met *MetricGroupsCache) GIs(metric string) bool {
@@ -104,36 +155,54 @@ func (met *MetricGroupsCache) GIs(metric string) bool {
 func (met *MetricGroupsCache) GGet(metric string) Gauge {
 	met.RLock()
 	defer met.RUnlock()
-	return met.gauges[metric]
+	gaug, ok := met.gauges[metric]
+	if !ok {
+		gaug = met.gReg(metric)
+	}
+	return gaug
 }
 
 func (met *MetricGroupsCache) GSet(metric string, val float64) {
 	met.RLock()
 	defer met.RUnlock()
-	met.gauges[metric].Set(val)
+	gaug, ok := met.gauges[metric]
+	if !ok {
+		gaug = met.gReg(metric)
+	}
+	gaug.Set(val)
 }
 
 func (met *MetricGroupsCache) GAdd(metric string, val float64) {
 	met.RLock()
 	defer met.RUnlock()
-	met.gauges[metric].Add(val)
+	gaug, ok := met.gauges[metric]
+	if !ok {
+		gaug = met.gReg(metric)
+	}
+	gaug.Add(val)
 }
 
 func (met *MetricGroupsCache) GInc(metric string) {
 	met.RLock()
 	defer met.RUnlock()
-	met.gauges[metric].Inc()
+	gaug, ok := met.gauges[metric]
+	if !ok {
+		gaug = met.gReg(metric)
+	}
+	gaug.Inc()
 }
 
 func (met *MetricGroupsCache) GDec(metric string) {
 	met.RLock()
 	defer met.RUnlock()
-	met.gauges[metric].Dec()
+	gaug, ok := met.gauges[metric]
+	if !ok {
+		gaug = met.gReg(metric)
+	}
+	gaug.Dec()
 }
 
-func (met *MetricGroupsCache) CombineCounterGroupsWithPrefix(prefix string, srcs ...map[string]Counter) {
-	met.Lock()
-	defer met.Unlock()
+func (met *MetricGroupsCache) combineCounterGroupsWithPrefix(prefix string, srcs ...map[string]Counter) {
 	for _, src := range srcs {
 		for k, v := range src {
 			met.counters[prefix+k] = v
@@ -141,19 +210,19 @@ func (met *MetricGroupsCache) CombineCounterGroupsWithPrefix(prefix string, srcs
 	}
 }
 
+func (met *MetricGroupsCache) CombineCounterGroupsWithPrefix(prefix string, srcs ...map[string]Counter) {
+	met.Lock()
+	defer met.Unlock()
+	met.combineCounterGroupsWithPrefix(prefix, srcs...)
+}
+
 func (met *MetricGroupsCache) CombineCounterGroups(srcs ...map[string]Counter) {
 	met.Lock()
 	defer met.Unlock()
-	for _, src := range srcs {
-		for k, v := range src {
-			met.counters[k] = v
-		}
-	}
+	met.combineCounterGroupsWithPrefix("", srcs...)
 }
 
-func (met *MetricGroupsCache) CombineGaugeGroupsWithPrefix(prefix string, srcs ...map[string]Gauge) {
-	met.Lock()
-	defer met.Unlock()
+func (met *MetricGroupsCache) combineGaugeGroupsWithPrefix(prefix string, srcs ...map[string]Gauge) {
 	for _, src := range srcs {
 		for k, v := range src {
 			met.gauges[prefix+k] = v
@@ -161,20 +230,24 @@ func (met *MetricGroupsCache) CombineGaugeGroupsWithPrefix(prefix string, srcs .
 	}
 }
 
+func (met *MetricGroupsCache) CombineGaugeGroupsWithPrefix(prefix string, srcs ...map[string]Gauge) {
+	met.Lock()
+	defer met.Unlock()
+	met.combineGaugeGroupsWithPrefix(prefix, srcs...)
+}
+
 func (met *MetricGroupsCache) CombineGaugeGroups(srcs ...map[string]Gauge) {
 	met.Lock()
 	defer met.Unlock()
-	for _, src := range srcs {
-		for k, v := range src {
-			met.gauges[k] = v
-		}
-	}
+	met.combineGaugeGroupsWithPrefix("", srcs...)
 }
 
 func NewMetricGroupsCache() *MetricGroupsCache {
 	entry := &MetricGroupsCache{}
 	entry.counters = make(map[string]Counter)
 	entry.gauges = make(map[string]Gauge)
+	entry.regcnt = nil
+	entry.reggau = nil
 	return entry
 }
 
@@ -268,7 +341,7 @@ func (m *Metrics) RegisterLabeledCounter(opts CounterOpts, labelNames []string, 
 	defer globalLock.Unlock()
 	opts.Namespace = m.Namespace
 	opts.Subsystem = subsytem
-	vecid := m.getFullName(prometheus.Opts(opts), []string{})
+	vecid := m.getFullName(prometheus.Opts(opts), labelNames)
 	if _, ok := cache_allcountervects[vecid]; !ok {
 		Logger.Info("Register new counter vector with opts: %v labelNames: %v", opts, labelNames)
 		entry := CounterVec{}
@@ -278,17 +351,12 @@ func (m *Metrics) RegisterLabeledCounter(opts CounterOpts, labelNames []string, 
 		cache_allcountervects[vecid] = entry
 	}
 	entry := cache_allcountervects[vecid]
-	if strSliceCompare(entry.Labels, labelNames) == false {
-		Logger.Warn("id:%s cached counter vec labels dont match %v != %v", vecid, entry.Labels, labelNames)
-	}
-
 	valid := m.getFullName(prometheus.Opts(entry.Opts), labelValues)
 	if _, ok := cache_allcounters[valid]; !ok {
 		Logger.Info("Register new counter from vector with opts: %v labelValues: %v", entry.Opts, labelValues)
 		cache_allcounters[valid] = entry.Vec.WithLabelValues(labelValues...)
 	}
 	return cache_allcounters[valid]
-
 }
 
 //
@@ -337,7 +405,7 @@ func (m *Metrics) RegisterLabeledGauge(opt CounterOpts, labelNames []string, lab
 	defer globalLock.Unlock()
 	opt.Namespace = m.Namespace
 	opt.Subsystem = subsytem
-	vecid := m.getFullName(prometheus.Opts(opt), []string{})
+	vecid := m.getFullName(prometheus.Opts(opt), labelNames)
 	if _, ok := cache_allgaugevects[vecid]; !ok {
 		Logger.Info("Register new gauge vector with opt: %v labelNames: %v", opt, labelNames)
 		entry := GaugeVec{}
@@ -347,16 +415,12 @@ func (m *Metrics) RegisterLabeledGauge(opt CounterOpts, labelNames []string, lab
 		cache_allgaugevects[vecid] = entry
 	}
 	entry := cache_allgaugevects[vecid]
-	if strSliceCompare(entry.Labels, labelNames) == false {
-		Logger.Warn("id:%s cached gauge vec labels dont match %v != %v", vecid, entry.Labels, labelNames)
-	}
 	valid := m.getFullName(prometheus.Opts(entry.Opts), labelValues)
 	if _, ok := cache_allgauges[valid]; !ok {
 		Logger.Info("Register new gauge from vector with opts: %v labelValues: %v", entry.Opts, labelValues)
 		cache_allgauges[valid] = entry.Vec.WithLabelValues(labelValues...)
 	}
 	return cache_allgauges[valid]
-
 }
 
 //
@@ -403,7 +467,7 @@ func (m *Metrics) RegisterCounterVec(opts CounterOpts, labelNames []string, subs
 	defer globalLock.Unlock()
 	opts.Namespace = m.Namespace
 	opts.Subsystem = subsytem
-	id := m.getFullName(prometheus.Opts(opts), []string{})
+	id := m.getFullName(prometheus.Opts(opts), labelNames)
 	if _, ok := cache_allcountervects[id]; !ok {
 		Logger.Info("Register new counter vector with opts: %v labelNames: %v", opts, labelNames)
 		entry := CounterVec{}
@@ -413,9 +477,6 @@ func (m *Metrics) RegisterCounterVec(opts CounterOpts, labelNames []string, subs
 		cache_allcountervects[id] = entry
 	}
 	entry := cache_allcountervects[id]
-	if strSliceCompare(entry.Labels, labelNames) == false {
-		Logger.Warn("id:%s cached counter vec labels dont match %v != %v", id, entry.Labels, labelNames)
-	}
 	return entry
 }
 
@@ -495,7 +556,7 @@ func (m *Metrics) RegisterGaugeVec(opt CounterOpts, labelNames []string, subsyte
 	defer globalLock.Unlock()
 	opt.Namespace = m.Namespace
 	opt.Subsystem = subsytem
-	id := m.getFullName(prometheus.Opts(opt), []string{})
+	id := m.getFullName(prometheus.Opts(opt), labelNames)
 	if _, ok := cache_allgaugevects[id]; !ok {
 		Logger.Info("Register new gauge vector with opt: %v labelNames: %v", opt, labelNames)
 		entry := GaugeVec{}
@@ -505,9 +566,6 @@ func (m *Metrics) RegisterGaugeVec(opt CounterOpts, labelNames []string, subsyte
 		cache_allgaugevects[id] = entry
 	}
 	entry := cache_allgaugevects[id]
-	if strSliceCompare(entry.Labels, labelNames) == false {
-		Logger.Warn("id:%s cached gauge vec labels dont match %v != %v", id, entry.Labels, labelNames)
-	}
 	return entry
 }
 
