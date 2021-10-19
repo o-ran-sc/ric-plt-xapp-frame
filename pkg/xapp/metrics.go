@@ -300,10 +300,6 @@ func NewMetrics(url, namespace string, r *mux.Router) *Metrics {
 	if url == "" {
 		url = "/ric/v1/metrics"
 	}
-	if namespace == "" {
-		namespace = "ricxapp"
-	}
-
 	Logger.Info("Serving metrics on: url=%s namespace=%s", url, namespace)
 
 	// Expose 'metrics' endpoint with standard golang metrics used by prometheus
