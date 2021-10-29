@@ -44,7 +44,10 @@ type ConfigChangeCB func(filename string)
 
 type SDLNotificationCB func(string, ...string)
 
-var ConfigChangeListeners []ConfigChangeCB
+var (
+	ConfigChangeListeners []ConfigChangeCB
+	cm                    *CM
+)
 
 func parseCmd() string {
 	var fileName *string
@@ -63,42 +66,17 @@ func LoadConfig() (l *Log) {
 	}
 	l.Info("Using config file: %s", viper.ConfigFileUsed())
 
-	updateMTypes := func() {
-		var mtypes []mtype
-		viper.UnmarshalKey("messaging.mtypes", &mtypes)
+	cm = NewCM(viper.GetString("name"), func(ch string, events ...string) {
+		Logger.Info("defaulCMNotificationCB: channel=%+v events=%+v", ch, events[0])
+	})
 
-		if len(mtypes) > 0 {
-			l.Info("Config mtypes before RICMessageTypes:%d RicMessageTypeToName:%d", len(RICMessageTypes), len(RicMessageTypeToName))
-			for _, v := range mtypes {
-				nadd := false
-				iadd := false
-				if _, ok := RICMessageTypes[v.Name]; ok == false {
-					nadd = true
-				}
-				if _, ok := RicMessageTypeToName[int(v.Id)]; ok == false {
-					iadd = true
-				}
-				if iadd != nadd {
-					l.Error("Config mtypes rmr.mtypes entry skipped due conflict with existing values %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
-				} else if iadd {
-					l.Info("Config mtypes rmr.mtypes entry added %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
-					RICMessageTypes[v.Name] = int(v.Id)
-					RicMessageTypeToName[int(v.Id)] = v.Name
-				} else {
-					l.Info("Config mtypes rmr.mtypes entry skipped %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
-				}
-			}
-			l.Info("Config mtypes after RICMessageTypes:%d RicMessageTypeToName:%d", len(RICMessageTypes), len(RicMessageTypeToName))
-		}
-	}
-
-	updateMTypes()
+	UpdateMTypes(l)
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		l.Info("config file %s changed ", e.Name)
 
-		updateMTypes()
+		UpdateMTypes(l)
 		if viper.IsSet("controls.logger.level") {
 			Logger.SetLevel(viper.GetInt("controls.logger.level"))
 		} else {
@@ -115,6 +93,35 @@ func LoadConfig() (l *Log) {
 	return
 }
 
+func UpdateMTypes(l *Log) {
+	var mtypes []mtype
+	viper.UnmarshalKey("messaging.mtypes", &mtypes)
+
+	if len(mtypes) > 0 {
+		l.Info("Config mtypes before RICMessageTypes:%d RicMessageTypeToName:%d", len(RICMessageTypes), len(RicMessageTypeToName))
+		for _, v := range mtypes {
+			nadd := false
+			iadd := false
+			if _, ok := RICMessageTypes[v.Name]; ok == false {
+				nadd = true
+			}
+			if _, ok := RicMessageTypeToName[int(v.Id)]; ok == false {
+				iadd = true
+			}
+			if iadd != nadd {
+				l.Error("Config mtypes rmr.mtypes entry skipped due conflict with existing values %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
+			} else if iadd {
+				l.Info("Config mtypes rmr.mtypes entry added %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
+				RICMessageTypes[v.Name] = int(v.Id)
+				RicMessageTypeToName[int(v.Id)] = v.Name
+			} else {
+				l.Info("Config mtypes rmr.mtypes entry skipped %s(%t) %d(%t) ", v.Name, nadd, v.Id, iadd)
+			}
+		}
+		l.Info("Config mtypes after RICMessageTypes:%d RicMessageTypeToName:%d", len(RICMessageTypes), len(RicMessageTypeToName))
+	}
+}
+
 func AddConfigChangeListener(f ConfigChangeCB) {
 	if ConfigChangeListeners == nil {
 		ConfigChangeListeners = make([]ConfigChangeCB, 0)
@@ -129,6 +136,10 @@ func PublishConfigChange(appName, eventJson string) error {
 		return err
 	}
 	return nil
+}
+
+func StoreCMData() error {
+	return cm.Store()
 }
 
 func ReadConfig(appName string) (map[string]interface{}, error) {

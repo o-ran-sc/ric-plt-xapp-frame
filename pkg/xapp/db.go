@@ -98,6 +98,8 @@ func (s *SDLStorage) TestConnection(namespace string) {
 	}
 	s.ready = true
 	Logger.Info("Connection to database established!")
+
+	StoreCMData()
 }
 
 func (s *SDLStorage) IsReady() bool {
