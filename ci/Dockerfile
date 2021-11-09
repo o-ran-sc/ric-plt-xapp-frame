@@ -17,13 +17,8 @@
 #
 #----------------------------------------------------------
 
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu18-c-go:1.9.0 as xapp-base
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 as xapp-base
 
-ARG g16="1.16.4"
-RUN wget -nv https://dl.google.com/go/go${g16}.linux-amd64.tar.gz \
-    && tar -xf go${g16}.linux-amd64.tar.gz \
-    && mv go /opt/go/1.16 \
-    && rm -f go*.gz
 
 RUN apt-get update -y \
     &&apt-get install -y \
@@ -38,9 +33,6 @@ RUN apt-get update -y \
     flex \
     curl \
     tree
-
-ARG GOVERSION=1.16
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/go/${GOVERSION}/bin
 
 RUN curl -s https://packagecloud.io/install/repositories/o-ran-sc/master/script.deb.sh | bash
 
@@ -83,7 +75,6 @@ RUN make -C /ws go-build
 # Test fmt
 RUN make -C /ws go-test-fmt
 
-# Test Requires dbaas
 #RUN sed -r  "s/^(::1.*)/#\1/" /etc/hosts  > /etc/hosts.new \
 #    && cat /etc/hosts.new > /etc/hosts \
 #    && cat /etc/hosts  \
