@@ -305,7 +305,7 @@ func RunWithParams(c MessageConsumer, sdlcheck bool) {
 	if ipString == "<nil>" {
 		host = fmt.Sprintf(":%d", GetPortData("http").Port)
 	} else {
-		host = fmt.Sprintf("%s:%d", ipString, GetPortData("http").Port)
+		host = fmt.Sprintf("[%s]:%d", ipString, GetPortData("http").Port)
 	}
 	go http.ListenAndServe(host, Resource.router)
 	Logger.Info(fmt.Sprintf("Xapp started, listening on: %s", host))
