@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	gerrit.o-ran-sc.org/r/com/golog v0.0.2
-	gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.0
+	gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.1-0.20211223104552-f7d2cf80e85c
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.2.1
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.2.1
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.2.1
@@ -36,5 +36,3 @@ replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common => gerrit.o-ran-sc.o
 replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.2.1
 
 replace gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader => gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.2.1
-
-replace gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm => gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.0

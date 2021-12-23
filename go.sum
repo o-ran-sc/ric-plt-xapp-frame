@@ -1,8 +1,8 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 gerrit.o-ran-sc.org/r/com/golog.git v0.0.2 h1:Ix6SgFuzd6yW6Ur6+qDlGhDO65UYs8PiIkeAL1VaQ2o=
 gerrit.o-ran-sc.org/r/com/golog.git v0.0.2/go.mod h1:A7hUL52YQSO4dFIZNcj76XQ09C9PftAe3LyL7kqBnok=
-gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.0 h1:OKDsIDlttbaoHwleyjflIWVZPgPvYbDhim6gWF0zf5E=
-gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.0/go.mod h1:AdEWKtERGvOQy9ybLhyhrb9w9LLVn8i9xzTwoR5n4BY=
+gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.1-0.20211223104552-f7d2cf80e85c h1:37zz2XYjQHw7G5EJf7WxBNaxbH6fk0qBkpDwq4GNoP4=
+gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm v0.5.1-0.20211223104552-f7d2cf80e85c/go.mod h1:4bLQ7iuVwDrQPdgv5CgSwJJQpYmWqt6cVPp5v7wbhbc=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.2.1 h1:3FFbXx55BODThXfyWAiz6cPXVELXFICDQUmJi13EoxM=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.2.1/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.2.1 h1:8Z60JRsPgcS1Ona4fEh6d0/03nLq1WHoZcNnBsni5+g=
