@@ -102,7 +102,7 @@ func registerXapp() {
 	for {
 		time.Sleep(5 * time.Second)
 		if !IsHealthProbeReady() {
-			Logger.Info("Application='%s' is not ready yet, waiting ...", viper.GetString("name"))
+			Logger.Debug("Application='%s' is not ready yet, waiting ...", viper.GetString("name"))
 			continue
 		}
 

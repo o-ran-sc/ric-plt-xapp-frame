@@ -67,7 +67,7 @@ func NewRouter() *Router {
 
 func (r *Router) serviceChecker(inner http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		Logger.Info("restapi: method=%s url=%s", req.Method, req.URL.RequestURI())
+		Logger.Debug("restapi: method=%s url=%s", req.Method, req.URL.RequestURI())
 		if req.URL.RequestURI() == AliveURL || r.CheckStatus() {
 			inner.ServeHTTP(w, req)
 		} else {
@@ -104,8 +104,6 @@ func (r *Router) CheckStatus() (status bool) {
 }
 
 func (r *Router) GetSymptomDataParams(w http.ResponseWriter, req *http.Request) SymptomDataParams {
-	Logger.Info("GetSymptomDataParams ...")
-
 	params := SymptomDataParams{}
 	queryParams := req.URL.Query()
 
@@ -202,12 +200,14 @@ func (r *Router) SendSymptomDataError(w http.ResponseWriter, req *http.Request, 
 func (r *Router) GetLocalMetrics(port int) (string, error) {
 	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/ric/v1/metrics", port))
 	if err != nil {
+		Logger.Error("GetLocalMetrics: http.Get failed: %v", err)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	metrics, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		Logger.Error("GetLocalMetrics: ioutil.ReadAll failed: %v", err)
 		return "", err
 	}
 
