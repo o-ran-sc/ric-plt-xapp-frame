@@ -25,6 +25,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
@@ -134,30 +136,43 @@ func (r *Router) CollectDefaultSymptomData(fileName string, data interface{}) st
 		return ""
 	}
 
+	//
 	if metrics, err := r.GetLocalMetrics(GetPortData("http").Port); err == nil {
 		if err := Util.WriteToFile(baseDir+"metrics.json", metrics); err != nil {
 			Logger.Error("writeToFile failed for metrics.json: %v", err)
 		}
 	}
 
+	//
 	if data != nil {
 		if b, err := json.MarshalIndent(data, "", "  "); err == nil {
 			Util.WriteToFile(baseDir+fileName, string(b))
 		}
 	}
 
-	rtPath := os.Getenv("RMR_STASH_RT")
-	if rtPath == "" {
-		return baseDir
-	}
-
-	input, err := ioutil.ReadFile(rtPath)
-	if err != nil {
+	//
+	cfile := viper.ConfigFileUsed()
+	input, err := ioutil.ReadFile(cfile)
+	if err == nil {
+		Util.WriteToFile(baseDir+path.Base(cfile), string(input))
+	} else {
 		Logger.Error("ioutil.ReadFile failed: %v", err)
-		return baseDir
 	}
 
-	Util.WriteToFile(baseDir+"rttable.txt", string(input))
+	//
+	Util.WriteToFile(baseDir+"environment", strings.Join(os.Environ(), "\n"))
+
+	//
+	rtPath := os.Getenv("RMR_STASH_RT")
+	if rtPath != "" {
+		input, err = ioutil.ReadFile(rtPath)
+		if err == nil {
+			Util.WriteToFile(baseDir+"rttable.txt", string(input))
+		} else {
+			Logger.Error("ioutil.ReadFile failed: %v", err)
+		}
+	}
+
 	return baseDir
 }
 
@@ -172,24 +187,18 @@ func (r *Router) SendSymptomDataJson(w http.ResponseWriter, req *http.Request, d
 }
 
 func (r *Router) SendSymptomDataFile(w http.ResponseWriter, req *http.Request, baseDir, zipFile string) {
-	// Compress and reply with attachment
-	tmpFile, err := ioutil.TempFile("", "symptom")
-	if err != nil {
-		r.SendSymptomDataError(w, req, "Failed to create a tmp file: "+err.Error())
-		return
-	}
-	defer os.Remove(tmpFile.Name())
 
 	var fileList []string
 	fileList = Util.FetchFiles(baseDir, fileList)
-	err = Util.ZipFiles(tmpFile, baseDir, fileList)
+	tmpFileName, err := Util.ZipFilesToTmpFile(baseDir, "symptom", fileList)
 	if err != nil {
-		r.SendSymptomDataError(w, req, "Failed to zip the files: "+err.Error())
+		r.SendSymptomDataError(w, req, err.Error())
 		return
 	}
+	defer os.Remove(tmpFileName)
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+zipFile)
-	http.ServeFile(w, req, tmpFile.Name())
+	http.ServeFile(w, req, tmpFileName)
 }
 
 func (r *Router) SendSymptomDataError(w http.ResponseWriter, req *http.Request, message string) {

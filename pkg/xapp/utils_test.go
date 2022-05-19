@@ -20,7 +20,6 @@
 package xapp
 
 import (
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -38,14 +37,16 @@ func TestNewUtils(t *testing.T) {
 	utils.FetchFiles("./", []string{"go.mod"})
 	utils.FetchFiles("./", []string{"go.mod"})
 
-	tmpFile, err := ioutil.TempFile("", "symptom")
+	tmpFileName, err := utils.ZipFilesToTmpFile("/tmp/abcd", "symptom", []string{"/tmp/abcd/file.txt"})
 	assert.Equal(t, err, nil)
-	defer os.Remove(tmpFile.Name())
+	defer os.Remove(tmpFileName)
 
-	err = utils.ZipFiles(tmpFile, "/tmp/abcd", []string{"/tmp/abcd/file.txt"})
+	assert.Equal(t, utils.CreateDir("/tmp/dcba"), nil)
+	_, err = utils.UnZipFiles(tmpFileName, "/tmp/dcba")
 	assert.Equal(t, err, nil)
 
 	utils.DeleteFile("/tmp/abcd")
+	utils.DeleteFile("/tmp/dcba")
 }
 
 func TestSymptomdata(t *testing.T) {

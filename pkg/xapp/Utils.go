@@ -21,6 +21,7 @@ package xapp
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -82,10 +83,7 @@ func (u *Utils) AddFileToZip(zipWriter *zip.Writer, filePath string, filename st
 		return err
 	}
 
-	if strings.HasPrefix(filename, filePath) {
-		filename = strings.TrimPrefix(filename, filePath)
-	}
-	header.Name = filename
+	header.Name = strings.TrimPrefix(filename, filePath)
 	header.Method = zip.Deflate
 
 	writer, err := zipWriter.CreateHeader(header)
@@ -104,7 +102,6 @@ func (u *Utils) ZipFiles(newZipFile *os.File, filePath string, files []string) e
 	defer zipWriter.Close()
 	for _, file := range files {
 		if err := u.AddFileToZip(zipWriter, filePath, file); err != nil {
-			Logger.Error("AddFileToZip() failed: %+v", err.Error())
 			return err
 		}
 	}
@@ -112,25 +109,83 @@ func (u *Utils) ZipFiles(newZipFile *os.File, filePath string, files []string) e
 	return nil
 }
 
+func (u *Utils) ZipFilesToTmpFile(baseDir string, tmpfilename string, fileList []string) (string, error) {
+	//Generate zip file
+	tmpFile, err := ioutil.TempFile("", tmpfilename)
+	if err != nil {
+		return "", fmt.Errorf("Failed to create a tmp file: %w", err)
+	}
+	err = u.ZipFiles(tmpFile, baseDir, fileList)
+	if err != nil {
+		os.Remove(tmpFile.Name())
+		return "", fmt.Errorf("Failed to zip the files: %w", err)
+	}
+	return tmpFile.Name(), nil
+}
+
+func (u *Utils) GetFileFromZip(file *zip.File, filePath string) (string, error) {
+	filename := filepath.Join(filePath, file.Name)
+
+	if file.FileInfo().IsDir() {
+		os.MkdirAll(filename, os.ModePerm)
+		return "", nil
+	}
+
+	if err := os.MkdirAll(filepath.Dir(filename), os.ModePerm); err != nil {
+		return "", fmt.Errorf("mkdir failed %s", filepath.Dir(filename))
+	}
+
+	dstFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	if err != nil {
+		return "", fmt.Errorf("openfile failed %s", filename)
+	}
+	defer dstFile.Close()
+
+	fileInArchive, err := file.Open()
+	if err != nil {
+		return "", fmt.Errorf("zip file open failed %s", file.Name)
+	}
+	defer fileInArchive.Close()
+
+	if _, err := io.Copy(dstFile, fileInArchive); err != nil {
+		return "", fmt.Errorf("copy failed %s -> %s", file.Name, filename)
+	}
+	return filename, nil
+
+}
+
+func (u *Utils) UnZipFiles(zippedFile string, filePath string) ([]string, error) {
+	retval := []string{}
+	zipReader, err := zip.OpenReader(zippedFile)
+	if err != nil {
+		return retval, fmt.Errorf("Failed to open zip reader: %w", err)
+	}
+	defer zipReader.Close()
+
+	//fmt.Printf("Reading zipfile: %s\n", zippedFile)
+	for _, file := range zipReader.File {
+		fname, err := u.GetFileFromZip(file, filePath)
+		if err != nil {
+			return retval, fmt.Errorf("Failed to unzip the files: %w", err)
+		}
+		if len(fname) > 0 {
+			retval = append(retval, fname)
+		}
+	}
+	return retval, nil
+}
+
 func (u *Utils) FetchFiles(filePath string, fileList []string) []string {
 	files, err := ioutil.ReadDir(filePath)
 	if err != nil {
-		Logger.Error("ioutil.ReadDir failed: %+v", err)
+		fmt.Printf("ioutil.ReadDir failed: %+v\n", err)
 		return nil
 	}
 	for _, file := range files {
 		if !file.IsDir() {
 			fileList = append(fileList, filepath.Join(filePath, file.Name()))
 		} else {
-			subPath := filepath.Join(filePath, file.Name())
-			subFiles, _ := ioutil.ReadDir(subPath)
-			for _, subFile := range subFiles {
-				if !subFile.IsDir() {
-					fileList = append(fileList, filepath.Join(subPath, subFile.Name()))
-				} else {
-					fileList = u.FetchFiles(filepath.Join(subPath, subFile.Name()), fileList)
-				}
-			}
+			fileList = u.FetchFiles(filepath.Join(filePath, file.Name()), fileList)
 		}
 	}
 	return fileList

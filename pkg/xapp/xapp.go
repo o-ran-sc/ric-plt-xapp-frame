@@ -156,6 +156,7 @@ func doRegister() error {
 	xappversion := viper.GetString("version")
 	pltNs := getPltNamespace("PLT_NAMESPACE", DEFAULT_PLT_NS)
 
+	//httpEp, rmrEp := getService(xappname, SERVICE_HTTP), getService(xappname, SERVICE_RMR)
 	httpEp, rmrEp := getService(host, SERVICE_HTTP), getService(host, SERVICE_RMR)
 	if httpEp == "" || rmrEp == "" {
 		Logger.Warn("Couldn't resolve service endpoints: httpEp=%s rmrEp=%s", httpEp, rmrEp)
