@@ -20,6 +20,7 @@
 package xapp
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,11 +28,13 @@ import (
 	"os"
 	"path"
 	"strings"
-
-	"github.com/gorilla/mux"
-	"github.com/spf13/viper"
+	"time"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/models"
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/expfmt"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -137,6 +140,24 @@ func (r *Router) CollectDefaultSymptomData(fileName string, data interface{}) st
 	}
 
 	//
+	// Collect some general information into one file
+	//
+	var lines []string
+
+	// uptime
+	d := XappUpTime()
+	h := d / time.Hour
+	d -= h * time.Hour
+	m := d / time.Minute
+	d -= m * time.Minute
+	s := d / time.Second
+	lines = append(lines, fmt.Sprintf("uptime: %02d:%02d:%02d", h, m, s))
+
+	Util.WriteToFile(baseDir+"information.txt", strings.Join(lines, "\n"))
+
+	//
+	// Collect metrics
+	//
 	if metrics, err := r.GetLocalMetrics(GetPortData("http").Port); err == nil {
 		if err := Util.WriteToFile(baseDir+"metrics.json", metrics); err != nil {
 			Logger.Error("writeToFile failed for metrics.json: %v", err)
@@ -144,12 +165,7 @@ func (r *Router) CollectDefaultSymptomData(fileName string, data interface{}) st
 	}
 
 	//
-	if data != nil {
-		if b, err := json.MarshalIndent(data, "", "  "); err == nil {
-			Util.WriteToFile(baseDir+fileName, string(b))
-		}
-	}
-
+	// Collect currently used config file
 	//
 	cfile := viper.ConfigFileUsed()
 	input, err := ioutil.ReadFile(cfile)
@@ -160,8 +176,12 @@ func (r *Router) CollectDefaultSymptomData(fileName string, data interface{}) st
 	}
 
 	//
-	Util.WriteToFile(baseDir+"environment", strings.Join(os.Environ(), "\n"))
+	// Collect environment
+	//
+	Util.WriteToFile(baseDir+"environment.txt", strings.Join(os.Environ(), "\n"))
 
+	//
+	// Collect RMR rt table
 	//
 	rtPath := os.Getenv("RMR_STASH_RT")
 	if rtPath != "" {
@@ -170,6 +190,15 @@ func (r *Router) CollectDefaultSymptomData(fileName string, data interface{}) st
 			Util.WriteToFile(baseDir+"rttable.txt", string(input))
 		} else {
 			Logger.Error("ioutil.ReadFile failed: %v", err)
+		}
+	}
+
+	//
+	// Put data that was provided as argument
+	//
+	if data != nil {
+		if b, err := json.MarshalIndent(data, "", "  "); err == nil {
+			Util.WriteToFile(baseDir+fileName, string(b))
 		}
 	}
 
@@ -207,20 +236,19 @@ func (r *Router) SendSymptomDataError(w http.ResponseWriter, req *http.Request, 
 }
 
 func (r *Router) GetLocalMetrics(port int) (string, error) {
-	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/ric/v1/metrics", port))
+	buf := &bytes.Buffer{}
+	enc := expfmt.NewEncoder(buf, expfmt.FmtText)
+	vals, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
-		Logger.Error("GetLocalMetrics: http.Get failed: %v", err)
-		return "", err
+		return fmt.Sprintf("#metrics get error: %s\n", err.Error()), fmt.Errorf("Could get local metrics %w", err)
 	}
-	defer resp.Body.Close()
-
-	metrics, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		Logger.Error("GetLocalMetrics: ioutil.ReadAll failed: %v", err)
-		return "", err
+	for _, val := range vals {
+		err = enc.Encode(val)
+		if err != nil {
+			buf.WriteString(fmt.Sprintf("#metrics enc err:%s\n", err.Error()))
+		}
 	}
-
-	return string(metrics), nil
+	return string(buf.Bytes()), nil
 }
 
 func IsHealthProbeReady() bool {

@@ -66,6 +66,16 @@ var (
 	shutdownCnt   int32
 )
 
+var startTime time.Time
+
+func XappUpTime() time.Duration {
+	return time.Since(startTime)
+}
+
+func init() {
+	startTime = time.Now()
+}
+
 func IsReady() bool {
 	return Rmr != nil && Rmr.IsReady() && SdlStorage != nil && SdlStorage.IsReady()
 }
@@ -274,34 +284,35 @@ func init() {
 	InstallSignalHandler()
 }
 
-func getIpAdress() string {
-	var ip net.IP
-	itf, err := net.InterfaceByName(os.Getenv("INTERFACE_NAME"))
+func GetIpAddress() (string, error) {
+	ifname := os.Getenv("INTERFACE_NAME")
+	itf, err := net.InterfaceByName(ifname)
 	if err != nil {
-		Logger.Info("Interface name is not able to resolve " + err.Error())
-		return ip.String()
+		return "<nil>", fmt.Errorf("Interface (%s) %w", ifname, err)
 	}
 	item, err := itf.Addrs()
 	if err != nil {
-		Logger.Info("IP address is not able to resolve " + err.Error())
-		return ip.String()
+		return "<nil>", fmt.Errorf("Interface (%s) %w", ifname, err)
 	}
 	for _, addr := range item {
 		switch v := addr.(type) {
 		case *net.IPNet:
 			if !v.IP.IsLinkLocalUnicast() {
-				ip = v.IP
+				return v.IP.String(), nil
 			}
 		}
 	}
-	return ip.String()
+	return "<nil>", fmt.Errorf("Interface (%s) couldn't find ip", ifname)
 }
 
 func RunWithParams(c MessageConsumer, sdlcheck bool) {
 	Rmr = NewRMRClient()
 
 	Rmr.SetReadyCB(XappReadyCb, nil)
-	ipString := getIpAdress()
+	ipString, err := GetIpAddress()
+	if err != nil {
+		Logger.Info("IP address is not able to resolve " + err.Error())
+	}
 	var host string
 	if ipString == "<nil>" {
 		host = fmt.Sprintf(":%d", GetPortData("http").Port)
