@@ -1,6 +1,6 @@
 module gerrit.o-ran-sc.org/r/ric-plt/xapp-frame
 
-go 1.12
+go 1.16
 
 require (
 	gerrit.o-ran-sc.org/r/com/golog v0.0.2
@@ -25,6 +25,39 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
+)
+
+require (
+	github.com/PuerkitoBio/purell v1.1.1 // indirect
+	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
+	github.com/beorn7/perks v1.0.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/docker/go-units v0.4.0 // indirect
+	github.com/go-openapi/analysis v0.19.5 // indirect
+	github.com/go-openapi/jsonpointer v0.19.3 // indirect
+	github.com/go-openapi/jsonreference v0.19.3 // indirect
+	github.com/go-redis/redis v6.15.9+incompatible // indirect
+	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/magiconair/properties v1.8.0 // indirect
+	github.com/mailru/easyjson v0.7.0 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/mitchellh/mapstructure v1.1.2 // indirect
+	github.com/pelletier/go-toml v1.2.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
+	github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 // indirect
+	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/cast v1.3.0 // indirect
+	github.com/spf13/jwalterweatherman v1.0.0 // indirect
+	github.com/spf13/pflag v1.0.3 // indirect
+	github.com/stretchr/objx v0.2.0 // indirect
+	go.mongodb.org/mongo-driver v1.1.2 // indirect
+	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
+	golang.org/x/text v0.3.2 // indirect
+	google.golang.org/protobuf v1.23.0 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920 // indirect
 )
 

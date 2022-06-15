@@ -76,9 +76,16 @@ import (
 
 var RMRCounterOpts = []CounterOpts{
 	{Name: "Transmitted", Help: "The total number of transmited RMR messages"},
-	{Name: "Received", Help: "The total number of received RMR messages"},
 	{Name: "TransmitError", Help: "The total number of RMR transmission errors"},
+	{Name: "TransmitRetry", Help: "The total number of transmit retries on failure"},
+	{Name: "Received", Help: "The total number of received RMR messages"},
 	{Name: "ReceiveError", Help: "The total number of RMR receive errors"},
+	{Name: "SendWithRetryRetry", Help: "SendWithRetry service retries"},
+}
+
+var RMRGaugeOpts = []CounterOpts{
+	{Name: "Enqueued", Help: "The total number of enqueued in RMR library"},
+	{Name: "Dropped", Help: "The total number of dropped in RMR library"},
 }
 
 var RMRErrors = map[int]string{
@@ -164,7 +171,8 @@ func NewRMRClientWithParams(params *RMRClientParams) *RMRClient {
 	return &RMRClient{
 		context:           ctx,
 		consumers:         make([]MessageConsumer, 0),
-		stat:              Metric.RegisterCounterGroup(RMRCounterOpts, params.StatDesc),
+		statc:             Metric.RegisterCounterGroup(RMRCounterOpts, params.StatDesc),
+		statg:             Metric.RegisterGaugeGroup(RMRGaugeOpts, params.StatDesc),
 		maxRetryOnFailure: params.RmrData.MaxRetryOnFailure,
 	}
 }
@@ -208,12 +216,12 @@ func (m *RMRClient) Start(c MessageConsumer) {
 		time.Sleep(1 * time.Second)
 		counter++
 	}
-	m.wg.Add(1)
 
 	if m.readyCb != nil {
 		go m.readyCb(m.readyCbParams)
 	}
 
+	m.wg.Add(1)
 	go func() {
 		m.contextMux.Lock()
 		rfd := C.rmr_get_rcvfd(m.context)
@@ -222,6 +230,7 @@ func (m *RMRClient) Start(c MessageConsumer) {
 
 		defer m.wg.Done()
 		for {
+
 			if int(C.wait_epoll(efd, rfd)) == 0 {
 				continue
 			}
@@ -239,7 +248,28 @@ func (m *RMRClient) Start(c MessageConsumer) {
 		}
 	}()
 
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		for {
+			m.UpdateRmrStats()
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
 	m.wg.Wait()
+}
+
+func (m *RMRClient) UpdateRmrStats() {
+	param := (*C.rmr_rx_debug_t)(C.malloc(C.size_t(unsafe.Sizeof(C.rmr_rx_debug_t{}))))
+	m.contextMux.Lock()
+	C.rmr_get_rx_debug_info(m.context, param)
+	m.contextMux.Unlock()
+	m.mux.Lock()
+	m.statg["Enqueued"].Set(float64(param.enqueue))
+	m.statg["Dropped"].Set(float64(param.drop))
+	m.mux.Unlock()
+	C.free(unsafe.Pointer(param))
 }
 
 func (m *RMRClient) parseMessage(rxBuffer *C.rmr_mbuf_t) {
@@ -340,6 +370,7 @@ func (m *RMRClient) SendWithRetry(params *RMRParams, isRts bool, to time.Duratio
 	for ; i < int(to)*2 && status == false; i++ {
 		status = m.Send(params, isRts)
 		if status == false {
+			m.UpdateStatCounter("SendWithRetryRetry")
 			time.Sleep(500 * time.Millisecond)
 		}
 	}
@@ -454,6 +485,7 @@ func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
 			}
 		}
 		m.contextMux.Unlock()
+		m.UpdateStatCounter("TransmitRetry")
 	}
 
 	if currBuffer == nil {
@@ -545,12 +577,13 @@ func (m *RMRClient) IsNoEndPointError(params *RMRParams) bool {
 
 func (m *RMRClient) UpdateStatCounter(name string) {
 	m.mux.Lock()
-	m.stat[name].Inc()
+	m.statc[name].Inc()
 	m.mux.Unlock()
 }
 
 func (m *RMRClient) RegisterMetrics() {
-	m.stat = Metric.RegisterCounterGroup(RMRCounterOpts, "RMR")
+	m.statc = Metric.RegisterCounterGroup(RMRCounterOpts, "RMR")
+	m.statg = Metric.RegisterGaugeGroup(RMRGaugeOpts, "RMR")
 }
 
 func (m *RMRClient) Wait() {

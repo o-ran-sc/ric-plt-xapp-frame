@@ -29,7 +29,8 @@ type RMRClient struct {
 	ready             int
 	wg                sync.WaitGroup
 	mux               sync.Mutex
-	stat              map[string]Counter
+	statc             map[string]Counter
+	statg             map[string]Gauge
 	consumers         []MessageConsumer
 	readyCb           ReadyCB
 	readyCbParams     interface{}

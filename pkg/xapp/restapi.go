@@ -158,7 +158,7 @@ func (r *Router) CollectDefaultSymptomData(fileName string, data interface{}) st
 	//
 	// Collect metrics
 	//
-	if metrics, err := r.GetLocalMetrics(GetPortData("http").Port); err == nil {
+	if metrics, err := r.GetLocalMetrics(); err == nil {
 		if err := Util.WriteToFile(baseDir+"metrics.json", metrics); err != nil {
 			Logger.Error("writeToFile failed for metrics.json: %v", err)
 		}
@@ -235,7 +235,7 @@ func (r *Router) SendSymptomDataError(w http.ResponseWriter, req *http.Request, 
 	http.Error(w, message, http.StatusInternalServerError)
 }
 
-func (r *Router) GetLocalMetrics(port int) (string, error) {
+func (r *Router) GetLocalMetrics() (string, error) {
 	buf := &bytes.Buffer{}
 	enc := expfmt.NewEncoder(buf, expfmt.FmtText)
 	vals, err := prometheus.DefaultGatherer.Gather()
@@ -250,6 +250,14 @@ func (r *Router) GetLocalMetrics(port int) (string, error) {
 	}
 	return string(buf.Bytes()), nil
 }
+
+//Resource.InjectRoute(url, metricsHandler, "GET")
+//func metricsHandler(w http.ResponseWriter, r *http.Request) {
+//	w.Header().Set("Content-Type", "text/plain")
+//	w.WriteHeader(http.StatusOK)
+//	metrics, _ := Resource.GetLocalMetrics()
+//	w.Write([]byte(metrics))
+//}
 
 func IsHealthProbeReady() bool {
 	return healthReady
