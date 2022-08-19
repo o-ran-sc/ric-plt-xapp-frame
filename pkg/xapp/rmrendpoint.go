@@ -53,16 +53,18 @@ func (endpoint *RmrEndpoint) GetPort() uint16 {
 }
 
 func (endpoint *RmrEndpoint) Set(src string) bool {
-	elems := strings.Split(src, ":")
-	if len(elems) == 2 {
-		srcAddr := elems[0]
-		srcPort, err := strconv.ParseUint(elems[1], 10, 16)
+	if strings.Contains(src, ":") {
+		lind := strings.LastIndexByte(src, ':')
+		srcAddr := src[:lind]
+		srcPort, err := strconv.ParseUint(src[lind+1:], 10, 16)
 		if err == nil {
 			endpoint.Addr = srcAddr
 			endpoint.Port = uint16(srcPort)
 			return true
 		}
 	}
+	endpoint.Addr = ""
+	endpoint.Port = 0
 	return false
 }
 

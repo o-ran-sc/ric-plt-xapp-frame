@@ -20,8 +20,9 @@
 package xapp
 
 import (
-	"gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm"
 	"os"
+
+	"gerrit.o-ran-sc.org/r/ric-plt/alarm-go.git/alarm"
 )
 
 type AlarmClient struct {

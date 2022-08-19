@@ -20,8 +20,54 @@
 package xapp
 
 import (
+	"fmt"
 	"testing"
 )
+
+func TestRmrEndpoint1(t *testing.T) {
+	addr := "127.0.0.1"
+	port := uint16(8080)
+	str := fmt.Sprintf("%s:%d", addr, port)
+	Logger.Info("CASE: TestRmrEndpoint1 %s", str)
+	ep := NewRmrEndpoint(str)
+	if ep == nil || ep.Addr != addr || ep.Port != port {
+		t.Errorf("NewRmrEndpoint: %s failed", str)
+	}
+}
+
+func TestRmrEndpoint2(t *testing.T) {
+	addr := "[2001:2003:fb69:ea00:c894:288b:4582:b5c/64]"
+	port := uint16(8080)
+	str := fmt.Sprintf("%s:%d", addr, port)
+	Logger.Info("CASE: TestRmrEndpoint2 %s", str)
+	ep := NewRmrEndpoint(str)
+	if ep == nil || ep.Addr != addr || ep.Port != port {
+		t.Errorf("NewRmrEndpoint: %s failed", str)
+	}
+}
+
+func TestRmrEndpoint3(t *testing.T) {
+	addr := "127.0.0.1"
+	str := fmt.Sprintf("%s:port", addr)
+	Logger.Info("CASE: TestRmrEndpoint3 %s", str)
+	ep := NewRmrEndpoint(str)
+	if ep != nil {
+		t.Errorf("NewRmrEndpoint: %s successful while should fail", str)
+	}
+}
+
+func TestRmrEndpoint4(t *testing.T) {
+	addr := "127.0.0.1"
+	str := fmt.Sprintf("%s:port", addr)
+	Logger.Info("CASE: TestRmrEndpoint4 %s", str)
+	ep := &RmrEndpoint{}
+	if ep.Set(str) == true {
+		t.Errorf("NewRmrEndpoint: Set %s successful while should fail", str)
+	}
+	if ep.Addr != "" || ep.Port != 0 {
+		t.Errorf("NewRmrEndpoint: Values %s successful while should fail", str)
+	}
+}
 
 func TestRmrEndpointList(t *testing.T) {
 	Logger.Info("CASE: TestRmrEndpointList")
