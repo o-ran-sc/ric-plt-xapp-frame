@@ -51,18 +51,18 @@ func NewAlarmClient(moId, appId string) *AlarmClient {
 	return nil
 }
 
-func (c *AlarmClient) Raise(sp int, severity alarm.Severity, identifyingInfo, additionalInfo string) error {
-	alarmData := c.alarmer.NewAlarm(sp, severity, identifyingInfo, additionalInfo)
+func (c *AlarmClient) Raise(sp int, severity alarm.Severity, additionalInfo, identifyingInfo string) error {
+	alarmData := c.alarmer.NewAlarm(sp, severity, additionalInfo, identifyingInfo)
 	return c.alarmer.Raise(alarmData)
 }
 
-func (c *AlarmClient) Clear(sp int, severity alarm.Severity, identifyingInfo, additionalInfo string) error {
-	alarmData := c.alarmer.NewAlarm(sp, severity, identifyingInfo, additionalInfo)
+func (c *AlarmClient) Clear(sp int, severity alarm.Severity, additionalInfo, identifyingInfo string) error {
+	alarmData := c.alarmer.NewAlarm(sp, severity, additionalInfo, identifyingInfo)
 	return c.alarmer.Clear(alarmData)
 }
 
-func (c *AlarmClient) Reraise(sp int, severity alarm.Severity, identifyingInfo, additionalInfo string) error {
-	alarmData := c.alarmer.NewAlarm(sp, severity, identifyingInfo, additionalInfo)
+func (c *AlarmClient) Reraise(sp int, severity alarm.Severity, additionalInfo, identifyingInfo string) error {
+	alarmData := c.alarmer.NewAlarm(sp, severity, additionalInfo, identifyingInfo)
 	return c.alarmer.Reraise(alarmData)
 }
 
