@@ -152,9 +152,21 @@ func getPltNamespace(envName, defVal string) string {
 func doPost(pltNs, url string, msg []byte, status int) error {
 	resp, err := http.Post(fmt.Sprintf(url, pltNs, pltNs), "application/json", bytes.NewBuffer(msg))
 	if err != nil || resp == nil || resp.StatusCode != status {
-		Logger.Info("http.Post to '%s' failed with error: %v", fmt.Sprintf(url, pltNs, pltNs), err)
-		return err
+		logdesc := fmt.Sprintf("http.Post to '%s' failed with", fmt.Sprintf(url, pltNs, pltNs))
+		if resp != nil {
+			logdesc += fmt.Sprintf(" status: %d != %d", resp.StatusCode, status)
+		} else {
+			logdesc += fmt.Sprintf(" resp: nil")
+		}
+		if err != nil {
+			logdesc += fmt.Sprintf(" err: %s", err.Error())
+		} else {
+			logdesc += fmt.Sprintf(" err: nil")
+		}
+		Logger.Info(logdesc)
+		return fmt.Errorf(logdesc)
 	}
+
 	Logger.Info("Post to '%s' done, status:%v", fmt.Sprintf(url, pltNs, pltNs), resp.Status)
 
 	return err

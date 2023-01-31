@@ -316,15 +316,25 @@ func appconfigHandler(w http.ResponseWriter, r *http.Request) {
 	metadata.XappName = &name
 	metadata.ConfigType = &configtype
 
-	configFile, err := os.Open("/opt/ric/config/config-file.json")
-	if err != nil {
-		Logger.Error("Cannot open config file: %v", err)
+	// Read config-files
+	cfiles := []string{viper.ConfigFileUsed(), "/opt/ric/config/config-file.json"}
+
+	var err error
+	var configFile *os.File
+	for _, cfile := range cfiles {
+		configFile, err = os.Open(cfile)
+		if err != nil {
+			configFile = nil
+			Logger.Error("Cannot open config file: %s err: %v", cfile, err)
+		}
+	}
+	if err != nil || configFile == nil {
+		Logger.Error("Cannot open any of listed config files: %v", cfiles)
 		respondWithJSON(w, http.StatusInternalServerError, nil)
-		// return nil,errors.New("Could Not parse the config file")
+		return
 	}
 
 	body, err := ioutil.ReadAll(configFile)
-
 	defer configFile.Close()
 
 	xappconfig.Metadata = &metadata
@@ -333,6 +343,4 @@ func appconfigHandler(w http.ResponseWriter, r *http.Request) {
 	appconfig = append(appconfig, &xappconfig)
 
 	respondWithJSON(w, http.StatusOK, appconfig)
-
-	//return appconfig,nil
 }
