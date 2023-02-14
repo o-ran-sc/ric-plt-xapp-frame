@@ -16,6 +16,24 @@
       "message": "recheck",
       "revId": "cfe963016fc00ad60e015377c576444153657217",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "918ff0eb_957780d5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002076
+      },
+      "writtenOn": "2023-02-14T04:00:16Z",
+      "side": 1,
+      "message": "This is failing at pkg/xapp/mtypes.go:47:48: could not determine kind of name for C.RIC_SUB_DEL_REQUIRED\n\nAnd corresponding changes are already done in rmr and shared for review \n\nI could see rmr changes are already merged. So above compilation issue can be resolved by creating the .deb pkg using the code in master branch and installing it on the jenkins slave machine where the build is triggerred",
+      "parentUuid": "10d54f98_6db2ca4d",
+      "revId": "cfe963016fc00ad60e015377c576444153657217",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
