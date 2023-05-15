@@ -17,7 +17,7 @@
 #
 #----------------------------------------------------------
 
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 as xapp-base
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.1.0 as xapp-base
 
 
 RUN apt-get update -y \
@@ -57,7 +57,6 @@ CMD ["/bin/bash"]
 #----------------------------------------------------------
 FROM xapp-base as xapp-base-testbuild
 
-
 RUN mkdir -p /ws
 WORKDIR "/ws"
 
@@ -75,6 +74,10 @@ RUN make -C /ws go-build
 # Test fmt
 RUN make -C /ws go-test-fmt
 
+# Alternative way to run tests:
+#   If there is ipv6 in use, then there might be problems if
+#   "localhost" is resolved as ipv6 address
+#   --> Comment out ipv6 hosts file entries before running tests
 #RUN sed -r  "s/^(::1.*)/#\1/" /etc/hosts  > /etc/hosts.new \
 #    && cat /etc/hosts.new > /etc/hosts \
 #    && cat /etc/hosts  \

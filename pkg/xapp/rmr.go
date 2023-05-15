@@ -29,6 +29,7 @@ package xapp
 #include <rmr/rmr.h>
 #include <rmr/RIC_message_types.h>
 
+
 void write_bytes_array(unsigned char *dst, void *data, int len) {
     memcpy((void *)dst, (void *)data, len);
 }
@@ -108,9 +109,9 @@ var RMRErrors = map[int]string{
 	C.RMR_ERR_NOTSUPP:    "the request is not supported, or RMr was not initialized for the request",
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 //
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 type RMRParams struct {
 	Mtype      int
 	Payload    []byte
@@ -132,9 +133,9 @@ func (params *RMRParams) String() string {
 	return b.String()
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 //
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 type RMRClientParams struct {
 	StatDesc string
 	RmrData  PortData
@@ -146,9 +147,9 @@ func (params *RMRClientParams) String() string {
 		params.RmrData.LowLatency, params.RmrData.FastAck, params.RmrData.Policies)
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 //
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 func NewRMRClientWithParams(params *RMRClientParams) *RMRClient {
 	p := C.CString(fmt.Sprintf("%d", params.RmrData.Port))
 	m := C.int(params.RmrData.MaxSize)
