@@ -48,22 +48,23 @@ type ShutdownCB func()
 
 var (
 	// XApp is an application instance
-	Rmr           *RMRClient
-	Sdl           *SDLClient
-	SdlStorage    *SDLStorage
-	Rnib          *RNIBClient
-	Resource      *Router
-	Metric        *Metrics
-	Logger        *Log
-	Config        Configurator
-	Subscription  *Subscriber
-	Alarm         *AlarmClient
-	Util          *Utils
-	readyCb       ReadyCB
-	readyCbParams interface{}
-	shutdownCb    ShutdownCB
-	shutdownFlag  int32
-	shutdownCnt   int32
+	Rmr                *RMRClient
+	Sdl                *SDLClient
+	SdlStorage         *SDLStorage
+	Rnib               *RNIBClient
+	Resource           *Router
+	Metric             *Metrics
+	Logger             *Log
+	Config             Configurator
+	Subscription       *Subscriber
+	Alarm              *AlarmClient
+	Util               *Utils
+	readyCb            ReadyCB
+	readyCbParams      interface{}
+	shutdownCb         ShutdownCB
+	shutdownFlag       int32
+	shutdownCnt        int32
+	disableAlarmClient bool
 )
 
 var startTime time.Time
@@ -86,7 +87,9 @@ func SetReadyCB(cb ReadyCB, params interface{}) {
 }
 
 func XappReadyCb(params interface{}) {
-	Alarm = NewAlarmClient(viper.GetString("moId"), viper.GetString("name"))
+	if disableAlarmClient == false {
+		Alarm = NewAlarmClient(viper.GetString("moId"), viper.GetString("name"))
+	}
 	if readyCb != nil {
 		readyCb(readyCbParams)
 	}
@@ -317,7 +320,19 @@ func GetIpAddress() (string, error) {
 	return "<nil>", fmt.Errorf("Interface (%s) couldn't find ip", ifname)
 }
 
-func RunWithParams(c MessageConsumer, sdlcheck bool) {
+type RunParams struct {
+	SdlCheck           bool
+	DisableAlarmClient bool
+}
+
+func RunWithRunParams(c MessageConsumer, params RunParams) {
+
+	if params.DisableAlarmClient {
+		disableAlarmClient = true
+	} else {
+		disableAlarmClient = false
+	}
+
 	Rmr = NewRMRClient()
 
 	Rmr.SetReadyCB(XappReadyCb, nil)
@@ -334,12 +349,16 @@ func RunWithParams(c MessageConsumer, sdlcheck bool) {
 	go http.ListenAndServe(host, Resource.router)
 	Logger.Info(fmt.Sprintf("Xapp started, listening on: %s", host))
 
-	if sdlcheck {
+	if params.sdlcheck {
 		SdlStorage.TestConnection(viper.GetString("controls.db.namespace"))
 	}
 	go registerXapp()
 
 	Rmr.Start(c)
+}
+
+func RunWithParams(c MessageConsumer, sdlcheck bool) {
+	RunWithRunParams(c, RunParams{SdlCheck: sdlcheck, DisableAlarmClient: false})
 }
 
 func Run(c MessageConsumer) {
