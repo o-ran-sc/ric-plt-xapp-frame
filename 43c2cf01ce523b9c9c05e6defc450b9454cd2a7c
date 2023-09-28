@@ -1,0 +1,8 @@
+Code-Review+2: Juha Hyttinen <juha.hyttinen@nokia.com>
+Verified+1: ORAN Jobbuilder <releng+oran-jobbuilder@linuxfoundation.org>
+Verified+1: ORAN Required GHA <releng+oran.required.gha@linuxfoundation.org>
+Submitted-by: Juha Hyttinen <juha.hyttinen@nokia.com>
+Submitted-at: Thu, 28 Sep 2023 19:02:56 +0000
+Reviewed-on: https://gerrit.o-ran-sc.org/r/c/ric-plt/xapp-frame/+/11739
+Project: ric-plt/xapp-frame
+Branch: refs/heads/master
