@@ -447,62 +447,46 @@ func (m *RMRClient) Send(params *RMRParams, isRts bool) bool {
 }
 
 func (m *RMRClient) SendBuf(txBuffer *C.rmr_mbuf_t, isRts bool, whid int) int {
-	var (
-		currBuffer *C.rmr_mbuf_t
-	)
-
-	m.contextMux.Lock()
 	txBuffer.state = 0
-	if whid != 0 {
-		currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
-	} else {
-		if isRts {
-			currBuffer = C.rmr_rts_msg(m.context, txBuffer)
-		} else {
-			currBuffer = C.rmr_send_msg(m.context, txBuffer)
-		}
-	}
-	m.contextMux.Unlock()
-
-	if currBuffer == nil {
-		m.UpdateStatCounter("TransmitError")
-		return m.LogMBufError("SendBuf failed", txBuffer)
-	}
 
 	// Just quick retry seems to help for K8s issue
 	if m.maxRetryOnFailure == 0 {
 		m.maxRetryOnFailure = 5
 	}
 
-	for j := 0; j < m.maxRetryOnFailure && currBuffer != nil && currBuffer.state == C.RMR_ERR_RETRY; j++ {
+	for j := 0; j <= m.maxRetryOnFailure; j++ {
 		m.contextMux.Lock()
 		if whid != 0 {
-			currBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
+			txBuffer = C.rmr_wh_send_msg(m.context, C.rmr_whid_t(whid), txBuffer)
 		} else {
 			if isRts {
-				currBuffer = C.rmr_rts_msg(m.context, txBuffer)
+				txBuffer = C.rmr_rts_msg(m.context, txBuffer)
 			} else {
-				currBuffer = C.rmr_send_msg(m.context, txBuffer)
+				txBuffer = C.rmr_send_msg(m.context, txBuffer)
 			}
 		}
 		m.contextMux.Unlock()
-		m.UpdateStatCounter("TransmitRetry")
+		if j+1 <= m.maxRetryOnFailure && txBuffer != nil && txBuffer.state == C.RMR_ERR_RETRY {
+			m.UpdateStatCounter("TransmitRetry")
+			continue
+		}
+		break
 	}
 
-	if currBuffer == nil {
+	if txBuffer == nil {
 		m.UpdateStatCounter("TransmitError")
-		m.LogMBufError("SendBuf failed", currBuffer)
+		m.LogMBufError("SendBuf failed", txBuffer)
 		return int(C.RMR_ERR_INITFAILED)
 	}
 
-	if currBuffer.state != C.RMR_OK {
+	if txBuffer.state != C.RMR_OK {
 		m.UpdateStatCounter("TransmitError")
-		m.LogMBufError("SendBuf failed", currBuffer)
+		m.LogMBufError("SendBuf failed", txBuffer)
 	} else {
 		m.UpdateStatCounter("Transmitted")
 	}
-	defer m.Free(currBuffer)
-	return int(currBuffer.state)
+	defer m.Free(txBuffer)
+	return int(txBuffer.state)
 
 }
 
