@@ -65,6 +65,7 @@ var (
 	shutdownFlag       int32
 	shutdownCnt        int32
 	disableAlarmClient bool
+	isRegistered       bool
 )
 
 var startTime time.Time
@@ -79,6 +80,10 @@ func init() {
 
 func IsReady() bool {
 	return Rmr != nil && Rmr.IsReady() && SdlStorage != nil && SdlStorage.IsReady()
+}
+
+func IsRegistered() bool {
+	return isRegistered
 }
 
 func SetReadyCB(cb ReadyCB, params interface{}) {
@@ -109,6 +114,8 @@ func XappShutdownCb() {
 	if shutdownCb != nil {
 		shutdownCb()
 	}
+
+	isRegistered = false
 }
 
 func registerXapp() {
@@ -121,6 +128,7 @@ func registerXapp() {
 
 		Logger.Debug("Application='%s' is now up and ready, continue with registration ...", viper.GetString("name"))
 		if err := doRegister(); err == nil {
+			isRegistered = true
 			Logger.Info("Registration done, proceeding with startup ...")
 			break
 		}
