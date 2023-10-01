@@ -1,0 +1,10 @@
+Verified+1: ORAN Required GHA <releng+oran.required.gha@linuxfoundation.org>
+Verified+1: ORAN Jobbuilder <releng+oran-jobbuilder@linuxfoundation.org>
+Verified+1: Thoralf Czichy <thoralf.czichy@nokia.com>
+Code-Review+1: Abhijit Gadgil <gabhijit@iitbombay.org>
+Code-Review+2: Thoralf Czichy <thoralf.czichy@nokia.com>
+Submitted-by: Juha Hyttinen <juha.hyttinen@nokia.com>
+Submitted-at: Sun, 01 Oct 2023 09:32:04 +0000
+Reviewed-on: https://gerrit.o-ran-sc.org/r/c/ric-plt/xapp-frame/+/11838
+Project: ric-plt/xapp-frame
+Branch: refs/heads/master
