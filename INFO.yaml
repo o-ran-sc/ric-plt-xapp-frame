@@ -44,6 +44,11 @@ committers:
       company: 'nokia'
       id: 'juhhytti'
       timezone: 'Unknown/Unknown'
+    - name: 'Akansha Keshri'
+      email: 'akansha.1.keshri@nokia.com'
+      company: 'nokia'
+      id: 'akeshri'
+      timezone: 'Unknown/Unknown'
 tsc:
     # yamllint disable rule:line-length
     approval: 'missing'
