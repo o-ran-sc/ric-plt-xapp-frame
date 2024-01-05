@@ -122,6 +122,7 @@ var RICMessageTypes = map[string]int{
 	"MC_REPORT":                           C.MC_REPORT,
 	"DCAPTERM_RTPM_RMR_MSGTYPE":           C.DCAPTERM_RTPM_RMR_MSGTYPE,
 	"DCAPTERM_GEO_RMR_MSGTYPE":            C.DCAPTERM_GEO_RMR_MSGTYPE,
+	"RIC_E2_RAN_ERROR_INDICATION":         C.RIC_E2_RAN_ERROR_INDICATION,
 }
 
 //-----------------------------------------------------------------------------
@@ -222,6 +223,7 @@ const (
 	MC_REPORT                           = C.MC_REPORT
 	DCAPTERM_RTPM_RMR_MSGTYPE           = C.DCAPTERM_RTPM_RMR_MSGTYPE
 	DCAPTERM_GEO_RMR_MSGTYPE            = C.DCAPTERM_GEO_RMR_MSGTYPE
+	RIC_E2_RAN_ERROR_INDICATION         = C.RIC_E2_RAN_ERROR_INDICATION
 )
 
 //-----------------------------------------------------------------------------
@@ -322,4 +324,5 @@ var RicMessageTypeToName = map[int]string{
 	MC_REPORT:                           "MC_REPORT",
 	DCAPTERM_RTPM_RMR_MSGTYPE:           "DCAPTERM_RTPM_RMR_MSGTYPE",
 	DCAPTERM_GEO_RMR_MSGTYPE:            "DCAPTERM_GEO_RMR_MSGTYPE",
+	RIC_E2_RAN_ERROR_INDICATION:         "RIC_E2_RAN_ERROR_INDICATION",
 }
