@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+option go_package = "grpc/ProtoBuf";
+option java_multiple_files = true;
+option java_package = "io.grpc.E2Guidance";
+option java_outer_classname = "E2GuidanceProto";
+
+package e2Guidance;
+
+// The e2GuidanceService service definition.
+service e2GuidanceService {
+  // Sends a greeting
+  rpc E2GuidanceService (E2GuidanceReq) returns (E2GuidanceResp) {}
+ 
+}
+
+// The request message containing theE2GuidanceReq fields
+message E2GuidanceReq {
+    uint64  resourcetype = 1;
+    uint64  transactionID = 2;
+    uint64  resourceID  = 3;   //supported ResourceID is amueNgapID
+    repeated uint64 ParamList = 4;
+}
+
+
+// The response message containing the response fields
+message E2GuidanceResp {
+    uint64  transactionID = 1;
+	bool    isRequestConflicting = 2;
+	repeated uint64 ConflictingRanParamList = 3;
+	string Cause =4;
+  
+}
+
