@@ -34,16 +34,6 @@ repositories:
     - ric-plt/xapp-frame
 committers:
     - <<: *oran_ric_plt_xapp_frame_ptl
-    - name: 'Abukar Mohamed'
-      email: 'abukar.mohamed@nokia.com'
-      company: 'nokia'
-      id: 'Nune'
-      timezone: 'Unknown/Unknown'
-    - name: 'Juha Hyttinen'
-      email: 'juha.hyttinen@nokia.com'
-      company: 'nokia'
-      id: 'juhhytti'
-      timezone: 'Unknown/Unknown'
     - name: 'Akansha Keshri'
       email: 'akansha.1.keshri@nokia.com'
       company: 'nokia'
@@ -53,6 +43,9 @@ tsc:
     # yamllint disable rule:line-length
     approval: 'missing'
     changes:
-        - type: ''
-          name: ''
+        - type: 'removal'
+          name: 'Juha Hyttinen'
+          link: ''
+        - type: 'removal'
+          name: 'Abukar Mohamed'
           link: ''
