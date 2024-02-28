@@ -352,7 +352,7 @@ func RunWithRunParams(c MessageConsumer, params RunParams) {
 	if params.SdlCheck {
 		SdlStorage.TestConnection(viper.GetString("controls.db.namespace"))
 	}
-	go registerXapp()
+	registerXapp()
 
 	Rmr.Start(c)
 }
