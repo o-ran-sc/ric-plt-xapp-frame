@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "07698854_d7785733",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000059
+      },
+      "writtenOn": "2024-04-10T21:59:35Z",
+      "side": 1,
+      "message": "+1 verify since the reported failure is Docker related, not related to our change\n\n17:45:05 #20 104.0 make: *** [build/make.go.mk:68: /ws/cache/go/pkg/xapp_test] Error 1\n17:45:05 #20 104.0 make: Leaving directory \u0027/ws\u0027\n17:45:05 #20 ERROR: process \"/bin/sh -c make -C /ws go-test\" did not complete successfully: exit code: 2",
+      "revId": "aa92390f9294b0a1b70a6c417fc9db66db289fbc",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
